@@ -1,0 +1,7 @@
+<svg width="220" height="40" viewBox="0 0 220 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="2" y="2" width="36" height="36" rx="10" fill="#CECBF6"/>
+  <path d="M13 14.5H27.5V18H20.75V20.75H26.5V24.1H20.75V28H17V18H13V14.5Z" fill="#26215C"/>
+  <path d="M29 14.5V18H24.75V28H21V14.5H29Z" fill="#26215C"/>
+  <text x="50" y="17" fill="#F1EFE8" font-size="12" font-family="Inter, Arial, sans-serif" font-weight="700" letter-spacing="1.2">STERO TECH</text>
+  <text x="50" y="31" fill="#D3D1C7" font-size="12" font-family="Inter, Arial, sans-serif" font-weight="500">Company OS Admin</text>
+</svg>

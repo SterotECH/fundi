@@ -1,0 +1,109 @@
+{% extends "admin/base.html" %}
+
+{% load i18n static %}
+
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_("Django site admin") }}{% endblock %}
+
+{% block branding %}
+    {% include "unfold/helpers/site_branding.html" %}
+{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    <link rel="stylesheet" href="{% static 'core/admin/unfold-overrides.css' %}">
+{% endblock %}
+
+{% block content %}
+    <div class="stero-admin-dashboard">
+        <section class="stero-hero">
+            <div class="stero-hero__copy">
+                <div class="stero-eyebrow">Stero Tech Company OS</div>
+                <h1 class="stero-hero__title">Admin workspace for the operational core.</h1>
+                <p class="stero-hero__text">
+                    This admin is tuned for internal control: client records, access management,
+                    audit visibility, and backend inspection in one place.
+                </p>
+            </div>
+
+            <div class="stero-hero__meta">
+                <div class="stero-meta-card">
+                    <div class="stero-meta-card__label">Organisations</div>
+                    <div class="stero-meta-card__value">{{ dashboard_meta.organisation_count }}</div>
+                </div>
+                <div class="stero-meta-card stero-meta-card--{% if dashboard_meta.debug %}warn{% else %}ok{% endif %}">
+                    <div class="stero-meta-card__label">Environment</div>
+                    <div class="stero-meta-card__value">
+                        {% if dashboard_meta.debug %}Debug{% else %}Production{% endif %}
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="stero-grid stero-grid--kpis">
+            {% for item in dashboard_kpis %}
+                <article class="stero-kpi stero-kpi--{{ item.tone }}">
+                    <div class="stero-kpi__head">
+                        <span class="material-symbols-outlined stero-kpi__icon">{{ item.icon }}</span>
+                        <span class="stero-kpi__title">{{ item.title }}</span>
+                    </div>
+                    <div class="stero-kpi__value">{{ item.value }}</div>
+                    <p class="stero-kpi__hint">{{ item.hint }}</p>
+                </article>
+            {% endfor %}
+        </section>
+
+        <section class="stero-grid stero-grid--main">
+            <div class="stero-panel stero-panel--links">
+                <div class="stero-panel__header">
+                    <h2 class="stero-panel__title">Quick actions</h2>
+                    <p class="stero-panel__subtitle">Jump straight into the parts of admin you use most.</p>
+                </div>
+
+                <div class="stero-link-grid">
+                    {% for item in dashboard_quick_links %}
+                        <a href="{{ item.link }}" class="stero-link-card stero-link-card--{{ item.tone }}">
+                            <span class="material-symbols-outlined stero-link-card__icon">{{ item.icon }}</span>
+                            <div>
+                                <div class="stero-link-card__title">{{ item.title }}</div>
+                                <div class="stero-link-card__text">{{ item.description }}</div>
+                            </div>
+                        </a>
+                    {% endfor %}
+                </div>
+            </div>
+
+            <div class="stero-panel stero-panel--logs">
+                <div class="stero-panel__header">
+                    <h2 class="stero-panel__title">Recent audit activity</h2>
+                    <p class="stero-panel__subtitle">The latest application-level changes recorded by the system.</p>
+                </div>
+
+                <div class="stero-log-table">
+                    <div class="stero-log-table__head">
+                        <span>Action</span>
+                        <span>Entity</span>
+                        <span>User</span>
+                        <span>Time</span>
+                    </div>
+
+                    {% for entry in dashboard_recent_audit_logs %}
+                        <div class="stero-log-table__row">
+                            <span class="stero-log-badge stero-log-badge--{{ entry.action }}">{{ entry.get_action_display }}</span>
+                            <span>{{ entry.entity_type }}</span>
+                            <span>{% if entry.user %}{{ entry.user.full_name|default:entry.user.email }}{% else %}System{% endif %}</span>
+                            <span>{{ entry.timestamp|date:"M j, Y H:i" }}</span>
+                        </div>
+                    {% empty %}
+                        <div class="stero-empty-state">
+                            No audit events yet. Once create and update hooks fire, they will appear here.
+                        </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </section>
+
+        <section class="stero-grid stero-grid--history">
+            {% include "unfold/helpers/history.html" %}
+        </section>
+    </div>
+{% endblock %}

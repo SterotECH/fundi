@@ -1,8 +1,12 @@
 # config/settings/base.py
 
 from pathlib import Path
-from decouple import config, Csv
 from datetime import timedelta
+
+from decouple import Csv, config
+from django.templatetags.static import static
+from django.urls import reverse_lazy
+from django.utils.translation import gettext_lazy as _
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
 # ^^ Three .parent calls now — base.py is one level deeper than settings.py was.
@@ -137,6 +141,7 @@ REST_FRAMEWORK = {
     'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
     'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
     'PAGE_SIZE': 25,
+    'EXCEPTION_HANDLER': 'utils.exceptions.custom_exception_handler',
 }
 
 # --- SimpleJWT ---
@@ -159,4 +164,170 @@ SPECTACULAR_SETTINGS = {
     'DESCRIPTION': 'Company OS for African freelancers and small teams.',
     'VERSION': '1.0.0',
     'SERVE_INCLUDE_SCHEMA': False,
+}
+
+# --- Unfold admin branding ---
+
+UNFOLD = {
+    'SITE_TITLE': 'Stero Tech Admin',
+    'SITE_HEADER': 'Stero Tech Inc.',
+    'SITE_SUBHEADER': 'Company OS',
+    'SITE_URL': '/admin/',
+    'SITE_SYMBOL': 'space_dashboard',
+    'SITE_ICON': {
+        'light': lambda request: static('core/admin/brand/stero-icon-light.svg'),
+        'dark': lambda request: static('core/admin/brand/stero-icon-dark.svg'),
+    },
+    'SITE_LOGO': {
+        'light': lambda request: static('core/admin/brand/stero-logo-light.svg'),
+        'dark': lambda request: static('core/admin/brand/stero-logo-dark.svg'),
+    },
+    'SITE_FAVICONS': [
+        {
+            'rel': 'icon',
+            'type': 'image/svg+xml',
+            'href': lambda request: static('core/admin/brand/stero-favicon.svg'),
+        },
+    ],
+    'SHOW_HISTORY': True,
+    'SHOW_VIEW_ON_SITE': False,
+    'SHOW_BACK_BUTTON': False,
+    'BORDER_RADIUS': '12px',
+    'STYLES': [
+        lambda request: static('core/admin/unfold-overrides.css'),
+    ],
+    'DASHBOARD_CALLBACK': 'apps.core.unfold.dashboard_callback',
+    'COLORS': {
+        'base': {
+            '50': '#F1EFE8',
+            '100': '#D3D1C7',
+            '200': '#C0BDB1',
+            '300': '#A8A59A',
+            '400': '#888780',
+            '500': '#6F6E68',
+            '600': '#5F5E5A',
+            '700': '#4F4E4A',
+            '800': '#444441',
+            '900': '#2F2F2C',
+            '950': '#1F1F1D',
+        },
+        'primary': {
+            '50': '#EEEDFE',
+            '100': '#CECBF6',
+            '200': '#AFA9EC',
+            '300': '#978FE4',
+            '400': '#7F77DD',
+            '500': '#6A62CD',
+            '600': '#534AB7',
+            '700': '#463E9C',
+            '800': '#3C3489',
+            '900': '#26215C',
+            '950': '#1B163F',
+        },
+        'font': {
+            'subtle-light': 'var(--color-base-500)',
+            'subtle-dark': 'var(--color-base-400)',
+            'default-light': 'var(--color-base-600)',
+            'default-dark': 'var(--color-base-300)',
+            'important-light': 'var(--color-base-900)',
+            'important-dark': 'var(--color-base-100)',
+        },
+    },
+    'SITE_DROPDOWN': [
+        {
+            'icon': 'home',
+            'title': _('Admin dashboard'),
+            'link': reverse_lazy('admin:index'),
+        },
+        {
+            'icon': 'code',
+            'title': _('API schema'),
+            'link': reverse_lazy('schema'),
+        },
+        {
+            'icon': 'preview',
+            'title': _('Swagger UI'),
+            'link': reverse_lazy('swagger-ui'),
+        },
+    ],
+    'SIDEBAR': {
+        'show_search': True,
+        'command_search': False,
+        'show_all_applications': False,
+        'navigation': [
+            {
+                'title': _('Workspace'),
+                'separator': True,
+                'collapsible': False,
+                'items': [
+                    {
+                        'title': _('Dashboard'),
+                        'icon': 'space_dashboard',
+                        'link': reverse_lazy('admin:index'),
+                    },
+                    {
+                        'title': _('Clients'),
+                        'icon': 'school',
+                        'link': reverse_lazy('admin:clients_client_changelist'),
+                    },
+                ],
+            },
+            {
+                'title': _('Access'),
+                'separator': True,
+                'collapsible': True,
+                'items': [
+                    {
+                        'title': _('Users'),
+                        'icon': 'people',
+                        'link': reverse_lazy('admin:accounts_user_changelist'),
+                    },
+                    {
+                        'title': _('Organisations'),
+                        'icon': 'apartment',
+                        'link': reverse_lazy('admin:accounts_organisation_changelist'),
+                    },
+                    {
+                        'title': _('Groups'),
+                        'icon': 'shield',
+                        'link': reverse_lazy('admin:auth_group_changelist'),
+                    },
+                ],
+            },
+            {
+                'title': _('Audit'),
+                'separator': True,
+                'collapsible': True,
+                'items': [
+                    {
+                        'title': _('Audit logs'),
+                        'icon': 'history',
+                        'link': reverse_lazy('admin:core_auditlog_changelist'),
+                    },
+                    {
+                        'title': _('Admin activity'),
+                        'icon': 'receipt_long',
+                        'link': reverse_lazy('admin:admin_logentry_changelist'),
+                    },
+                ],
+            },
+            {
+                'title': _('Developer'),
+                'separator': True,
+                'collapsible': True,
+                'items': [
+                    {
+                        'title': _('API schema'),
+                        'icon': 'data_object',
+                        'link': reverse_lazy('schema'),
+                    },
+                    {
+                        'title': _('Swagger UI'),
+                        'icon': 'preview',
+                        'link': reverse_lazy('swagger-ui'),
+                    },
+                ],
+            },
+        ],
+    },
 }

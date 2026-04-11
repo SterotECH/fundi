@@ -1,0 +1,398 @@
+.stero-admin-dashboard {
+    color: #1a1a1a;
+    padding: 1rem 0 2.5rem;
+}
+
+.stero-admin-dashboard > section + section {
+    margin-top: 1.5rem;
+}
+
+.stero-hero {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: minmax(0, 1.6fr) minmax(280px, 0.8fr);
+    padding: 2rem;
+    border: 1px solid rgba(211, 209, 199, 0.9);
+    border-radius: 24px;
+    background:
+        radial-gradient(circle at top right, rgba(238, 237, 254, 0.95), transparent 34%),
+        linear-gradient(135deg, rgba(248, 247, 243, 0.98), rgba(255, 255, 255, 1));
+    box-shadow: 0 24px 60px rgba(38, 33, 92, 0.08);
+}
+
+.stero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    padding: 0.35rem 0.85rem;
+    border-radius: 999px;
+    background: rgba(238, 237, 254, 1);
+    color: #3c3489;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.stero-hero__title {
+    margin: 0.9rem 0 0.6rem;
+    font-size: clamp(1.9rem, 3.2vw, 2.8rem);
+    line-height: 1.04;
+    font-weight: 800;
+    color: #26215c;
+}
+
+.stero-hero__text {
+    max-width: 52rem;
+    margin: 0;
+    color: #5f5e5a;
+    font-size: 1rem;
+    line-height: 1.75;
+}
+
+.stero-hero__meta {
+    display: grid;
+    gap: 1rem;
+}
+
+.stero-meta-card {
+    padding: 1.1rem 1.25rem;
+    border-radius: 18px;
+    border: 1px solid rgba(211, 209, 199, 0.9);
+    background: rgba(255, 255, 255, 0.92);
+}
+
+.stero-meta-card--ok {
+    background: rgba(225, 245, 238, 0.95);
+    border-color: rgba(29, 158, 117, 0.22);
+}
+
+.stero-meta-card--warn {
+    background: rgba(250, 238, 218, 0.95);
+    border-color: rgba(186, 117, 23, 0.22);
+}
+
+.stero-meta-card__label {
+    color: #888780;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.stero-meta-card__value {
+    margin-top: 0.5rem;
+    color: #26215c;
+    font-size: 1.65rem;
+    font-weight: 800;
+}
+
+.stero-grid {
+    display: grid;
+    gap: 1.25rem;
+}
+
+.stero-grid--kpis {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.stero-grid--main {
+    grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.8fr);
+}
+
+.stero-grid--history {
+    grid-template-columns: 1fr;
+    align-items: start;
+}
+
+.stero-kpi,
+.stero-panel {
+    border-radius: 22px;
+    border: 1px solid rgba(211, 209, 199, 0.92);
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 18px 40px rgba(31, 31, 29, 0.05);
+}
+
+.stero-kpi {
+    padding: 1.25rem 1.3rem;
+}
+
+.stero-kpi__head {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+}
+
+.stero-kpi__icon {
+    font-size: 1.2rem;
+}
+
+.stero-kpi__title {
+    color: #5f5e5a;
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.stero-kpi__value {
+    margin-top: 1rem;
+    color: #1a1a1a;
+    font-size: 2.05rem;
+    line-height: 1;
+    font-weight: 800;
+}
+
+.stero-kpi__hint {
+    margin: 0.7rem 0 0;
+    color: #888780;
+    font-size: 0.88rem;
+    line-height: 1.55;
+}
+
+.stero-kpi--primary {
+    background: linear-gradient(180deg, rgba(238, 237, 254, 0.96), rgba(255, 255, 255, 0.98));
+}
+
+.stero-kpi--primary .stero-kpi__icon,
+.stero-kpi--primary .stero-kpi__value {
+    color: #3c3489;
+}
+
+.stero-kpi--teal {
+    background: linear-gradient(180deg, rgba(225, 245, 238, 0.98), rgba(255, 255, 255, 0.98));
+}
+
+.stero-kpi--teal .stero-kpi__icon,
+.stero-kpi--teal .stero-kpi__value {
+    color: #0f6e56;
+}
+
+.stero-kpi--amber {
+    background: linear-gradient(180deg, rgba(250, 238, 218, 0.98), rgba(255, 255, 255, 0.98));
+}
+
+.stero-kpi--amber .stero-kpi__icon,
+.stero-kpi--amber .stero-kpi__value {
+    color: #854f0b;
+}
+
+.stero-kpi--gray {
+    background: linear-gradient(180deg, rgba(241, 239, 232, 0.98), rgba(255, 255, 255, 0.98));
+}
+
+.stero-kpi--gray .stero-kpi__icon,
+.stero-kpi--gray .stero-kpi__value {
+    color: #444441;
+}
+
+.stero-panel {
+    padding: 1.35rem;
+}
+
+.stero-panel__header {
+    margin-bottom: 1rem;
+}
+
+.stero-panel__title {
+    margin: 0;
+    color: #26215c;
+    font-size: 1.08rem;
+    font-weight: 800;
+}
+
+.stero-panel__subtitle {
+    margin: 0.35rem 0 0;
+    color: #888780;
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.stero-link-grid {
+    display: grid;
+    gap: 0.9rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.stero-link-card {
+    display: flex;
+    gap: 0.9rem;
+    align-items: flex-start;
+    padding: 1rem;
+    border-radius: 18px;
+    border: 1px solid rgba(211, 209, 199, 0.92);
+    text-decoration: none;
+    transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.stero-link-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 16px 28px rgba(31, 31, 29, 0.08);
+}
+
+.stero-link-card__icon {
+    font-size: 1.35rem;
+}
+
+.stero-link-card__title {
+    font-weight: 800;
+    color: #1a1a1a;
+}
+
+.stero-link-card__text {
+    margin-top: 0.25rem;
+    color: #5f5e5a;
+    font-size: 0.88rem;
+    line-height: 1.55;
+}
+
+.stero-link-card--primary {
+    background: rgba(238, 237, 254, 0.65);
+    color: #3c3489;
+}
+
+.stero-link-card--teal {
+    background: rgba(225, 245, 238, 0.7);
+    color: #0f6e56;
+}
+
+.stero-link-card--amber {
+    background: rgba(250, 238, 218, 0.78);
+    color: #854f0b;
+}
+
+.stero-link-card--blue {
+    background: rgba(230, 241, 251, 0.78);
+    color: #0c447c;
+}
+
+.stero-log-table {
+    display: grid;
+    border-radius: 18px;
+    overflow: hidden;
+    border: 1px solid rgba(211, 209, 199, 0.92);
+}
+
+.stero-log-table__head,
+.stero-log-table__row {
+    display: grid;
+    gap: 0.75rem;
+    grid-template-columns: minmax(110px, 0.85fr) minmax(120px, 0.95fr) minmax(140px, 1fr) minmax(120px, 0.95fr);
+    align-items: center;
+    padding: 0.82rem 1rem;
+}
+
+.stero-log-table__head {
+    background: rgba(241, 239, 232, 0.9);
+    color: #5f5e5a;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.stero-log-table__row {
+    background: #fff;
+    border-top: 1px solid rgba(232, 230, 223, 1);
+    color: #444441;
+    font-size: 0.92rem;
+}
+
+.stero-log-badge {
+    display: inline-flex;
+    width: fit-content;
+    padding: 0.25rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.74rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.stero-log-badge--created {
+    background: rgba(225, 245, 238, 1);
+    color: #085041;
+}
+
+.stero-log-badge--updated,
+.stero-log-badge--status_changed {
+    background: rgba(250, 238, 218, 1);
+    color: #854f0b;
+}
+
+.stero-log-badge--deleted {
+    background: rgba(252, 235, 235, 1);
+    color: #791f1f;
+}
+
+.stero-empty-state {
+    padding: 1rem;
+    background: #fff;
+    color: #888780;
+    font-size: 0.92rem;
+}
+
+.stero-admin-dashboard .app-list,
+.stero-admin-dashboard [data-accordion] {
+    border-radius: 18px;
+}
+
+.stero-grid--history #content-related {
+    width: 100%;
+    max-width: none;
+}
+
+.stero-grid--history #recent-actions-module {
+    padding: 1.35rem;
+    border-radius: 22px;
+    border: 1px solid rgba(211, 209, 199, 0.92);
+    background: rgba(255, 255, 255, 0.98);
+    box-shadow: 0 18px 40px rgba(31, 31, 29, 0.05);
+}
+
+.stero-grid--history #recent-actions-module h2 {
+    margin-bottom: 1rem;
+    color: #26215c;
+    font-size: 1.08rem;
+    font-weight: 800;
+}
+
+.stero-grid--history .actionlist {
+    display: grid;
+    gap: 0.75rem;
+}
+
+.stero-grid--history .actionlist li {
+    margin-bottom: 0;
+    border-radius: 18px;
+    border: 1px solid rgba(211, 209, 199, 0.78);
+    box-shadow: none;
+}
+
+aside nav [data-nested-navigation-item] {
+    border-radius: 14px;
+}
+
+aside nav [data-nested-navigation-item][aria-current="page"] {
+    background: linear-gradient(90deg, rgba(238, 237, 254, 1), rgba(238, 237, 254, 0.4));
+}
+
+aside nav h3 {
+    color: #3c3489;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+}
+
+@media (max-width: 1200px) {
+    .stero-grid--kpis,
+    .stero-grid--main,
+    .stero-grid--secondary,
+    .stero-link-grid,
+    .stero-hero {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    .stero-log-table__head,
+    .stero-log-table__row {
+        grid-template-columns: 1fr;
+    }
+}
