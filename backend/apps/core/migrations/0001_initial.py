@@ -7,30 +7,75 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('accounts', '0001_initial'),
+        ("accounts", "0001_initial"),
         migrations.swappable_dependency(settings.AUTH_USER_MODEL),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='AuditLog',
+            name="AuditLog",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('action', models.CharField(choices=[('created', 'Created'), ('updated', 'Updated'), ('deleted', 'Deleted'), ('status_changed', 'Status Changed')], max_length=20)),
-                ('entity_type', models.CharField(max_length=255)),
-                ('entity_id', models.UUIDField()),
-                ('diff', models.JSONField(blank=True, default=dict, null=True)),
-                ('timestamp', models.DateTimeField(auto_now_add=True)),
-                ('organisation', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='audit_logs', to='accounts.organisation')),
-                ('user', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='audit_logs', to=settings.AUTH_USER_MODEL)),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                (
+                    "action",
+                    models.CharField(
+                        choices=[
+                            ("created", "Created"),
+                            ("updated", "Updated"),
+                            ("deleted", "Deleted"),
+                            ("status_changed", "Status Changed"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("entity_type", models.CharField(max_length=255)),
+                ("entity_id", models.UUIDField()),
+                ("diff", models.JSONField(blank=True, default=dict, null=True)),
+                ("timestamp", models.DateTimeField(auto_now_add=True)),
+                (
+                    "organisation",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="audit_logs",
+                        to="accounts.organisation",
+                    ),
+                ),
+                (
+                    "user",
+                    models.ForeignKey(
+                        blank=True,
+                        null=True,
+                        on_delete=django.db.models.deletion.SET_NULL,
+                        related_name="audit_logs",
+                        to=settings.AUTH_USER_MODEL,
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-timestamp'],
-                'indexes': [models.Index(fields=['entity_type', 'entity_id'], name='core_auditl_entity__244637_idx'), models.Index(fields=['organisation', '-timestamp'], name='core_auditl_organis_26bf38_idx')],
+                "ordering": ["-timestamp"],
+                "indexes": [
+                    models.Index(
+                        fields=["entity_type", "entity_id"],
+                        name="core_auditl_entity__244637_idx",
+                    ),
+                    models.Index(
+                        fields=["organisation", "-timestamp"],
+                        name="core_auditl_organis_26bf38_idx",
+                    ),
+                ],
             },
         ),
     ]

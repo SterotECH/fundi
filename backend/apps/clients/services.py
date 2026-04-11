@@ -1,21 +1,12 @@
-"""
-Service-layer functions for the clients app.
+from collections.abc import Mapping
+from typing import Any
 
-Some functions in this module are implemented and used as reference examples
-for the agreed service-layer architecture. Others remain intentionally
-unimplemented until the related models and endpoints exist.
-
-Think of this file the same way you would think of a Laravel service class:
-views/controllers should stay thin, while queryset rules, organisation scoping,
-soft-archive rules, and cross-model orchestration live here.
-"""
-
-from typing import Any, Mapping
-
+from django.db import transaction
 from django.db.models import Q, QuerySet
 
 from apps.accounts.models import Organisation
-from apps.clients.models import Client
+from apps.clients.exceptions import LeadAlreadyConvertedError
+from apps.clients.models import Client, Lead
 
 
 def _coerce_bool_filter(value: Any) -> bool | None:
@@ -190,3 +181,155 @@ def list_client_projects(*, organisation: Organisation, client_id: str) -> Any:
     - return the queryset for serialization
     """
     raise NotImplementedError("Stub only. Implement client project listing here.")
+
+
+def list_leads(
+    *, organisation: Organisation, filters: Mapping[str, Any]
+) -> QuerySet[Lead]:
+    """
+    Return an organisation-scoped lead queryset for list endpoints.
+
+    What this implementation does:
+    - organisation scoping happens first so no later filter can leak data
+    - supports text search across name, email, phone, and contact person
+    - supports filtering by lead source and status
+    - ordering is explicit so API responses stay predictable
+    """
+    queryset = Lead.objects.filter(organisation=organisation).order_by(
+        "name",
+        "-created_at",
+    )
+
+    status_filter = filters.get("status")
+    if status_filter:
+        queryset = queryset.filter(status=status_filter)
+    else:
+        queryset = queryset.filter(
+            status__in=[
+                Lead.LeadStatus.NEW,
+                Lead.LeadStatus.CONTACTED,
+                Lead.LeadStatus.QUALIFIED,
+            ]
+        )
+
+    search_term = str(filters.get("search", "")).strip()
+    if search_term:
+        queryset = queryset.filter(
+            Q(name__icontains=search_term)
+            | Q(email__icontains=search_term)
+            | Q(phone__icontains=search_term)
+            | Q(contact_person__icontains=search_term)
+        )
+    source_filter = filters.get("source")
+    if source_filter:
+        queryset = queryset.filter(source=source_filter)
+
+    return queryset
+
+
+def create_lead(*, organisation: Organisation, data: Mapping[str, Any]) -> Lead:
+    """
+    Create one lead inside the authenticated user's organisation.
+
+    Why this method is now written this way:
+    - the view owns HTTP + serializer validation concerns
+    - the service owns domain creation concerns
+    - `organisation` is injected on the server side so the client cannot choose
+      a tenant in the request payload
+    - leads have different fields and rules than clients, so we keep them separate
+      for now; if you later decide to implement lead-specific endpoints, you can
+      add more lead-focused fields and validation logic here without affecting
+      client creation logic
+    """
+    return Lead.objects.create(organisation=organisation, **data)
+
+
+def get_lead_detail(*, organisation: Organisation, lead_id: str) -> Lead:
+    """
+    Return one lead detail record scoped to the caller's organisation.
+
+    What this implementation does:
+    - fetches a single lead by `id` and `organisation`
+    - relies on `.get(...)` so Django raises `Lead.DoesNotExist` naturally when
+      the record is missing
+
+    Why this is okay with the global exception handler:
+    - the service does not import DRF or raise HTTP-specific exceptions
+    - `backend/utils/exceptions.py` converts `ObjectDoesNotExist` into a 404
+    - the view stays thin and does not repeat try/except blocks per endpoint
+    """
+    return Lead.objects.get(id=lead_id, organisation=organisation)
+
+
+def update_lead(*, lead: Lead, data: Mapping[str, Any]) -> Lead:
+    """
+    Mutate and save an already-fetched lead instance.
+
+    The view is responsible for fetching the organisation-scoped lead and
+    turning missing records into HTTP 404 responses. This service should not hit
+    the database again for the same row; its job starts after the valid lead
+    instance already exists.
+    """
+    for field, value in data.items():
+        setattr(lead, field, value)
+    lead.save()
+    return lead
+
+
+def mark_lead_dead(*, lead: Lead) -> Lead:
+    """
+    Soft-archive a lead instance.
+
+    This is the delete path for leads. We keep the row for history and future
+    reporting, then hide it from normal list results through `list_leads()`.
+    """
+    lead.status = Lead.LeadStatus.DEAD
+    lead.save()
+    return lead
+
+
+def convert_lead_to_client(*, lead: Lead, data: Mapping[str, Any]) -> Client:
+    """
+    Convert one already-fetched lead into a client.
+
+    Why this method is explicit instead of passing `data` straight into
+    `create_client()`:
+    - conversion request data may contain action-only fields that are not
+      `Client` model fields
+    - lead values should be the fallback, while validated request data can
+      override contact fields when the user corrects them during conversion
+    - client creation and lead status update must happen atomically so we do
+      not create a client without linking the lead, or link a lead without a
+      client
+    """
+    if lead.converted_to_client:
+        raise LeadAlreadyConvertedError
+
+    client_data = {
+        "type": data["type"],
+        "name": lead.name,
+        "email": data.get("email", lead.email),
+        "contact_person": data.get("contact_person", lead.contact_person),
+        "phone": data.get("phone", lead.phone),
+        "address": data.get("address", ""),
+        "region": data.get("region", "Ghana"),
+        "notes": (
+            f"Converted from lead {lead.id} "
+            f"(source: {lead.source}, previous status: {lead.status})."
+        ),
+    }
+
+    extra_notes = str(data.get("notes", "")).strip()
+    if extra_notes:
+        client_data["notes"] = f"{client_data['notes']} {extra_notes}"
+
+    with transaction.atomic():
+        lead_client = create_client(
+            organisation=lead.organisation,
+            data=client_data,
+        )
+        lead.status = Lead.LeadStatus.CONVERTED
+        lead.converted_to_client = lead_client
+        lead.save(update_fields=["status", "converted_to_client", "updated_at"])
+
+    return lead_client

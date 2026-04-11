@@ -6,34 +6,62 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     initial = True
 
     dependencies = [
-        ('accounts', '0002_alter_user_managers'),
+        ("accounts", "0002_alter_user_managers"),
     ]
 
     operations = [
         migrations.CreateModel(
-            name='Client',
+            name="Client",
             fields=[
-                ('id', models.UUIDField(default=uuid.uuid4, editable=False, primary_key=True, serialize=False)),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('type', models.CharField(choices=[('shs', 'SHS'), ('jhs', 'JHS'), ('intl', 'International'), ('uni', 'University')], max_length=20)),
-                ('name', models.CharField(max_length=255)),
-                ('email', models.EmailField(blank=True, max_length=254)),
-                ('contact_person', models.CharField(blank=True, max_length=255)),
-                ('phone', models.CharField(blank=True, max_length=20)),
-                ('address', models.TextField(blank=True)),
-                ('region', models.CharField(blank=True, default='Ghana', max_length=100)),
-                ('is_archived', models.BooleanField(default=False)),
-                ('notes', models.TextField(blank=True)),
-                ('organisation', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='clients', to='accounts.organisation')),
+                (
+                    "id",
+                    models.UUIDField(
+                        default=uuid.uuid4,
+                        editable=False,
+                        primary_key=True,
+                        serialize=False,
+                    ),
+                ),
+                ("created_at", models.DateTimeField(auto_now_add=True)),
+                ("updated_at", models.DateTimeField(auto_now=True)),
+                (
+                    "type",
+                    models.CharField(
+                        choices=[
+                            ("shs", "SHS"),
+                            ("jhs", "JHS"),
+                            ("intl", "International"),
+                            ("uni", "University"),
+                        ],
+                        max_length=20,
+                    ),
+                ),
+                ("name", models.CharField(max_length=255)),
+                ("email", models.EmailField(blank=True, max_length=254)),
+                ("contact_person", models.CharField(blank=True, max_length=255)),
+                ("phone", models.CharField(blank=True, max_length=20)),
+                ("address", models.TextField(blank=True)),
+                (
+                    "region",
+                    models.CharField(blank=True, default="Ghana", max_length=100),
+                ),
+                ("is_archived", models.BooleanField(default=False)),
+                ("notes", models.TextField(blank=True)),
+                (
+                    "organisation",
+                    models.ForeignKey(
+                        on_delete=django.db.models.deletion.CASCADE,
+                        related_name="clients",
+                        to="accounts.organisation",
+                    ),
+                ),
             ],
             options={
-                'ordering': ['-created_at'],
-                'abstract': False,
+                "ordering": ["-created_at"],
+                "abstract": False,
             },
         ),
     ]

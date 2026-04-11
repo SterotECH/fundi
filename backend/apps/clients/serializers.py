@@ -9,7 +9,7 @@ the refactor yourself.
 
 from rest_framework import serializers
 
-from apps.clients.models import Client
+from apps.clients.models import Client, Lead
 
 
 class ClientWriteSerializer(serializers.ModelSerializer):
@@ -26,14 +26,14 @@ class ClientWriteSerializer(serializers.ModelSerializer):
     class Meta:
         model = Client
         fields = [
-            'type',
-            'name',
-            'email',
-            'contact_person',
-            'phone',
-            'address',
-            'region',
-            'notes',
+            "type",
+            "name",
+            "email",
+            "contact_person",
+            "phone",
+            "address",
+            "region",
+            "notes",
         ]
 
 
@@ -49,14 +49,14 @@ class ClientListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Client
         fields = [
-            'id',
-            'type',
-            'name',
-            'email',
-            'contact_person',
-            'phone',
-            'region',
-            'is_archived',
+            "id",
+            "type",
+            "name",
+            "email",
+            "contact_person",
+            "phone",
+            "region",
+            "is_archived",
         ]
 
 
@@ -85,16 +85,16 @@ class ClientDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Client
         fields = [
-            'id',
-            'type',
-            'name',
-            'email',
-            'contact_person',
-            'phone',
-            'address',
-            'region',
-            'is_archived',
-            'notes',
+            "id",
+            "type",
+            "name",
+            "email",
+            "contact_person",
+            "phone",
+            "address",
+            "region",
+            "is_archived",
+            "notes",
         ]
 
 
@@ -157,3 +157,89 @@ class ClientProjectListItemSerializer(serializers.Serializer):
 
     # TODO: Add project read-only fields after the Project model exists.
     pass
+
+
+class LeadWriteSerializer(serializers.ModelSerializer):
+    """
+    Write serializer for creating/updating leads.
+
+    This is a separate serializer from the LeadSerializer because some fields
+    (like `converted_to_client`) should not be writable from the request body.
+    """
+
+    source = serializers.ChoiceField(choices=Lead.LeadSource.choices)
+    status = serializers.ChoiceField(choices=Lead.LeadStatus.choices)
+
+    class Meta:
+        model = Lead
+        fields = [
+            "name",
+            "contact_person",
+            "email",
+            "phone",
+            "source",
+            "status",
+        ]
+
+
+class LeadListSerializer(serializers.ModelSerializer):
+    """
+    Read serializer for listing leads.
+
+    This is a separate serializer from the LeadSerializer because list endpoints
+    should be optimized for performance and may not need all the fields that the
+    detail serializer provides.
+    """
+
+    class Meta:
+        model = Lead
+        fields = [
+            "id",
+            "name",
+            "contact_person",
+            "email",
+            "phone",
+            "source",
+            "status",
+        ]
+
+
+class LeadDetailSerializer(serializers.ModelSerializer):
+    """
+    Read serializer for lead details.
+    """
+
+    class Meta:
+        model = Lead
+        fields = [
+            "id",
+            "name",
+            "contact_person",
+            "email",
+            "phone",
+            "source",
+            "status",
+            "converted_to_client",
+        ]
+        read_only_fields = ["converted_to_client", "id"]
+
+
+class ConvertLeadToClientSerializer(serializers.Serializer):
+    """
+    Serializer for converting a lead to a client.
+
+    This is not a ModelSerializer because it does not directly correspond to a
+    single model. Instead, it represents the data needed to perform the
+    conversion action, which may involve creating a new Client instance based on
+    the Lead data.
+    """
+
+    type = serializers.ChoiceField(choices=Client.ClientType.choices)
+    contact_person = serializers.CharField(
+        max_length=255, required=False, allow_blank=True
+    )
+    phone = serializers.CharField(max_length=20, required=False, allow_blank=True)
+    address = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    region = serializers.CharField(max_length=100, required=False, allow_blank=True)
+    notes = serializers.CharField(allow_blank=True, required=False)
+    email = serializers.EmailField(required=False, allow_blank=True)

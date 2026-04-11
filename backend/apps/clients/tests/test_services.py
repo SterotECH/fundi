@@ -2,8 +2,9 @@ import pytest
 
 from apps.accounts.factories import OrganisationFactory
 from apps.clients import services
-from apps.clients.factories import ClientFactory
-from apps.clients.models import Client
+from apps.clients.exceptions import LeadAlreadyConvertedError
+from apps.clients.factories import ClientFactory, LeadFactory
+from apps.clients.models import Client, Lead
 
 
 @pytest.mark.django_db
@@ -135,6 +136,76 @@ def test_archive_client_soft_archives_existing_instance(django_assert_num_querie
     client.refresh_from_db()
     assert result == client
     assert client.is_archived is True
+
+
+@pytest.mark.django_db
+def test_convert_lead_to_client_creates_client_and_marks_lead_converted(org):
+    lead = LeadFactory(
+        organisation=org,
+        name="Stero Lead",
+        email="lead@example.com",
+        contact_person="Original Contact",
+        phone="0240000000",
+        source=Lead.LeadSource.WEBSITE,
+        status=Lead.LeadStatus.QUALIFIED,
+    )
+
+    client = services.convert_lead_to_client(
+        lead=lead,
+        data={
+            "type": Client.ClientType.SHS,
+            "contact_person": "Updated Contact",
+            "phone": "0550000000",
+            "address": "Accra",
+            "region": "Greater Accra",
+            "notes": "Ready for onboarding.",
+        },
+    )
+
+    lead.refresh_from_db()
+    assert client.organisation == org
+    assert client.name == "Stero Lead"
+    assert client.email == "lead@example.com"
+    assert client.contact_person == "Updated Contact"
+    assert client.phone == "0550000000"
+    assert client.address == "Accra"
+    assert client.region == "Greater Accra"
+    assert "Ready for onboarding." in client.notes
+    assert lead.status == Lead.LeadStatus.CONVERTED
+    assert lead.converted_to_client == client
+
+
+@pytest.mark.django_db
+def test_convert_lead_to_client_rejects_already_converted_lead(org):
+    existing_client = ClientFactory(organisation=org)
+    lead = LeadFactory(
+        organisation=org,
+        status=Lead.LeadStatus.CONVERTED,
+        converted_to_client=existing_client,
+    )
+
+    with pytest.raises(LeadAlreadyConvertedError):
+        services.convert_lead_to_client(
+            lead=lead,
+            data={"type": Client.ClientType.UNI},
+        )
+
+    assert Client.objects.filter(organisation=org).count() == 1
+
+
+@pytest.mark.django_db
+def test_list_leads_excludes_converted_by_default_but_allows_status_filter(org):
+    active_lead = LeadFactory(organisation=org, status=Lead.LeadStatus.NEW)
+    converted_lead = LeadFactory(organisation=org, status=Lead.LeadStatus.CONVERTED)
+
+    default_queryset = services.list_leads(organisation=org, filters={})
+    converted_queryset = services.list_leads(
+        organisation=org,
+        filters={"status": Lead.LeadStatus.CONVERTED},
+    )
+
+    assert list(default_queryset) == [active_lead]
+    assert list(converted_queryset) == [converted_lead]
 
 
 @pytest.mark.django_db

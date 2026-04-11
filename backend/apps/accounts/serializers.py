@@ -1,4 +1,5 @@
 from rest_framework import serializers
+
 from apps.accounts.models import User
 
 
@@ -10,8 +11,8 @@ class LoginSerializer(serializers.Serializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ['id', 'email', 'full_name', 'role', 'created_at']
-        read_only_fields = ['id', 'created_at']
+        fields = ["id", "email", "full_name", "role", "created_at"]
+        read_only_fields = ["id", "created_at"]
 
 
 class UpdateMeSerializer(serializers.ModelSerializer):
@@ -19,10 +20,10 @@ class UpdateMeSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['full_name', 'password']
+        fields = ["full_name", "password"]
 
     def update(self, instance, validated_data):
-        password = validated_data.pop('password', None)
+        password = validated_data.pop("password", None)
         instance = super().update(instance, validated_data)
         if password:
             instance.set_password(password)

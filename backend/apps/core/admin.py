@@ -81,9 +81,7 @@ class AuditLogAdmin(ModelAdmin):
         ),
         (
             "Diff",
-            {
-                "fields": ("diff",)
-            },
+            {"fields": ("diff",)},
         ),
     )
 

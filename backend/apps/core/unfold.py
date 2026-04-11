@@ -80,7 +80,9 @@ def dashboard_callback(request, context):
                 },
                 {
                     "title": "Audit log",
-                    "description": "Inspect create, update, archive, and system events.",
+                    "description": (
+                        "Inspect create, update, archive, and system events."
+                    ),
                     "icon": "receipt_long",
                     "link": reverse_lazy("admin:core_auditlog_changelist"),
                     "tone": "amber",

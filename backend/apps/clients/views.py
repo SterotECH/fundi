@@ -1,4 +1,5 @@
-from typing import Any, Mapping, cast
+from collections.abc import Mapping
+from typing import Any, cast
 
 from rest_framework import status, viewsets
 from rest_framework.decorators import action
@@ -6,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
 from apps.clients import services
-from apps.clients.models import Client
+from apps.clients.models import Client, Lead
 from apps.clients.serializers import (
     ClientDetailSerializer,
     ClientInvoiceListItemSerializer,
@@ -14,6 +15,10 @@ from apps.clients.serializers import (
     ClientProjectListItemSerializer,
     ClientProposalListItemSerializer,
     ClientWriteSerializer,
+    ConvertLeadToClientSerializer,
+    LeadDetailSerializer,
+    LeadListSerializer,
+    LeadWriteSerializer,
 )
 
 
@@ -201,3 +206,145 @@ class ClientViewSet(viewsets.ModelViewSet):
             },
             status=status.HTTP_501_NOT_IMPLEMENTED,
         )
+
+
+class LeadViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    http_method_names = ["get", "post", "patch", "head", "options"]
+    lookup_value_converter = "uuid"
+
+    list_service = staticmethod(services.list_leads)
+    create_service = staticmethod(services.create_lead)
+    detail_service = staticmethod(services.get_lead_detail)
+    update_service = staticmethod(services.update_lead)
+    mark_dead_service = staticmethod(services.mark_lead_dead)
+
+    def get_queryset(self):
+        """
+        Return the organisation-scoped queryset used by list views and schema tools.
+        """
+        organisation = getattr(self.request.user, "organisation", None)
+        if organisation is None:
+            return Lead.objects.none()
+
+        return self.list_service(
+            organisation=organisation,
+            filters=self.request.query_params,
+        )
+
+    def get_serializer_class(self):
+        """
+        Use serializers by endpoint shape, not by model only.
+        """
+        if self.action == "list":
+            return LeadListSerializer
+
+        if self.action in {"create", "partial_update"}:
+            return LeadWriteSerializer
+
+        if self.action == "convert_to_client":
+            return ConvertLeadToClientSerializer
+
+        return LeadDetailSerializer
+
+    def _get_lead(self, pk) -> Lead:
+        """
+        Fetch one lead through the service layer.
+
+        If the lead does not exist inside the authenticated user's
+        organisation, the service raises `Lead.DoesNotExist`. The global DRF
+        exception handler converts that into a 404, so the view does not need a
+        local try/except block.
+        """
+        return self.detail_service(
+            organisation=self.request.user.organisation,
+            lead_id=str(pk),
+        )
+
+    def list(self, request, *args, **kwargs):
+        """
+        Return a paginated list of leads for the authenticated organisation.
+        """
+        queryset = self.filter_queryset(self.get_queryset())
+        page = self.paginate_queryset(queryset)
+
+        if page is not None:
+            serializer = LeadListSerializer(page, many=True)
+            return self.get_paginated_response(serializer.data)
+
+        serializer = LeadListSerializer(queryset, many=True)
+        return Response(serializer.data)
+
+    def create(self, request, *args, **kwargs):
+        """
+        Create one lead for the authenticated user's organisation.
+        """
+        serializer = LeadWriteSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = cast(Mapping[str, Any], serializer.validated_data)
+
+        lead = self.create_service(
+            organisation=request.user.organisation,
+            data=validated_data,
+        )
+
+        response_serializer = LeadDetailSerializer(lead)
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+    def partial_update(self, request, *args, **kwargs):
+        """
+        Partially update one organisation-scoped lead and return the new state.
+        """
+        serializer = LeadWriteSerializer(data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        validated_data = cast(Mapping[str, Any], serializer.validated_data)
+
+        lead = self.update_service(
+            lead=self._get_lead(self.kwargs[self.lookup_field]),
+            data=validated_data,
+        )
+
+        response_serializer = LeadDetailSerializer(lead)
+        return Response(response_serializer.data)
+
+    @action(detail=True, methods=["post"], url_path="mark-dead")
+    def mark_dead(self, request, *args, **kwargs):
+        """
+        Mark one organisation-scoped lead as dead.
+        """
+        lead = self._get_lead(self.kwargs[self.lookup_field])
+        updated_lead = self.mark_dead_service(lead=lead)
+
+        response_serializer = LeadDetailSerializer(updated_lead)
+
+        return Response(data=response_serializer.data, status=status.HTTP_200_OK)
+
+    def retrieve(self, request, *args, **kwargs):
+        """
+        Return one organisation-scoped lead detail record.
+        """
+        lead = self._get_lead(self.kwargs[self.lookup_field])
+        serializer = LeadDetailSerializer(lead)
+        return Response(serializer.data)
+
+    @action(detail=True, methods=["post"])
+    def convert_to_client(self, request, *args, **kwargs) -> Response:
+        """
+        Convert a lead to a client.
+
+        This is a placeholder for the lead-to-client conversion endpoint. The
+        actual implementation will depend on the business rules around lead
+        conversion, which may involve creating a new client record, copying
+        data from the lead to the client, and possibly deleting or archiving the
+        original lead.
+        """
+        lead = self._get_lead(self.kwargs[self.lookup_field])
+        serializer = ConvertLeadToClientSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        validated_data = cast(Mapping[str, Any], serializer.validated_data)
+        client = services.convert_lead_to_client(
+            lead=lead,
+            data=validated_data,
+        )
+        response_serializer = ClientDetailSerializer(client)
+        return Response(response_serializer.data, status=status.HTTP_200_OK)
