@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sprint 2 — The Money Layer · Stero Tech Company OS</title>
+<style>
+  :root {
+    --purple-50:#EEEDFE;--purple-100:#CECBF6;--purple-200:#AFA9EC;
+    --purple-400:#7F77DD;--purple-600:#534AB7;--purple-800:#3C3489;--purple-900:#26215C;
+    --teal-50:#E1F5EE;--teal-100:#9FE1CB;--teal-400:#1D9E75;--teal-600:#0F6E56;--teal-800:#085041;
+    --amber-50:#FAEEDA;--amber-400:#BA7517;--amber-600:#854F0B;
+    --red-50:#FCEBEB;--red-400:#E24B4A;--red-800:#791F1F;
+    --blue-50:#E6F1FB;--blue-400:#378ADD;--blue-800:#0C447C;
+    --gray-50:#F1EFE8;--gray-100:#D3D1C7;--gray-400:#888780;--gray-600:#5F5E5A;--gray-800:#444441;
+    --glass-bg:rgba(255,255,255,0.78);
+    --glass-border:rgba(255,255,255,0.6);
+    --page-bg:#F4F3FC;
+    --ink:#1a1720;--ink2:#5a5580;--ink3:#9390b0;
+    --border:rgba(180,176,220,0.3);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+
+  body {
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+    background:var(--page-bg);
+    color:var(--ink);
+    line-height:1.65;
+    font-size:15px;
+  }
+
+  /* subtle liquid bg pattern */
+  body::before {
+    content:'';
+    position:fixed;
+    inset:0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 10%, rgba(83,74,183,.07) 0%, transparent 70%),
+      radial-gradient(ellipse 50% 50% at 80% 80%, rgba(29,158,117,.05) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 60% at 70% 20%, rgba(186,117,23,.04) 0%, transparent 70%);
+    pointer-events:none;
+    z-index:0;
+  }
+
+  .page { position:relative; z-index:1; max-width:960px; margin:0 auto; padding:0 24px 80px; }
+
+  /* COVER */
+  .cover {
+    padding:60px 0 44px;
+    border-bottom:1px solid var(--border);
+    margin-bottom:48px;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:24px;
+    flex-wrap:wrap;
+  }
+  .cover-left { flex:1; min-width:280px; }
+  .cover-breadcrumb {
+    display:flex;
+    align-items:center;
+    gap:8px;
+    font-size:12px;
+    color:var(--ink3);
+    margin-bottom:20px;
+  }
+  .cover-breadcrumb .logo {
+    width:28px;height:28px;background:var(--purple-600);border-radius:7px;
+    display:inline-flex;align-items:center;justify-content:center;
+    color:#fff;font-size:11px;font-weight:700;
+  }
+  .cover-breadcrumb span { color:var(--ink3); }
+  .sprint-badge {
+    display:inline-flex;align-items:center;gap:7px;
+    background:var(--teal-50);color:var(--teal-800);
+    font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+    padding:4px 12px;border-radius:20px;border:1px solid var(--teal-100);
+    margin-bottom:16px;
+  }
+  .cover h1 {
+    font-size:40px;font-weight:800;letter-spacing:-.03em;
+    color:var(--ink);line-height:1.1;margin-bottom:12px;
+  }
+  .cover h1 em { color:var(--purple-600);font-style:normal; }
+  .cover-sub { font-size:16px;color:var(--ink2);max-width:520px;line-height:1.6; }
+  .cover-meta {
+    display:flex;flex-direction:column;gap:10px;
+    background:var(--glass-bg);border:1px solid var(--glass-border);
+    border-radius:16px;padding:20px 24px;
+    backdrop-filter:blur(12px);
+    min-width:220px;
+    flex-shrink:0;
+  }
+  .meta-row { display:flex;justify-content:space-between;align-items:baseline;gap:16px; }
+  .meta-key { font-size:11px;color:var(--ink3);font-weight:600;letter-spacing:.04em;text-transform:uppercase; }
+  .meta-val { font-size:13px;font-weight:700;color:var(--ink); }
+  .meta-divider { height:1px;background:var(--border); }
+
+  /* TOC */
+  .toc {
+    background:var(--glass-bg);border:1px solid var(--glass-border);
+    border-radius:16px;padding:28px 32px;margin-bottom:56px;
+    backdrop-filter:blur(12px);
+  }
+  .toc-label {
+    font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;
+    color:var(--ink3);margin-bottom:16px;
+  }
+  .toc-grid { display:grid;grid-template-columns:1fr 1fr;gap:0; }
+  .toc-item {
+    display:flex;align-items:baseline;gap:10px;
+    padding:6px 0;border-bottom:1px solid rgba(180,176,220,.12);
+  }
+  .toc-item:nth-last-child(-n+2) { border-bottom:none; }
+  .toc-num { font-size:11px;font-weight:700;color:var(--purple-400);width:24px;flex-shrink:0;font-variant-numeric:tabular-nums; }
+  .toc-link { font-size:14px;color:var(--ink);text-decoration:none;transition:color .15s; }
+  .toc-link:hover { color:var(--purple-600); }
+
+  /* SECTION */
+  .section { margin-bottom:64px; }
+  .section-header { display:flex;align-items:center;gap:14px;margin-bottom:28px;padding-top:8px; }
+  .section-icon {
+    width:36px;height:36px;border-radius:10px;
+    display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  }
+  .section-icon svg { width:18px;height:18px; }
+  h2 { font-size:26px;font-weight:700;letter-spacing:-.02em; }
+  h3 { font-size:17px;font-weight:700;color:var(--ink);margin:32px 0 14px; }
+  h4 { font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin:24px 0 10px; }
+
+  p { margin-bottom:14px;color:var(--ink);line-height:1.75; }
+  p:last-child { margin-bottom:0; }
+  code {
+    font-family:'SF Mono','Fira Code','Cascadia Code',monospace;
+    font-size:12px;background:var(--purple-50);color:var(--purple-800);
+    padding:1px 6px;border-radius:5px;
+  }
+
+  /* GLASS CARD */
+  .card {
+    background:var(--glass-bg);border:1px solid var(--glass-border);
+    border-radius:16px;padding:24px;backdrop-filter:blur(12px);
+    margin-bottom:16px;
+  }
+  .card-sm {
+    background:var(--glass-bg);border:1px solid var(--glass-border);
+    border-radius:12px;padding:16px;backdrop-filter:blur(8px);
+    margin-bottom:12px;
+  }
+
+  /* CHIPS */
+  .chip {
+    display:inline-flex;align-items:center;gap:4px;
+    font-size:10px;font-weight:700;padding:2px 8px;
+    border-radius:20px;letter-spacing:.04em;white-space:nowrap;
+  }
+  .chip-p { background:var(--purple-50);color:var(--purple-800); }
+  .chip-t { background:var(--teal-50);color:var(--teal-800); }
+  .chip-a { background:var(--amber-50);color:var(--amber-600); }
+  .chip-r { background:var(--red-50);color:var(--red-800); }
+  .chip-b { background:var(--blue-50);color:var(--blue-800); }
+  .chip-g { background:var(--gray-50);color:var(--gray-600); }
+
+  /* STAT GRID */
+  .stat-grid { display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0; }
+  .stat-card {
+    background:var(--glass-bg);border:1px solid var(--glass-border);
+    border-radius:12px;padding:14px 16px;backdrop-filter:blur(8px);
+  }
+  .stat-label { font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:5px; }
+  .stat-val { font-size:24px;font-weight:800;color:var(--ink);line-height:1; }
+  .stat-sub { font-size:11px;color:var(--ink3);margin-top:4px; }
+
+  /* TABLES */
+  .table-wrap { overflow-x:auto;margin:16px 0; }
+  table { width:100%;border-collapse:collapse;font-size:13.5px; }
+  th {
+    background:rgba(83,74,183,.05);
+    font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--ink2);padding:10px 14px;text-align:left;
+    border-bottom:1px solid var(--border);white-space:nowrap;
+  }
+  td { padding:10px 14px;border-bottom:1px solid rgba(180,176,220,.15);vertical-align:top;line-height:1.55; }
+  tr:last-child td { border-bottom:none; }
+  td code { font-size:11.5px; }
+  tr:hover td { background:rgba(83,74,183,.02); }
+
+  /* CALLOUTS */
+  .callout {
+    border-radius:12px;padding:16px 20px;margin:20px 0;
+    border-left:3px solid;
+  }
+  .callout-purple { background:var(--purple-50);border-color:var(--purple-600); }
+  .callout-teal { background:var(--teal-50);border-color:var(--teal-400); }
+  .callout-amber { background:var(--amber-50);border-color:var(--amber-400); }
+  .callout-red { background:var(--red-50);border-color:var(--red-400); }
+  .callout-title { font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px; }
+  .callout-purple .callout-title { color:var(--purple-800); }
+  .callout-teal .callout-title { color:var(--teal-800); }
+  .callout-amber .callout-title { color:var(--amber-600); }
+  .callout-red .callout-title { color:var(--red-800); }
+  .callout p, .callout li { font-size:14px;margin-bottom:0; }
+  .callout ul { padding-left:18px; }
+  .callout li { margin-bottom:4px; }
+
+  /* WEEK GRID */
+  .week-grid { display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:16px 0; }
+  .week-card {
+    background:var(--glass-bg);border:1px solid var(--glass-border);
+    border-radius:14px;padding:18px;backdrop-filter:blur(8px);
+  }
+  .week-num { font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px; }
+  .week-title { font-size:15px;font-weight:700;color:var(--ink);margin-bottom:12px; }
+  .week-item { font-size:13px;color:var(--ink2);padding:3px 0;display:flex;gap:7px;line-height:1.5; }
+  .week-item::before { content:'·';color:var(--ink3);flex-shrink:0; }
+  .week-bar { height:4px;border-radius:2px;margin-top:14px;overflow:hidden;background:rgba(180,176,220,.2); }
+  .week-bar-fill { height:100%;border-radius:2px;background:var(--teal-400); }
+
+  /* MODEL CARDS */
+  .model-grid { display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px;margin:16px 0; }
+  .model-card {
+    background:var(--glass-bg);border:1px solid var(--glass-border);
+    border-radius:12px;overflow:hidden;backdrop-filter:blur(8px);
+  }
+  .model-header {
+    padding:10px 14px;
+    background:linear-gradient(135deg, rgba(83,74,183,.08) 0%, rgba(83,74,183,.03) 100%);
+    border-bottom:1px solid var(--border);
+    display:flex;align-items:center;justify-content:space-between;
+  }
+  .model-name { font-size:13px;font-weight:700;color:var(--purple-800);font-family:'SF Mono','Fira Code',monospace; }
+  .model-sprint { font-size:10px;font-weight:700;background:var(--teal-50);color:var(--teal-800);padding:2px 7px;border-radius:10px; }
+  .model-sprint-old { font-size:10px;font-weight:700;background:var(--gray-50);color:var(--gray-600);padding:2px 7px;border-radius:10px; }
+  .field-list { padding:8px 0; }
+  .field { display:flex;align-items:baseline;gap:8px;padding:4px 14px;font-size:12px; }
+  .field-name { font-family:'SF Mono','Fira Code',monospace;font-weight:600;color:var(--ink);flex-shrink:0; }
+  .field-type { font-size:11px;color:var(--ink3);flex:1; }
+  .badge-pk { font-size:9px;font-weight:700;background:var(--amber-50);color:var(--amber-600);padding:1px 5px;border-radius:4px; }
+  .badge-fk { font-size:9px;font-weight:700;background:var(--teal-50);color:var(--teal-800);padding:1px 5px;border-radius:4px; }
+  .badge-sig { font-size:9px;font-weight:700;background:var(--purple-50);color:var(--purple-800);padding:1px 5px;border-radius:4px; }
+
+  /* ENDPOINT LIST */
+  .endpoint-group { margin-bottom:24px; }
+  .endpoint-group-label {
+    font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;
+    color:var(--ink3);margin-bottom:8px;padding-bottom:6px;
+    border-bottom:1px solid var(--border);
+  }
+  .endpoint {
+    display:grid;grid-template-columns:68px 260px 1fr;gap:10px;
+    align-items:start;padding:9px 12px;border-radius:10px;
+    background:var(--glass-bg);border:1px solid var(--glass-border);
+    margin-bottom:5px;font-size:13px;backdrop-filter:blur(6px);
+  }
+  .method {
+    font-family:'SF Mono','Fira Code',monospace;
+    font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;
+    text-align:center;align-self:start;margin-top:1px;letter-spacing:.03em;
+  }
+  .GET { background:var(--blue-50);color:var(--blue-800); }
+  .POST { background:var(--teal-50);color:var(--teal-800); }
+  .PATCH { background:var(--amber-50);color:var(--amber-600); }
+  .DELETE { background:var(--red-50);color:var(--red-800); }
+  .endpoint-url { font-family:'SF Mono','Fira Code',monospace;font-size:11.5px;color:var(--purple-800);word-break:break-all; }
+  .endpoint-desc { color:var(--ink2);line-height:1.5; }
+
+  /* INVOICE PREVIEW */
+  .invoice-shell {
+    background:#fff;border:1px solid rgba(180,176,220,.3);
+    border-radius:14px;padding:28px;
+    box-shadow:0 8px 32px rgba(83,74,183,.08),0 2px 8px rgba(0,0,0,.04);
+    margin:16px 0;
+  }
+  .inv-top { display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:20px;padding-bottom:18px;border-bottom:2px solid var(--purple-600); }
+  .inv-brand { display:flex;align-items:center;gap:12px; }
+  .inv-logo { width:40px;height:40px;background:var(--purple-600);border-radius:10px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;font-weight:800; }
+  .inv-company { font-size:15px;font-weight:800;color:var(--ink); }
+  .inv-tagline { font-size:11px;color:var(--ink3);margin-top:2px; }
+  .inv-meta { text-align:right; }
+  .inv-number { font-size:20px;font-weight:800;color:var(--ink);font-family:'SF Mono','Fira Code',monospace; }
+  .inv-dates { font-size:11px;color:var(--ink3);margin-top:3px; }
+  .inv-grid { display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:18px; }
+  .inv-block { background:var(--gray-50);border-radius:10px;padding:12px 14px; }
+  .inv-block-label { font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px; }
+  .inv-block-name { font-size:13px;font-weight:700;color:var(--ink);margin-bottom:2px; }
+  .inv-block-sub { font-size:12px;color:var(--ink2); }
+  .line-table { width:100%;border-collapse:collapse;font-size:12.5px;margin-bottom:14px; }
+  .line-table th { font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);padding:7px 10px;text-align:left;border-bottom:1px solid rgba(180,176,220,.25);background:var(--gray-50); }
+  .line-table th:last-child,.line-table td:last-child { text-align:right; }
+  .line-table td { padding:9px 10px;border-bottom:1px solid rgba(180,176,220,.15);color:var(--ink); }
+  .total-box { background:var(--purple-50);border-radius:10px;padding:12px 16px; }
+  .total-row { display:flex;justify-content:space-between;font-size:12.5px;padding:2px 0;color:var(--ink2); }
+  .total-row.grand { font-size:15px;font-weight:800;color:var(--purple-800);border-top:1px solid var(--purple-100);margin-top:6px;padding-top:8px; }
+
+  /* PAYMENT TIMELINE */
+  .payment-timeline { margin:16px 0; }
+  .pay-bar-wrap { display:flex;align-items:center;gap:10px;margin-bottom:14px; }
+  .pay-bar-track { flex:1;height:8px;background:rgba(180,176,220,.2);border-radius:4px;overflow:hidden; }
+  .pay-bar-fill { height:100%;border-radius:4px;background:var(--teal-400); }
+  .pay-bar-label { font-size:12px;font-weight:700;color:var(--teal-600);flex-shrink:0; }
+  .pay-entry {
+    display:flex;align-items:center;gap:12px;
+    background:var(--glass-bg);border:1px solid var(--glass-border);
+    border-radius:12px;padding:12px 16px;margin-bottom:8px;
+    backdrop-filter:blur(8px);
+  }
+  .pay-icon { width:34px;height:34px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0; }
+  .pay-info { flex:1; }
+  .pay-name { font-size:13px;font-weight:700;color:var(--ink); }
+  .pay-ref { font-size:11px;color:var(--ink3);font-family:'SF Mono','Fira Code',monospace;margin-top:1px; }
+  .pay-right { text-align:right; }
+  .pay-amount { font-size:15px;font-weight:800;color:var(--teal-600); }
+  .pay-date { font-size:11px;color:var(--ink3);margin-top:2px; }
+  .pay-remaining { font-size:11px;color:var(--ink3); }
+
+  /* TIME LOG */
+  .timelog-stats { display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:14px; }
+  .tl-row {
+    display:flex;align-items:center;gap:10px;
+    background:var(--glass-bg);border:1px solid var(--glass-border);
+    border-radius:10px;padding:10px 14px;margin-bottom:6px;
+    backdrop-filter:blur(6px);
+  }
+  .tl-indicator { width:8px;height:8px;border-radius:50%;flex-shrink:0; }
+  .tl-date { font-size:11px;color:var(--ink3);width:66px;flex-shrink:0; }
+  .tl-desc { font-size:13px;color:var(--ink);flex:1;line-height:1.4; }
+  .tl-hours { font-size:14px;font-weight:800;color:var(--purple-600); }
+
+  /* CELERY FLOW */
+  .celery-flow { margin:16px 0; }
+  .cf-step {
+    background:var(--glass-bg);border:1px solid var(--glass-border);
+    border-radius:12px;padding:14px 18px;backdrop-filter:blur(8px);
+    display:flex;align-items:center;justify-content:space-between;
+    margin-bottom:4px;
+  }
+  .cf-step-left { }
+  .cf-step-title { font-size:13px;font-weight:700;color:var(--ink); }
+  .cf-step-sub { font-size:11px;color:var(--ink3);margin-top:2px; }
+  .cf-connector { text-align:center;color:var(--ink3);font-size:12px;padding:4px 0;padding-left:20px; }
+
+  /* ISSUE LIST */
+  .issue-list { }
+  .issue {
+    display:flex;align-items:flex-start;gap:12px;
+    padding:10px 0;border-bottom:1px solid rgba(180,176,220,.15);
+  }
+  .issue:last-child { border-bottom:none; }
+  .issue-num { font-size:11px;font-weight:700;color:var(--purple-600);width:30px;flex-shrink:0;font-family:'SF Mono','Fira Code',monospace;margin-top:2px; }
+  .issue-body { flex:1; }
+  .issue-title { font-size:13.5px;color:var(--ink);font-weight:500;line-height:1.45;margin-bottom:5px; }
+  .issue-tags { display:flex;gap:5px;flex-wrap:wrap; }
+  .it-be { background:var(--amber-50);color:var(--amber-600); }
+  .it-fe { background:var(--blue-50);color:var(--blue-800); }
+  .it-m { background:var(--gray-50);color:var(--gray-600); }
+  .it-ch { background:var(--purple-50);color:var(--purple-800); }
+
+  /* SCOPE GRID */
+  .scope-grid { display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0; }
+  .scope-col { background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:14px;overflow:hidden;backdrop-filter:blur(8px); }
+  .scope-header { padding:12px 18px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--border); }
+  .scope-header.in { background:rgba(29,158,117,.07);color:var(--teal-800); }
+  .scope-header.out { background:rgba(226,75,74,.06);color:var(--red-800); }
+  .scope-items { padding:8px 0; }
+  .scope-item { display:flex;align-items:flex-start;gap:10px;padding:6px 18px;font-size:13.5px;color:var(--ink);line-height:1.5; }
+  .scope-icon { flex-shrink:0;margin-top:3px;font-size:12px; }
+
+  /* CHECKLIST */
+  .checklist-item {
+    display:flex;align-items:flex-start;gap:12px;
+    padding:9px 0;border-bottom:1px solid rgba(180,176,220,.12);
+    font-size:14px;color:var(--ink);
+  }
+  .checklist-item:last-child { border-bottom:none; }
+  .check-box {
+    width:16px;height:16px;border-radius:5px;
+    border:2px solid rgba(180,176,220,.5);
+    flex-shrink:0;margin-top:2px;
+  }
+
+  /* DECISION CARDS */
+  .decision {
+    background:var(--glass-bg);border:1px solid var(--glass-border);
+    border-radius:14px;padding:20px 22px;backdrop-filter:blur(8px);
+    margin-bottom:12px;
+  }
+  .decision-num { font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--purple-400);margin-bottom:5px; }
+  .decision-title { font-size:15px;font-weight:700;color:var(--ink);margin-bottom:10px; }
+  .decision p { font-size:13.5px;color:var(--ink2);line-height:1.7;margin-bottom:0; }
+
+  /* STATUS LOGIC */
+  .status-logic { background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:12px;backdrop-filter:blur(8px);overflow:hidden;margin:14px 0; }
+  .sl-header { display:grid;grid-template-columns:90px 1fr 110px;gap:10px;padding:9px 16px;background:rgba(83,74,183,.05);border-bottom:1px solid var(--border); }
+  .sl-header span { font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3); }
+  .sl-row { display:grid;grid-template-columns:90px 1fr 110px;gap:10px;padding:9px 16px;border-bottom:1px solid rgba(180,176,220,.1);font-size:13px;align-items:center; }
+  .sl-row:last-child { border-bottom:none; }
+  .sl-trigger-col { font-size:11px;color:var(--ink3);font-family:'SF Mono','Fira Code',monospace; }
+  .sl-condition { color:var(--ink2); }
+  .sl-result { font-weight:700;text-align:right; }
+
+  /* FOOTER */
+  .doc-footer {
+    margin-top:64px;padding-top:24px;
+    border-top:1px solid var(--border);
+    display:flex;justify-content:space-between;align-items:center;
+    font-size:13px;color:var(--ink3);
+  }
+
+  /* LIST STYLES */
+  ul, ol { padding-left:20px;margin-bottom:14px; }
+  li { margin-bottom:5px;line-height:1.65; }
+  strong { font-weight:700; }
+
+  /* PRINT */
+  @media print {
+    body::before { display:none; }
+    body { background:#fff;font-size:13px; }
+    .card,.week-card,.model-card,.decision,.scope-col { break-inside:avoid; }
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-left">
+    <div class="cover-breadcrumb">
+      <span class="logo">ST</span>
+      <span>Stero Tech Inc.</span>
+      <span>·</span>
+      <span>Company OS</span>
+    </div>
+    <div class="sprint-badge">Sprint 2 · Weeks 4–6</div>
+    <h1>The <em>Money</em> Layer</h1>
+    <p class="cover-sub">Invoices, payments, time logging, and Celery reminders — the complete implementation plan that flows naturally from Sprint 1's foundation.</p>
+  </div>
+  <div class="cover-meta">
+    <div class="meta-row"><span class="meta-key">Sprint</span><span class="meta-val">2 of 3</span></div>
+    <div class="meta-divider"></div>
+    <div class="meta-row"><span class="meta-key">Weeks</span><span class="meta-val">4 – 6</span></div>
+    <div class="meta-divider"></div>
+    <div class="meta-row"><span class="meta-key">New models</span><span class="meta-val">4</span></div>
+    <div class="meta-row"><span class="meta-key">New endpoints</span><span class="meta-val">18</span></div>
+    <div class="meta-row"><span class="meta-key">New screens</span><span class="meta-val">5</span></div>
+    <div class="meta-divider"></div>
+    <div class="meta-row"><span class="meta-key">Currency</span><span class="meta-val">GHS (Ghana)</span></div>
+    <div class="meta-row"><span class="meta-key">Design</span><span class="meta-val">Glass / liquid</span></div>
+  </div>
+</div>
+
+<!-- TOC -->
+<div class="toc">
+  <div class="toc-label">Contents</div>
+  <div class="toc-grid">
+    <div class="toc-item"><span class="toc-num">01</span><a class="toc-link" href="#s1">Sprint 1 exit gate</a></div>
+    <div class="toc-item"><span class="toc-num">06</span><a class="toc-link" href="#s6">Invoice screen spec</a></div>
+    <div class="toc-item"><span class="toc-num">02</span><a class="toc-link" href="#s2">Week-by-week plan</a></div>
+    <div class="toc-item"><span class="toc-num">07</span><a class="toc-link" href="#s7">Payment flow spec</a></div>
+    <div class="toc-item"><span class="toc-num">03</span><a class="toc-link" href="#s3">New data models</a></div>
+    <div class="toc-item"><span class="toc-num">08</span><a class="toc-link" href="#s8">Time logging spec</a></div>
+    <div class="toc-item"><span class="toc-num">04</span><a class="toc-link" href="#s4">API contract</a></div>
+    <div class="toc-item"><span class="toc-num">09</span><a class="toc-link" href="#s9">Celery architecture</a></div>
+    <div class="toc-item"><span class="toc-num">05</span><a class="toc-link" href="#s5">Invoice status logic</a></div>
+    <div class="toc-item"><span class="toc-num">10</span><a class="toc-link" href="#s10">GitHub issues + scope</a></div>
+  </div>
+</div>
+
+
+<!-- S1: EXIT GATE -->
+<div class="section" id="s1">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--teal-50)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--teal-600)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h2>Sprint 1 exit gate</h2>
+  </div>
+
+  <p>These six conditions must all be true before you write a single Sprint 2 model. If any is false, fix it first. A shaky Sprint 1 will cause compounding failures in Sprint 2 because every new model has a foreign key dependency on something Sprint 1 built.</p>
+
+  <div class="card">
+    <div class="checklist-item">
+      <div class="check-box"></div>
+      <div>Organisation + User + Client + Lead + Proposal + Project models all migrated, admin-registered, and seeded with at least one real record each</div>
+    </div>
+    <div class="checklist-item">
+      <div class="check-box"></div>
+      <div>JWT auth flow working end-to-end — login returns tokens, refresh works, protected routes reject unauthenticated requests with <code>401</code></div>
+    </div>
+    <div class="checklist-item">
+      <div class="check-box"></div>
+      <div>Proposal → <em>won</em> → convert to Project working — a Project record exists in the database, linked back to the originating Proposal</div>
+    </div>
+    <div class="checklist-item">
+      <div class="check-box"></div>
+      <div>Dashboard API endpoint returning live aggregated data — not hardcoded fixtures, not mock responses</div>
+    </div>
+    <div class="checklist-item">
+      <div class="check-box"></div>
+      <div>Redis container healthy in Docker Compose and reachable from the Django container — Sprint 2 Celery depends on this being stable</div>
+    </div>
+    <div class="checklist-item">
+      <div class="check-box"></div>
+      <div>AuditLog Django signal wired and writing records to the database on every model create/update/delete — even though no UI reads it yet</div>
+    </div>
+  </div>
+
+  <div class="callout callout-amber">
+    <div class="callout-title">The Redis check matters more than it looks</div>
+    <p>Run <code>docker compose exec django python -c "import redis; r = redis.from_url('redis://redis:6379'); r.ping()"</code> and confirm it returns <code>True</code>. Celery Beat silently fails if the broker is unreachable, and you won't discover it until you're wondering why no notifications are firing in Week 5.</p>
+  </div>
+</div>
+
+
+<!-- S2: WEEK PLAN -->
+<div class="section" id="s2">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--purple-50)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--purple-600)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    </div>
+    <h2>Week-by-week delivery plan</h2>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-label">New models</div><div class="stat-val">4</div><div class="stat-sub">Invoice · LineItem · Payment · TimeLog</div></div>
+    <div class="stat-card"><div class="stat-label">Celery tasks</div><div class="stat-val">2</div><div class="stat-sub">Overdue invoices · Proposal deadlines</div></div>
+    <div class="stat-card"><div class="stat-label">New screens</div><div class="stat-val">5</div><div class="stat-sub">Invoice list · detail · time · notifications · project</div></div>
+    <div class="stat-card"><div class="stat-label">Sprint goal</div><div class="stat-val">GHS</div><div class="stat-sub">Full financial tracking live</div></div>
+  </div>
+
+  <div class="week-grid">
+    <div class="week-card">
+      <div class="week-num">Week 4 · Days 1–5</div>
+      <div class="week-title">Data foundation</div>
+      <div class="week-item">Celery + Beat Docker services wired first</div>
+      <div class="week-item">Invoice + InvoiceLineItem models + migration</div>
+      <div class="week-item">Payment model + post_save signal</div>
+      <div class="week-item">TimeLog model + migration</div>
+      <div class="week-item">Invoice number Postgres sequence</div>
+      <div class="week-item">All backend CRUD endpoints (no UI)</div>
+      <div class="week-item">pytest-django tests for all new endpoints</div>
+      <div class="week-bar"><div class="week-bar-fill" style="width:100%"></div></div>
+    </div>
+    <div class="week-card">
+      <div class="week-num">Week 5 · Days 6–10</div>
+      <div class="week-title">Frontend + Celery tasks</div>
+      <div class="week-item">Invoice list screen (glass card layout)</div>
+      <div class="week-item">Invoice detail + print stylesheet</div>
+      <div class="week-item">Record payment right-side drawer</div>
+      <div class="week-item">Time log form + project hours panel</div>
+      <div class="week-item">check_overdue_invoices Celery task</div>
+      <div class="week-item">check_proposal_deadlines Celery task</div>
+      <div class="week-bar"><div class="week-bar-fill" style="width:100%"></div></div>
+    </div>
+    <div class="week-card">
+      <div class="week-num">Week 6 · Days 11–15</div>
+      <div class="week-title">Polish + dashboard upgrade</div>
+      <div class="week-item">Notification bell component (unread dot, dropdown)</div>
+      <div class="week-item">Dashboard: outstanding GHS tile live</div>
+      <div class="week-item">Dashboard: overdue invoices tile live</div>
+      <div class="week-item">Client detail: Payments + Time tabs</div>
+      <div class="week-item">Project detail: hours summary panel</div>
+      <div class="week-item">Mobile responsiveness pass all screens</div>
+      <div class="week-item">Sprint 2 demo → Sprint 3 kickoff</div>
+      <div class="week-bar"><div class="week-bar-fill" style="width:100%"></div></div>
+    </div>
+  </div>
+
+  <div class="callout callout-purple">
+    <div class="callout-title">Build order rule</div>
+    <p>Always go backend-first within each week. A working endpoint with no UI is a testable, demonstrable thing. A UI that calls a non-existent endpoint is dead weight. Every screen in Week 5 should be wiring a React Query hook to an endpoint that already passes its pytest tests.</p>
+  </div>
+</div>
+
+
+<!-- S3: MODELS -->
+<div class="section" id="s3">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--blue-50)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue-400)" stroke-width="2"><ellipse cx="12" cy="5" rx="9" ry="3"/><path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3"/><path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5"/></svg>
+    </div>
+    <h2>New data models</h2>
+  </div>
+
+  <p>Four new models. None of them introduce a new root entity — every FK points at something Sprint 1 already built. The <code>organisation</code> FK is on all of them from day one, following the Company OS architecture decision.</p>
+
+  <div class="model-grid">
+
+    <div class="model-card">
+      <div class="model-header">
+        <span class="model-name">Invoice</span>
+        <span class="model-sprint">Sprint 2</span>
+      </div>
+      <div class="field-list">
+        <div class="field"><span class="field-name">id</span><span class="field-type">UUID</span><span class="badge-pk">PK</span></div>
+        <div class="field"><span class="field-name">organisation</span><span class="field-type">FK → Organisation</span><span class="badge-fk">FK</span></div>
+        <div class="field"><span class="field-name">client</span><span class="field-type">FK → Client</span><span class="badge-fk">FK</span></div>
+        <div class="field"><span class="field-name">project</span><span class="field-type">nullable FK → Project</span><span class="badge-fk">FK</span></div>
+        <div class="field"><span class="field-name">invoice_number</span><span class="field-type">string, unique (Postgres seq)</span></div>
+        <div class="field"><span class="field-name">subtotal_ghs</span><span class="field-type">Decimal(12,2)</span></div>
+        <div class="field"><span class="field-name">tax_ghs</span><span class="field-type">Decimal(12,2), default 0</span></div>
+        <div class="field"><span class="field-name">total_ghs</span><span class="field-type">Decimal(12,2)</span></div>
+        <div class="field"><span class="field-name">status</span><span class="field-type">enum: draft/sent/partial/paid/overdue</span></div>
+        <div class="field"><span class="field-name">issue_date</span><span class="field-type">date, auto today</span></div>
+        <div class="field"><span class="field-name">due_date</span><span class="field-type">date, default +30 days</span></div>
+        <div class="field"><span class="field-name">notes</span><span class="field-type">text, blank</span></div>
+        <div class="field"><span class="field-name">created_at</span><span class="field-type">datetime, auto</span></div>
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-header">
+        <span class="model-name">InvoiceLineItem</span>
+        <span class="model-sprint">Sprint 2</span>
+      </div>
+      <div class="field-list">
+        <div class="field"><span class="field-name">id</span><span class="field-type">UUID</span><span class="badge-pk">PK</span></div>
+        <div class="field"><span class="field-name">invoice</span><span class="field-type">FK → Invoice</span><span class="badge-fk">FK</span></div>
+        <div class="field"><span class="field-name">description</span><span class="field-type">string</span></div>
+        <div class="field"><span class="field-name">quantity</span><span class="field-type">Decimal(8,2)</span></div>
+        <div class="field"><span class="field-name">unit_price_ghs</span><span class="field-type">Decimal(12,2)</span></div>
+        <div class="field"><span class="field-name">line_total_ghs</span><span class="field-type">Decimal(12,2), computed</span></div>
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-header">
+        <span class="model-name">Payment</span>
+        <span class="model-sprint">Sprint 2</span>
+      </div>
+      <div class="field-list">
+        <div class="field"><span class="field-name">id</span><span class="field-type">UUID</span><span class="badge-pk">PK</span></div>
+        <div class="field"><span class="field-name">invoice</span><span class="field-type">FK → Invoice</span><span class="badge-fk">FK</span></div>
+        <div class="field"><span class="field-name">amount_ghs</span><span class="field-type">Decimal(12,2)</span></div>
+        <div class="field"><span class="field-name">method</span><span class="field-type">enum: mtn_momo/vodafone/airteltigo/bank/cash</span></div>
+        <div class="field"><span class="field-name">provider_reference</span><span class="field-type">string (MoMo/bank ref)</span></div>
+        <div class="field"><span class="field-name">payment_date</span><span class="field-type">date</span></div>
+        <div class="field"><span class="field-name">notes</span><span class="field-type">text, blank</span></div>
+        <div class="field"><span class="field-name">recorded_at</span><span class="field-type">datetime, auto</span><span class="badge-sig">→ signal</span></div>
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-header">
+        <span class="model-name">TimeLog</span>
+        <span class="model-sprint">Sprint 2</span>
+      </div>
+      <div class="field-list">
+        <div class="field"><span class="field-name">id</span><span class="field-type">UUID</span><span class="badge-pk">PK</span></div>
+        <div class="field"><span class="field-name">organisation</span><span class="field-type">FK → Organisation</span><span class="badge-fk">FK</span></div>
+        <div class="field"><span class="field-name">project</span><span class="field-type">FK → Project</span><span class="badge-fk">FK</span></div>
+        <div class="field"><span class="field-name">user</span><span class="field-type">FK → User</span><span class="badge-fk">FK</span></div>
+        <div class="field"><span class="field-name">log_date</span><span class="field-type">date</span></div>
+        <div class="field"><span class="field-name">hours</span><span class="field-type">Decimal(5,2)</span></div>
+        <div class="field"><span class="field-name">description</span><span class="field-type">string</span></div>
+        <div class="field"><span class="field-name">billable</span><span class="field-type">boolean, default True</span></div>
+        <div class="field"><span class="field-name">created_at</span><span class="field-type">datetime, auto</span></div>
+      </div>
+    </div>
+
+    <div class="model-card">
+      <div class="model-header">
+        <span class="model-name">Notification</span>
+        <span class="model-sprint">Sprint 2</span>
+      </div>
+      <div class="field-list">
+        <div class="field"><span class="field-name">id</span><span class="field-type">UUID</span><span class="badge-pk">PK</span></div>
+        <div class="field"><span class="field-name">user</span><span class="field-type">FK → User</span><span class="badge-fk">FK</span></div>
+        <div class="field"><span class="field-name">type</span><span class="field-type">enum: invoice_overdue/proposal_deadline/project_due</span></div>
+        <div class="field"><span class="field-name">message</span><span class="field-type">string (rendered text)</span></div>
+        <div class="field"><span class="field-name">entity_type</span><span class="field-type">string (e.g. "invoice")</span></div>
+        <div class="field"><span class="field-name">entity_id</span><span class="field-type">UUID</span></div>
+        <div class="field"><span class="field-name">read</span><span class="field-type">boolean, default False</span></div>
+        <div class="field"><span class="field-name">created_at</span><span class="field-type">datetime, auto</span></div>
+      </div>
+    </div>
+
+    <div class="model-card" style="opacity:.7">
+      <div class="model-header">
+        <span class="model-name">Project</span>
+        <span class="model-sprint-old">Sprint 1 ✓</span>
+      </div>
+      <div class="field-list">
+        <div class="field"><span class="field-name">id / client / proposal</span><span class="field-type">already exists</span></div>
+        <div class="field"><span class="field-name">title / status / due_date</span><span class="field-type">already exists</span></div>
+        <div class="field"><span class="field-name">budget_ghs</span><span class="field-type">already exists — now used for burn %</span></div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="callout callout-teal">
+    <div class="callout-title">Migration strategy</div>
+    <p>Create <strong>one migration</strong> for Invoice + InvoiceLineItem together — they're created and destroyed as a unit and there's no benefit to separating them. Payment gets its own migration since it needs the Invoice table to exist first. TimeLog and Notification get individual migrations. Total: 4 new migration files in Sprint 2.</p>
+  </div>
+</div>
+
+
+<!-- S4: API CONTRACT -->
+<div class="section" id="s4">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--amber-50)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber-600)" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+    </div>
+    <h2>API contract — Sprint 2 endpoints</h2>
+  </div>
+
+  <p>All endpoints prefixed <code>/api/v1/</code>. All require JWT auth. Standard responses: <code>200</code>, <code>201</code>, <code>204</code>, <code>400</code>, <code>401</code>, <code>404</code>. Decimal amounts always serialized as strings to preserve precision across JSON.</p>
+
+  <div class="endpoint-group">
+    <div class="endpoint-group-label">Invoices</div>
+    <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/invoices/</span><span class="endpoint-desc">List invoices. Filter by <code>status</code>, <code>client_id</code>, <code>project_id</code>. Paginated.</span></div>
+    <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/invoices/</span><span class="endpoint-desc">Create invoice with nested line items. Body: <code>{client_id, project_id?, due_date, notes?, line_items: [{description, quantity, unit_price_ghs}]}</code>. Auto-calculates totals.</span></div>
+    <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/invoices/{id}/</span><span class="endpoint-desc">Invoice detail with nested line items and payment history. Includes <code>amount_paid</code> and <code>amount_remaining</code> computed fields.</span></div>
+    <div class="endpoint"><span class="method PATCH">PATCH</span><span class="endpoint-url">/invoices/{id}/</span><span class="endpoint-desc">Update invoice. Only allowed when status is <code>draft</code>. Rejects updates to sent/paid invoices.</span></div>
+    <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/invoices/{id}/send/</span><span class="endpoint-desc">Transition draft → sent. Assigns invoice number from Postgres sequence. Returns updated invoice.</span></div>
+    <div class="endpoint"><span class="method DELETE">DELETE</span><span class="endpoint-url">/invoices/{id}/</span><span class="endpoint-desc">Hard delete. Draft status only. Returns <code>400</code> if status is anything else.</span></div>
+    <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/invoices/overdue/</span><span class="endpoint-desc">All overdue invoices across all clients, ordered by days overdue descending.</span></div>
+  </div>
+
+  <div class="endpoint-group">
+    <div class="endpoint-group-label">Payments</div>
+    <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/invoices/{invoice_id}/payments/</span><span class="endpoint-desc">List all payments for an invoice with running balance after each.</span></div>
+    <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/invoices/{invoice_id}/payments/</span><span class="endpoint-desc">Record payment. Body: <code>{amount_ghs, method, provider_reference, payment_date, notes?}</code>. Triggers <code>recalculate_invoice_status()</code> synchronously before <code>201</code> response.</span></div>
+    <div class="endpoint"><span class="method DELETE">DELETE</span><span class="endpoint-url">/invoices/{invoice_id}/payments/{id}/</span><span class="endpoint-desc">Delete payment. Triggers <code>recalculate_invoice_status()</code> synchronously. Returns <code>204</code>.</span></div>
+  </div>
+
+  <div class="endpoint-group">
+    <div class="endpoint-group-label">Time logs</div>
+    <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/timelogs/</span><span class="endpoint-desc">All time logs. Filter by <code>project_id</code>, <code>log_date__gte</code>, <code>log_date__lte</code>, <code>billable</code>.</span></div>
+    <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/timelogs/</span><span class="endpoint-desc">Create time log. Body: <code>{project_id, log_date, hours, description, billable}</code>.</span></div>
+    <div class="endpoint"><span class="method PATCH">PATCH</span><span class="endpoint-url">/timelogs/{id}/</span><span class="endpoint-desc">Update time log entry.</span></div>
+    <div class="endpoint"><span class="method DELETE">DELETE</span><span class="endpoint-url">/timelogs/{id}/</span><span class="endpoint-desc">Delete time log. Returns <code>204</code>.</span></div>
+    <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/projects/{id}/timelogs/</span><span class="endpoint-desc">Time logs for a specific project. Returns list + aggregate: <code>{total_hours, billable_hours, non_billable_hours, effective_rate_ghs}</code>.</span></div>
+  </div>
+
+  <div class="endpoint-group">
+    <div class="endpoint-group-label">Notifications</div>
+    <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/notifications/</span><span class="endpoint-desc">List notifications. Filter by <code>read=false</code> for unread count. Returns <code>{count, unread_count, results}</code>.</span></div>
+    <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/notifications/{id}/read/</span><span class="endpoint-desc">Mark single notification as read.</span></div>
+    <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/notifications/read-all/</span><span class="endpoint-desc">Mark all notifications as read. Returns <code>204</code>.</span></div>
+  </div>
+
+  <div class="endpoint-group">
+    <div class="endpoint-group-label">Dashboard (updated)</div>
+    <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/dashboard/</span><span class="endpoint-desc">Now returns additional Sprint 2 fields: <code>total_outstanding_ghs</code>, <code>overdue_invoices: []</code>, <code>unread_notifications_count</code>. Existing fields unchanged.</span></div>
+  </div>
+
+  <div class="callout callout-amber">
+    <div class="callout-title">Never recalculate status asynchronously</div>
+    <p>When a payment is created or deleted, <code>recalculate_invoice_status()</code> runs synchronously within the same request cycle — before the response is sent. Do not offload this to a Celery task. If there's a delay between the API response and the status update, the UI will show a stale status and the user will be confused. The function is fast (one aggregate query) and belongs inline.</p>
+  </div>
+</div>
+
+
+<!-- S5: STATUS LOGIC -->
+<div class="section" id="s5">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--red-50)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--red-400)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+    <h2>Invoice status logic</h2>
+  </div>
+
+  <p>The <code>recalculate_invoice_status(invoice)</code> service function is the most critical piece of business logic in Sprint 2. It must be the single source of truth for every invoice status transition triggered by payment events. Call it from the payment post_save signal AND from the payment delete endpoint — nowhere else.</p>
+
+  <div class="status-logic">
+    <div class="sl-header">
+      <span>Triggered by</span>
+      <span>Condition</span>
+      <span style="text-align:right">New status</span>
+    </div>
+    <div class="sl-row">
+      <div class="sl-trigger-col">post_save Payment</div>
+      <div class="sl-condition">sum(payments) = 0, due_date in future</div>
+      <div class="sl-result"><span class="chip chip-b">sent</span></div>
+    </div>
+    <div class="sl-row">
+      <div class="sl-trigger-col">post_save Payment</div>
+      <div class="sl-condition">0 &lt; sum(payments) &lt; total_ghs</div>
+      <div class="sl-result"><span class="chip chip-a">partial</span></div>
+    </div>
+    <div class="sl-row">
+      <div class="sl-trigger-col">post_save Payment</div>
+      <div class="sl-condition">sum(payments) &ge; total_ghs</div>
+      <div class="sl-result"><span class="chip chip-t">paid</span></div>
+    </div>
+    <div class="sl-row">
+      <div class="sl-trigger-col">post_delete Payment</div>
+      <div class="sl-condition">Any payment deleted → recalculate from scratch</div>
+      <div class="sl-result" style="color:var(--ink2);font-weight:400;font-size:12px">re-evaluated</div>
+    </div>
+    <div class="sl-row">
+      <div class="sl-trigger-col">Celery Beat daily</div>
+      <div class="sl-condition">due_date &lt; today AND status not in [paid]</div>
+      <div class="sl-result"><span class="chip chip-r">overdue</span></div>
+    </div>
+    <div class="sl-row">
+      <div class="sl-trigger-col">Celery Beat daily</div>
+      <div class="sl-condition">due_date &lt; today AND 0 &lt; sum(payments) &lt; total</div>
+      <div class="sl-result"><span class="chip chip-r">overdue</span></div>
+    </div>
+  </div>
+
+  <div class="callout callout-purple">
+    <div class="callout-title">Partial + overdue edge case</div>
+    <p>A partially-paid invoice that passes its due date should become <code>overdue</code> — not stay <code>partial</code>. The Celery task handles this: it sweeps all invoices where <code>due_date &lt; today</code> and <code>status != paid</code>, including those currently at <code>partial</code>. The <code>recalculate_invoice_status()</code> function also handles it: it always checks the due date before returning <code>partial</code>.</p>
+  </div>
+
+  <h3>Invoice number generation</h3>
+  <p>Run this in a data migration using <code>migrations.RunSQL</code>:</p>
+  <div class="card-sm" style="font-family:'SF Mono','Fira Code',monospace;font-size:13px;color:var(--purple-800);background:var(--purple-50);border-color:var(--purple-100)">
+    CREATE SEQUENCE IF NOT EXISTS stero_invoice_seq START 1;
+  </div>
+  <p style="margin-top:12px">In <code>Invoice.save()</code>, when <code>invoice_number</code> is empty and status transitions to <code>sent</code>:</p>
+  <div class="card-sm" style="font-family:'SF Mono','Fira Code',monospace;font-size:13px;color:var(--purple-800);background:var(--purple-50);border-color:var(--purple-100)">
+    SELECT nextval('stero_invoice_seq')
+    <br>→ format as STERO-{year}-{number:04d}
+    <br>→ e.g. STERO-2025-0007
+  </div>
+
+  <div class="callout callout-teal">
+    <div class="callout-title">Why Postgres sequence and not MAX + 1</div>
+    <p><code>MAX(invoice_number) + 1</code> is not atomic. Two simultaneous requests (you running Django dev server + Celery worker) can both read the same MAX value and generate duplicate invoice numbers. A Postgres sequence is atomic by design — <code>nextval()</code> always returns a unique value regardless of concurrency. This matters now and critically matters when you add Gunicorn workers later.</p>
+  </div>
+</div>
+
+
+<!-- S6: INVOICE SCREEN -->
+<div class="section" id="s6">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--purple-50)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--purple-600)" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+    </div>
+    <h2>Invoice screen specification</h2>
+  </div>
+
+  <p>The invoice detail screen has two visual modes: <strong>screen mode</strong> (glass card wrapping, action bar visible, sidebar visible) and <strong>print mode</strong> (bare white document only, triggered by <code>Ctrl+P</code> or the Print button). The print stylesheet is three CSS rules — it hides the sidebar nav, the action bar, and sets the invoice card background to pure white.</p>
+
+  <h3>Live invoice preview</h3>
+
+  <div class="invoice-shell">
+    <div class="inv-top">
+      <div class="inv-brand">
+        <div class="inv-logo">ST</div>
+        <div>
+          <div class="inv-company">Stero Tech Inc.</div>
+          <div class="inv-tagline">Software solutions for Ghanaian schools</div>
+        </div>
+      </div>
+      <div class="inv-meta">
+        <div class="inv-number">STERO-2025-0007</div>
+        <div class="inv-dates">Issued: 15 Apr 2025 · Due: 15 May 2025</div>
+        <div style="margin-top:6px"><span class="chip chip-a">Partial payment</span></div>
+      </div>
+    </div>
+
+    <div class="inv-grid">
+      <div class="inv-block">
+        <div class="inv-block-label">Bill to</div>
+        <div class="inv-block-name">Accra Academy Senior High School</div>
+        <div class="inv-block-sub">Mrs. Abena Mensah · Finance Office</div>
+        <div class="inv-block-sub">Accra, Greater Accra Region</div>
+      </div>
+      <div class="inv-block">
+        <div class="inv-block-label">Project</div>
+        <div class="inv-block-name">School Management System v2</div>
+        <div class="inv-block-sub">Active · 42h logged · Due Apr 30</div>
+        <div style="height:5px;background:rgba(180,176,220,.2);border-radius:3px;margin-top:8px;overflow:hidden"><div style="width:65%;height:100%;background:var(--teal-400);border-radius:3px"></div></div>
+      </div>
+    </div>
+
+    <table class="line-table">
+      <thead>
+        <tr>
+          <th>Description</th>
+          <th style="text-align:center;width:60px">Qty</th>
+          <th style="width:120px">Unit price</th>
+          <th style="width:120px">Total</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td>School management system — core module</td><td style="text-align:center">1</td><td>GHS 8,000.00</td><td>GHS 8,000.00</td></tr>
+        <tr><td>Student portal &amp; parent dashboard</td><td style="text-align:center">1</td><td>GHS 3,500.00</td><td>GHS 3,500.00</td></tr>
+        <tr><td>Staff payroll integration module</td><td style="text-align:center">1</td><td>GHS 2,000.00</td><td>GHS 2,000.00</td></tr>
+        <tr><td>On-site installation &amp; training (2 days)</td><td style="text-align:center">2</td><td>GHS 750.00</td><td>GHS 1,500.00</td></tr>
+      </tbody>
+    </table>
+
+    <div class="total-box">
+      <div class="total-row"><span>Subtotal</span><span>GHS 15,000.00</span></div>
+      <div class="total-row"><span>VAT (0%)</span><span>GHS 0.00</span></div>
+      <div class="total-row grand"><span>Total due</span><span>GHS 15,000.00</span></div>
+    </div>
+
+    <div style="margin-top:16px;padding-top:14px;border-top:1px dashed rgba(180,176,220,.4)">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px">Payment history</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <div style="flex:1;height:6px;background:rgba(180,176,220,.2);border-radius:3px;overflow:hidden"><div style="width:33%;height:100%;background:var(--teal-400);border-radius:3px"></div></div>
+        <span style="font-size:11px;font-weight:700;color:var(--teal-600)">GHS 5,000 of 15,000 collected</span>
+      </div>
+      <div style="font-size:12px;color:var(--ink2);padding:5px 0;border-bottom:1px solid rgba(180,176,220,.15);display:flex;gap:10px"><span style="width:80px;color:var(--ink3)">15 Apr</span><span style="flex:1">MTN Mobile Money</span><span style="font-family:monospace;color:var(--ink3);font-size:11px">GH-MOMO-2025041500423</span><span style="font-weight:700;color:var(--teal-600)">+GHS 3,000</span></div>
+      <div style="font-size:12px;color:var(--ink2);padding:5px 0;display:flex;gap:10px"><span style="width:80px;color:var(--ink3)">22 Apr</span><span style="flex:1">Bank transfer · GCB</span><span style="font-family:monospace;color:var(--ink3);font-size:11px">GCB-TXN-88234912</span><span style="font-weight:700;color:var(--teal-600)">+GHS 2,000</span></div>
+    </div>
+  </div>
+
+  <h3>Invoice list screen</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Status</th><th>Invoice</th><th>Client</th><th>Amount</th><th>Due / Overdue</th></tr></thead>
+    <tbody>
+      <tr><td><span class="chip chip-g">Draft</span></td><td style="font-family:monospace;font-size:12px">—</td><td>GIS International</td><td>GHS 4,200</td><td style="color:var(--ink3)">Not yet sent</td></tr>
+      <tr><td><span class="chip chip-b">Sent</span></td><td style="font-family:monospace;font-size:12px">STERO-2025-0006</td><td>Ridge International</td><td>GHS 6,800</td><td>Due in 12 days</td></tr>
+      <tr><td><span class="chip chip-a">Partial</span></td><td style="font-family:monospace;font-size:12px">STERO-2025-0007</td><td>Accra Academy SHS</td><td>GHS 15,000</td><td style="color:var(--amber-600)">GHS 5,000 paid</td></tr>
+      <tr><td><span class="chip chip-t">Paid</span></td><td style="font-family:monospace;font-size:12px">STERO-2025-0005</td><td>Tema SHS</td><td>GHS 3,200</td><td style="color:var(--teal-600)">Paid in full</td></tr>
+      <tr><td><span class="chip chip-r">Overdue</span></td><td style="font-family:monospace;font-size:12px">STERO-2025-0004</td><td>Achimota School</td><td>GHS 7,500</td><td style="color:var(--red-400)">14 days overdue</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout callout-purple">
+    <div class="callout-title">Print stylesheet — three rules only</div>
+    <ul>
+      <li>Hide the left sidebar nav: <code>@media print { .sidebar { display: none; } }</code></li>
+      <li>Hide the action bar: <code>@media print { .action-bar { display: none; } }</code></li>
+      <li>Remove glass background from invoice card: <code>@media print { .invoice-shell { background: #fff; box-shadow: none; border: none; } }</code></li>
+    </ul>
+    <p style="margin-top:8px">That's it. The browser handles pagination, margins, and page breaks. Do not add a PDF generation library in Sprint 2.</p>
+  </div>
+</div>
+
+
+<!-- S7: PAYMENT FLOW -->
+<div class="section" id="s7">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--teal-50)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--teal-600)" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+    </div>
+    <h2>Payment flow specification</h2>
+  </div>
+
+  <h3>Payment timeline — STERO-2025-0007</h3>
+
+  <div class="payment-timeline">
+    <div class="pay-bar-wrap">
+      <div class="pay-bar-track"><div class="pay-bar-fill" style="width:33%"></div></div>
+      <span class="pay-bar-label">33% · GHS 5,000 / 15,000 collected</span>
+    </div>
+
+    <div class="pay-entry">
+      <div class="pay-icon" style="background:var(--amber-50)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--amber-600)" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      </div>
+      <div class="pay-info">
+        <div class="pay-name">MTN Mobile Money</div>
+        <div class="pay-ref">REF: GH-MOMO-2025041500423</div>
+      </div>
+      <div class="pay-right">
+        <div class="pay-amount">+GHS 3,000</div>
+        <div class="pay-date">15 Apr 2025</div>
+        <div class="pay-remaining">Remaining: GHS 12,000</div>
+      </div>
+    </div>
+
+    <div class="pay-entry">
+      <div class="pay-icon" style="background:var(--blue-50)">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="var(--blue-400)" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+      </div>
+      <div class="pay-info">
+        <div class="pay-name">Bank transfer · GCB Ghana</div>
+        <div class="pay-ref">REF: GCB-TXN-88234912</div>
+      </div>
+      <div class="pay-right">
+        <div class="pay-amount">+GHS 2,000</div>
+        <div class="pay-date">22 Apr 2025</div>
+        <div class="pay-remaining">Remaining: GHS 10,000</div>
+      </div>
+    </div>
+
+    <div style="border:1px dashed rgba(180,176,220,.4);border-radius:10px;padding:14px;text-align:center;background:rgba(83,74,183,.02)">
+      <div style="font-size:22px;font-weight:800;color:var(--ink);margin-bottom:3px">GHS 10,000</div>
+      <div style="font-size:13px;color:var(--ink3)">still outstanding · record next payment when received</div>
+    </div>
+  </div>
+
+  <h3>Record payment drawer — field spec</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Field</th><th>Type</th><th>Validation</th><th>Notes</th></tr></thead>
+    <tbody>
+      <tr><td>Amount (GHS)</td><td>Decimal input</td><td>Required, positive, max = remaining balance</td><td>Warn if amount exceeds remaining, allow overpayment</td></tr>
+      <tr><td>Payment method</td><td>Button group (not dropdown)</td><td>Required</td><td>MTN MoMo · Vodafone Cash · AirtelTigo · Bank transfer · Cash</td></tr>
+      <tr><td>Provider reference</td><td>Text input</td><td>Required unless method = cash</td><td>Free text — no format validation (refs vary by provider)</td></tr>
+      <tr><td>Payment date</td><td>Date picker</td><td>Required, cannot be future</td><td>Default: today</td></tr>
+      <tr><td>Notes</td><td>Textarea</td><td>Optional</td><td>Internal note, not shown on invoice document</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout callout-amber">
+    <div class="callout-title">Provider reference validation rule</div>
+    <p>Do not validate the format of <code>provider_reference</code>. MTN MoMo references look like <code>GH-MOMO-2025042900887</code>, GCB bank transfer refs look like <code>GCB-TXN-88234912</code>, and Vodafone Cash refs have their own format. There is no cross-provider standard. Validate only that the field is non-empty when the method is not <code>cash</code>.</p>
+  </div>
+</div>
+
+
+<!-- S8: TIME LOGGING -->
+<div class="section" id="s8">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--blue-50)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue-400)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+    </div>
+    <h2>Time logging specification</h2>
+  </div>
+
+  <h3>Project hours panel</h3>
+
+  <div class="timelog-stats">
+    <div class="stat-card"><div class="stat-label">Total hours</div><div class="stat-val">42.5</div><div class="stat-sub">This project</div></div>
+    <div class="stat-card"><div class="stat-label">Billable hours</div><div class="stat-val" style="color:var(--teal-600)">38h</div><div class="stat-sub">89% billable</div></div>
+    <div class="stat-card"><div class="stat-label">Effective rate</div><div class="stat-val">GHS 197</div><div class="stat-sub">per billable hour</div></div>
+    <div class="stat-card"><div class="stat-label">Budget burn</div><div class="stat-val" style="color:var(--amber-400)">71%</div><div class="stat-sub">GHS 8,400 / 11,800</div></div>
+  </div>
+
+  <div class="tl-row">
+    <div class="tl-indicator" style="background:var(--teal-400)"></div>
+    <div class="tl-date">29 Apr</div>
+    <div class="tl-desc">Implemented fee payment module with MoMo webhook integration</div>
+    <div class="tl-hours">3.5h</div>
+    <span class="chip chip-t">billable</span>
+  </div>
+  <div class="tl-row">
+    <div class="tl-indicator" style="background:var(--teal-400)"></div>
+    <div class="tl-date">28 Apr</div>
+    <div class="tl-desc">Student dashboard UI — responsive layout and data tables</div>
+    <div class="tl-hours">5h</div>
+    <span class="chip chip-t">billable</span>
+  </div>
+  <div class="tl-row">
+    <div class="tl-indicator" style="background:var(--gray-100)"></div>
+    <div class="tl-date">27 Apr</div>
+    <div class="tl-desc">Internal review call — requirements clarification with client</div>
+    <div class="tl-hours">1h</div>
+    <span class="chip chip-g">non-billable</span>
+  </div>
+  <div class="tl-row">
+    <div class="tl-indicator" style="background:var(--teal-400)"></div>
+    <div class="tl-date">26 Apr</div>
+    <div class="tl-desc">Database schema design and Django model migrations</div>
+    <div class="tl-hours">4h</div>
+    <span class="chip chip-t">billable</span>
+  </div>
+
+  <h3>Log time drawer — field spec</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Field</th><th>Type</th><th>Validation</th><th>UX note</th></tr></thead>
+    <tbody>
+      <tr><td>Project</td><td>Searchable dropdown</td><td>Required</td><td>Pre-filled if opened from project detail page</td></tr>
+      <tr><td>Date</td><td>Date picker</td><td>Required, cannot be future</td><td>Default: today</td></tr>
+      <tr><td>Hours</td><td>Quick-select + custom</td><td>Required, 0.5–24</td><td>Buttons: 0.5 / 1 / 2 / 3 / 4 / custom. Decimal(5,2) to support 0.5h increments</td></tr>
+      <tr><td>Description</td><td>Text input</td><td>Required</td><td>What did you work on? Short sentence.</td></tr>
+      <tr><td>Billable</td><td>Toggle (default on)</td><td>—</td><td>Teal dot when on, gray when off. Shown inline next to description field.</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout callout-teal">
+    <div class="callout-title">Effective rate calculation</div>
+    <p>The effective rate shown in the hours panel is <code>project.budget_ghs / total_billable_hours</code>. This is computed at query time in the <code>/projects/{id}/timelogs/</code> endpoint — not stored on the model. When Sprint 3 adds analytics, this same calculation feeds the profitability-per-client chart without any schema changes.</p>
+  </div>
+</div>
+
+
+<!-- S9: CELERY -->
+<div class="section" id="s9">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--amber-50)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber-600)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <h2>Celery architecture</h2>
+  </div>
+
+  <p>Two Docker Compose services added at the very start of Week 4 — before any task code is written. Wire the environment first, tasks second. Redis is already running from Sprint 1.</p>
+
+  <div class="celery-flow">
+    <div class="cf-step">
+      <div class="cf-step-left">
+        <div class="cf-step-title">Celery Beat scheduler</div>
+        <div class="cf-step-sub">Runs daily at 07:00 Africa/Accra (UTC+0, no DST). Uses django-celery-beat PeriodicTask.</div>
+      </div>
+      <span class="chip chip-p">docker service: celery_beat</span>
+    </div>
+    <div class="cf-connector">↓ enqueues tasks via Redis broker (already in compose)</div>
+    <div class="cf-step">
+      <div class="cf-step-left">
+        <div class="cf-step-title">check_overdue_invoices task</div>
+        <div class="cf-step-sub">Queries Invoice where due_date &lt; today AND status NOT IN [paid]. Updates status → overdue. Creates Notification record per invoice.</div>
+      </div>
+      <span class="chip chip-t">worker task</span>
+    </div>
+    <div class="cf-connector" style="padding-left:40px">↓ parallel task on same Beat trigger</div>
+    <div class="cf-step">
+      <div class="cf-step-left">
+        <div class="cf-step-title">check_proposal_deadlines task</div>
+        <div class="cf-step-sub">Queries Proposal where deadline &lt;= today+3 AND status NOT IN [won, lost]. Creates Notification record per proposal.</div>
+      </div>
+      <span class="chip chip-t">worker task</span>
+    </div>
+    <div class="cf-connector">↓ both tasks write to the same table</div>
+    <div class="cf-step">
+      <div class="cf-step-left">
+        <div class="cf-step-title">Notification.objects.create()</div>
+        <div class="cf-step-sub">Skips if identical notification already exists for same entity today (prevent duplicates on re-run).</div>
+      </div>
+      <span class="chip chip-b">Postgres · Notification table</span>
+    </div>
+    <div class="cf-connector">↓ polled every 60s by the React notification bell</div>
+    <div class="cf-step">
+      <div class="cf-step-left">
+        <div class="cf-step-title">GET /notifications/?read=false</div>
+        <div class="cf-step-sub">React Query refetchInterval: 60000. Unread count shown on bell icon.</div>
+      </div>
+      <span class="chip chip-g">frontend polling</span>
+    </div>
+  </div>
+
+  <h3>Docker Compose additions</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Service name</th><th>Command</th><th>Depends on</th><th>Volume</th></tr></thead>
+    <tbody>
+      <tr><td><code>celery_worker</code></td><td><code>celery -A config worker -l info</code></td><td>django, redis</td><td>Same app code volume as django</td></tr>
+      <tr><td><code>celery_beat</code></td><td><code>celery -A config beat -l info --scheduler django_celery_beat.schedulers:DatabaseScheduler</code></td><td>django, redis, postgres</td><td>Same app code volume as django</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout callout-red">
+    <div class="callout-title">Tasks must never call external services</div>
+    <p>Both Celery tasks only write to the database. They do not send email, call webhooks, or hit any external API. When you add email in Sprint 4, you add a separate task that reads from the Notification table — you don't touch these tasks. This keeps Sprint 2 tasks simple, testable, and rollback-safe.</p>
+  </div>
+
+  <div class="callout callout-teal">
+    <div class="callout-title">Duplicate notification guard</div>
+    <p>Add a <code>get_or_create</code> check in both tasks keyed on <code>(user, type, entity_id, created_at__date=today)</code>. This prevents a re-run or a Beat timing glitch from spamming the notification table with duplicate entries for the same invoice or proposal.</p>
+  </div>
+</div>
+
+
+<!-- S10: ISSUES + SCOPE -->
+<div class="section" id="s10">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--gray-50)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--gray-600)" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    </div>
+    <h2>GitHub issues + scope freeze</h2>
+  </div>
+
+  <h3>All 20 Sprint 2 issues</h3>
+  <p>Create these before touching code. Issue numbers continue from Sprint 1's 18 issues.</p>
+
+  <div class="card">
+    <div class="issue-list">
+      <div class="issue"><div class="issue-num">#19</div><div class="issue-body"><div class="issue-title">Add celery_worker + celery_beat to docker-compose.yml and verify Redis connectivity before writing any task code</div><div class="issue-tags"><span class="chip issue-tag it-ch">chore</span><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#20</div><div class="issue-body"><div class="issue-title">Invoice model + InvoiceLineItem model — one migration, auto-calculated totals, default due_date +30 days</div><div class="issue-tags"><span class="chip issue-tag it-m">model</span><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#21</div><div class="issue-body"><div class="issue-title">Payment model + post_save / post_delete signals → recalculate_invoice_status() service function</div><div class="issue-tags"><span class="chip issue-tag it-m">model</span><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#22</div><div class="issue-body"><div class="issue-title">TimeLog model + migration (Decimal hours field for 0.5h increments)</div><div class="issue-tags"><span class="chip issue-tag it-m">model</span><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#23</div><div class="issue-body"><div class="issue-title">Notification model + migration (type, entity_type, entity_id, read boolean)</div><div class="issue-tags"><span class="chip issue-tag it-m">model</span><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#24</div><div class="issue-body"><div class="issue-title">Invoice number — Postgres sequence data migration + STERO-{year}-{n:04d} format in Invoice.save()</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#25</div><div class="issue-body"><div class="issue-title">Invoice CRUD endpoints: list, create (nested line items), detail, patch (draft only), /send/, /overdue/</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#26</div><div class="issue-body"><div class="issue-title">Payment endpoints: list, create (triggers status recalc), delete (triggers status recalc)</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#27</div><div class="issue-body"><div class="issue-title">TimeLog CRUD endpoints + /projects/{id}/timelogs/ aggregate (total_hours, billable_hours, effective_rate)</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#28</div><div class="issue-body"><div class="issue-title">Notification endpoints: list, /read/, /read-all/ + unread_count in response</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#29</div><div class="issue-body"><div class="issue-title">Dashboard endpoint upgrade: add total_outstanding_ghs, overdue_invoices[], unread_notifications_count</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#30</div><div class="issue-body"><div class="issue-title">Celery task: check_overdue_invoices — daily 07:00 WAT, get_or_create notification guard</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#31</div><div class="issue-body"><div class="issue-title">Celery task: check_proposal_deadlines — daily 07:00 WAT, deadlines ≤ 3 days, not yet decided</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#32</div><div class="issue-body"><div class="issue-title">pytest-django — full test coverage for all Sprint 2 endpoints including status transition edge cases</div><div class="issue-tags"><span class="chip issue-tag it-ch">chore</span><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#33</div><div class="issue-body"><div class="issue-title">Invoice list screen — glass card layout, status chips, GHS amounts, row-click to detail</div><div class="issue-tags"><span class="chip issue-tag it-fe">frontend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#34</div><div class="issue-body"><div class="issue-title">Invoice detail screen — document layout, line items table, payment timeline, print stylesheet</div><div class="issue-tags"><span class="chip issue-tag it-fe">frontend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#35</div><div class="issue-body"><div class="issue-title">Record payment right-side drawer — method button group, reference field, amount input</div><div class="issue-tags"><span class="chip issue-tag it-fe">frontend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#36</div><div class="issue-body"><div class="issue-title">Time log form drawer + project hours summary panel (total, billable%, effective rate, budget burn)</div><div class="issue-tags"><span class="chip issue-tag it-fe">frontend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#37</div><div class="issue-body"><div class="issue-title">Notification bell component — unread dot, dropdown list, click navigates to entity, mark-all-read</div><div class="issue-tags"><span class="chip issue-tag it-fe">frontend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#38</div><div class="issue-body"><div class="issue-title">Dashboard upgrade: outstanding tile + overdue invoices tile live + notification count in top bar</div><div class="issue-tags"><span class="chip issue-tag it-fe">frontend</span></div></div></div>
+    </div>
+  </div>
+
+  <h3>Scope freeze</h3>
+
+  <div class="scope-grid">
+    <div class="scope-col">
+      <div class="scope-header in">In — Sprint 2 must deliver</div>
+      <div class="scope-items">
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Invoice + InvoiceLineItem + Payment + TimeLog + Notification models</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Invoice CRUD + /send/ + /overdue/ endpoints</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Payment record/delete with synchronous status recalculation</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>TimeLog CRUD + project aggregate endpoint</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Celery worker + Beat both running in Docker Compose</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>check_overdue_invoices + check_proposal_deadlines tasks</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Invoice list + detail screens (glass design)</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Invoice detail print stylesheet</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Record payment drawer (MoMo / bank / Vodafone / AirtelTigo)</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Time log form drawer + project hours panel</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Notification bell + dropdown + mark-read</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Dashboard upgraded with live financial tiles</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Client detail: Payments tab + Time tab live</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Mobile responsiveness pass on all new screens</div>
+      </div>
+    </div>
+    <div class="scope-col">
+      <div class="scope-header out">Out — do not touch in Sprint 2</div>
+      <div class="scope-items">
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>AI assistant / Anthropic API calls</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>Analytics charts (revenue trend, win rate, profitability)</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>Server-side PDF generation (WeasyPrint, reportlab)</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>Email sending of any kind</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>Expense model / P&amp;L view</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>Contract model</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>Multi-user / role-based permissions</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>WebSocket real-time notifications (polling is fine)</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>GRA VAT calculation</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>Client payment portal</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>Budget vs actuals report page</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>Recurring invoices</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>Invoice template customisation</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Sprint 2 definition of done</h3>
+  <div class="card">
+    <div class="checklist-item"><div class="check-box"></div><div>I can create an invoice with 3 line items linked to a client and a project, and the totals are correct to 2 decimal places</div></div>
+    <div class="checklist-item"><div class="check-box"></div><div>Recording a GHS 3,000 MTN MoMo payment against a GHS 5,000 invoice changes the status to <code>partial</code> automatically</div></div>
+    <div class="checklist-item"><div class="check-box"></div><div>Recording a second payment that brings the total to GHS 5,000 changes the status to <code>paid</code> automatically</div></div>
+    <div class="checklist-item"><div class="check-box"></div><div>An invoice past its due date shows the red <code>overdue</code> chip in the list screen</div></div>
+    <div class="checklist-item"><div class="check-box"></div><div>I can log 3.5 hours to a project and the running total in the hours panel updates to reflect it</div></div>
+    <div class="checklist-item"><div class="check-box"></div><div>The notification bell shows an unread count and clicking it opens a dropdown with the correct messages</div></div>
+    <div class="checklist-item"><div class="check-box"></div><div>The dashboard Outstanding GHS tile shows the correct live sum of all unpaid invoice balances</div></div>
+    <div class="checklist-item"><div class="check-box"></div><div>Printing the invoice detail screen (Ctrl+P) produces a clean document with no sidebar, no action bar, and no glass background</div></div>
+    <div class="checklist-item"><div class="check-box"></div><div>Celery Beat is running in Docker and I can see both task logs in <code>docker compose logs celery_worker</code></div></div>
+    <div class="checklist-item"><div class="check-box"></div><div>All Sprint 2 endpoints have at least one passing pytest-django test including the status-transition edge cases</div></div>
+  </div>
+
+  <h3>What Sprint 2 hands to Sprint 3</h3>
+  <p>By the end of Sprint 2, every piece of financial data exists in your database in clean, queryable form. Sprint 3's analytics endpoints (<code>/analytics/revenue/</code>, <code>/analytics/win-rate/</code>, <code>/analytics/clients/profitability/</code>) are pure database aggregation queries against models that already exist. The AI assistant's <code>build_ai_context()</code> function will read from <code>Invoice</code>, <code>Payment</code>, <code>TimeLog</code>, and <code>Notification</code> — all of which Sprint 2 populates with real data. Sprint 3 has zero new model migrations. It only adds query endpoints and the Anthropic API integration layer on top of the foundation Sprint 2 built.</p>
+</div>
+
+
+<!-- FOOTER -->
+<div class="doc-footer">
+  <div>Stero Tech Inc. · Company OS · Sprint 2 Implementation Plan</div>
+  <div>Glass/liquid design system · GHS · Ghana</div>
+</div>
+
+</div>
+</body>
+</html>

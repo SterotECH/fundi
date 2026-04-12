@@ -1,0 +1,178 @@
+
+<div id="erd" style="padding: 1rem 0"></div>
+<script type="module">
+import mermaid from 'https://esm.sh/mermaid@11/dist/mermaid.esm.min.mjs';
+const dark = matchMedia('(prefers-color-scheme: dark)').matches;
+await document.fonts.ready;
+mermaid.initialize({
+  startOnLoad: false,
+  theme: 'base',
+  fontFamily: '"Anthropic Sans", sans-serif',
+  themeVariables: {
+    darkMode: dark,
+    fontSize: '13px',
+    fontFamily: '"Anthropic Sans", sans-serif',
+    lineColor: dark ? '#9c9a92' : '#73726c',
+    textColor: dark ? '#c2c0b6' : '#3d3d3a',
+  },
+});
+const diagram = `erDiagram
+  USER {
+    uuid id PK
+    string email
+    string password_hash
+    string full_name
+    datetime created_at
+  }
+
+  CLIENT {
+    uuid id PK
+    string name
+    string type
+    string contact_person
+    string email
+    string phone
+    string address
+    string region
+    string notes
+    datetime created_at
+    uuid created_by FK
+  }
+
+  LEAD {
+    uuid id PK
+    string name
+    string contact_person
+    string email
+    string phone
+    string source
+    string status
+    string notes
+    datetime created_at
+    uuid converted_to_client FK
+  }
+
+  PROPOSAL {
+    uuid id PK
+    uuid client_id FK
+    string title
+    text description
+    decimal amount_ghs
+    string status
+    date sent_date
+    date deadline
+    date decision_date
+    string notes
+    datetime created_at
+  }
+
+  PROJECT {
+    uuid id PK
+    uuid client_id FK
+    uuid proposal_id FK
+    string title
+    text description
+    string status
+    date start_date
+    date due_date
+    decimal budget_ghs
+    datetime created_at
+  }
+
+  MILESTONE {
+    uuid id PK
+    uuid project_id FK
+    string title
+    text description
+    date due_date
+    boolean completed
+    datetime completed_at
+  }
+
+  INVOICE {
+    uuid id PK
+    uuid client_id FK
+    uuid project_id FK
+    string invoice_number
+    decimal subtotal_ghs
+    decimal tax_ghs
+    decimal total_ghs
+    string status
+    date issue_date
+    date due_date
+    text notes
+    datetime created_at
+  }
+
+  PAYMENT {
+    uuid id PK
+    uuid invoice_id FK
+    decimal amount_ghs
+    string method
+    string provider
+    string reference
+    date payment_date
+    string notes
+    datetime recorded_at
+  }
+
+  TIMELOG {
+    uuid id PK
+    uuid project_id FK
+    uuid user_id FK
+    date log_date
+    decimal hours
+    string description
+    boolean billable
+    datetime created_at
+  }
+
+  NOTIFICATION {
+    uuid id PK
+    uuid user_id FK
+    string type
+    string message
+    boolean read
+    datetime created_at
+  }
+
+  USER ||--o{ CLIENT : manages
+  USER ||--o{ TIMELOG : logs
+  USER ||--o{ NOTIFICATION : receives
+  CLIENT ||--o{ PROPOSAL : receives
+  CLIENT ||--o{ PROJECT : owns
+  CLIENT ||--o{ INVOICE : billed
+  PROPOSAL ||--o| PROJECT : converts_to
+  PROJECT ||--o{ MILESTONE : has
+  PROJECT ||--o{ TIMELOG : tracked_on
+  PROJECT ||--o{ INVOICE : generates
+  INVOICE ||--o{ PAYMENT : paid_via
+  LEAD ||--o| CLIENT : converts_to
+`;
+const { svg } = await mermaid.render('erd-svg', diagram);
+document.getElementById('erd').innerHTML = svg;
+
+document.querySelectorAll('#erd svg.erDiagram .node').forEach(node => {
+  const firstPath = node.querySelector('path[d]');
+  if (!firstPath) return;
+  const d = firstPath.getAttribute('d');
+  const nums = d.match(/-?[\d.]+/g)?.map(Number);
+  if (!nums || nums.length < 8) return;
+  const xs = [nums[0], nums[2], nums[4], nums[6]];
+  const ys = [nums[1], nums[3], nums[5], nums[7]];
+  const x = Math.min(...xs), y = Math.min(...ys);
+  const w = Math.max(...xs) - x, h = Math.max(...ys) - y;
+  const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+  rect.setAttribute('x', x); rect.setAttribute('y', y);
+  rect.setAttribute('width', w); rect.setAttribute('height', h);
+  rect.setAttribute('rx', '8');
+  for (const a of ['fill', 'stroke', 'stroke-width', 'class', 'style']) {
+    if (firstPath.hasAttribute(a)) rect.setAttribute(a, firstPath.getAttribute(a));
+  }
+  firstPath.replaceWith(rect);
+});
+
+document.querySelectorAll('#erd svg.erDiagram .row-rect-odd path, #erd svg.erDiagram .row-rect-even path').forEach(p => {
+  p.setAttribute('stroke', 'none');
+});
+</script>

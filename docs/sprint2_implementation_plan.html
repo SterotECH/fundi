@@ -1,0 +1,616 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --glass-bg:rgba(255,255,255,0.72);
+  --glass-border:rgba(255,255,255,0.55);
+  --glass-shadow:0 4px 24px rgba(83,74,183,0.08),0 1px 4px rgba(0,0,0,0.06);
+  --liquid-1:#534AB7;--liquid-2:#1D9E75;--liquid-3:#BA7517;--liquid-4:#E24B4A;
+  --surface:#F8F7FF;
+  --ink:#1a1720;--ink2:#5a5680;--ink3:#9390b0;
+  --purple:#534AB7;--teal:#1D9E75;--amber:#BA7517;--red:#E24B4A;--blue:#378ADD;
+  --p50:#EEEDFE;--p100:#CECBF6;--p600:#534AB7;--p800:#3C3489;
+  --t50:#E1F5EE;--t400:#1D9E75;--t600:#0F6E56;--t800:#085041;
+  --a50:#FAEEDA;--a400:#BA7517;--a600:#854F0B;
+  --r50:#FCEBEB;--r400:#E24B4A;--r800:#791F1F;
+  --b50:#E6F1FB;--b400:#378ADD;--b800:#0C447C;
+  --g50:#F1EFE8;--g200:#B4B2A9;--g600:#5F5E5A;
+  --border:rgba(180,178,169,0.35);
+}
+
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--surface);color:var(--ink);line-height:1.5}
+
+.wrap{padding:20px;max-width:860px;margin:0 auto}
+
+.page-header{margin-bottom:28px}
+.sprint-pill{display:inline-flex;align-items:center;gap:8px;background:var(--p50);color:var(--p800);font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:4px 12px;border-radius:20px;margin-bottom:14px;border:1px solid var(--p100)}
+.page-title{font-size:26px;font-weight:700;color:var(--ink);letter-spacing:-.02em;margin-bottom:6px}
+.page-sub{font-size:14px;color:var(--ink2)}
+
+.nav-pills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:28px}
+.pill{font-size:12px;font-weight:600;padding:6px 14px;border-radius:20px;border:1px solid var(--border);background:var(--glass-bg);color:var(--ink2);cursor:pointer;transition:all .18s;backdrop-filter:blur(8px)}
+.pill.active,.pill:hover{background:var(--purple);color:#fff;border-color:var(--purple)}
+
+.section{display:none}
+.section.active{display:block}
+
+.glass-card{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:16px;padding:20px;backdrop-filter:blur(12px);box-shadow:var(--glass-shadow);margin-bottom:16px}
+.glass-card-sm{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:12px;padding:14px;backdrop-filter:blur(8px)}
+
+.section-title{font-size:16px;font-weight:700;color:var(--ink);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;flex-shrink:0}
+
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin-bottom:16px}
+
+.stat-tile{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:12px;padding:14px 16px;backdrop-filter:blur(8px)}
+.stat-label{font-size:11px;font-weight:600;color:var(--ink3);letter-spacing:.05em;text-transform:uppercase;margin-bottom:4px}
+.stat-val{font-size:22px;font-weight:700;color:var(--ink);line-height:1}
+.stat-sub{font-size:11px;color:var(--ink3);margin-top:3px}
+
+.chip{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.03em;white-space:nowrap;display:inline-block}
+.chip-p{background:var(--p50);color:var(--p800)}
+.chip-t{background:var(--t50);color:var(--t800)}
+.chip-a{background:var(--a50);color:var(--a600)}
+.chip-r{background:var(--r50);color:var(--r800)}
+.chip-b{background:var(--b50);color:var(--b800)}
+
+.row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid rgba(180,178,169,.2)}
+.row:last-child{border-bottom:none}
+.row-label{font-size:13px;color:var(--ink);font-weight:500;flex:1}
+.row-meta{font-size:12px;color:var(--ink2)}
+
+.method-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:6px;letter-spacing:.04em}
+.momo{background:#FAC75520;color:#633806;border:1px solid #FAC775}
+.bank{background:#B5D4F420;color:#0C447C;border:1px solid #85B7EB}
+.vodafone{background:#F0997B30;color:#712B13;border:1px solid #F0997B}
+.cash{background:var(--g50);color:var(--g600);border:1px solid var(--g200)}
+
+.invoice-preview{background:#fff;border:1px solid var(--border);border-radius:12px;padding:20px;font-size:13px}
+.inv-header{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:16px;padding-bottom:14px;border-bottom:2px solid var(--p600)}
+.inv-logo{width:36px;height:36px;background:var(--p600);border-radius:8px;display:flex;align-items:center;justify-content:center;color:#fff;font-size:13px;font-weight:700}
+.inv-company{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:2px}
+.inv-tagline{font-size:11px;color:var(--ink3)}
+.inv-num{font-size:18px;font-weight:700;color:var(--ink);text-align:right;font-family:monospace}
+.inv-date{font-size:11px;color:var(--ink3);text-align:right;margin-top:2px}
+.inv-section-title{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
+.inv-to{background:var(--g50);border-radius:8px;padding:10px;margin-bottom:14px}
+.inv-to-name{font-weight:700;font-size:13px;color:var(--ink)}
+.inv-to-meta{font-size:12px;color:var(--ink2);margin-top:1px}
+.line-table{width:100%;border-collapse:collapse;font-size:12px;margin-bottom:12px}
+.line-table th{font-size:10px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);padding:5px 8px;text-align:left;border-bottom:1px solid var(--border);background:var(--g50)}
+.line-table th:last-child,.line-table td:last-child{text-align:right}
+.line-table td{padding:7px 8px;border-bottom:1px solid rgba(180,178,169,.15);color:var(--ink)}
+.total-section{background:var(--p50);border-radius:8px;padding:10px 14px}
+.total-row{display:flex;justify-content:space-between;font-size:12px;padding:2px 0;color:var(--ink2)}
+.total-row.main{font-size:14px;font-weight:700;color:var(--p800);border-top:1px solid var(--p100);margin-top:4px;padding-top:6px}
+
+.payment-timeline{margin-top:14px}
+.pay-entry{display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:10px;margin-bottom:6px;backdrop-filter:blur(6px)}
+.pay-icon{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pay-name{font-size:13px;font-weight:600;color:var(--ink)}
+.pay-ref{font-size:11px;color:var(--ink3);font-family:monospace}
+.pay-amt{font-size:14px;font-weight:700;margin-left:auto}
+.pay-bal{font-size:11px;color:var(--ink3);margin-left:4px}
+
+.timelog-row{display:flex;align-items:center;gap:10px;padding:8px 10px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:10px;margin-bottom:6px;backdrop-filter:blur(6px)}
+.timelog-date{font-size:11px;color:var(--ink3);width:64px;flex-shrink:0}
+.timelog-desc{font-size:13px;color:var(--ink);flex:1}
+.timelog-h{font-size:14px;font-weight:700;color:var(--p600)}
+.billable-dot{width:7px;height:7px;border-radius:50%;background:var(--teal);flex-shrink:0}
+.nonbill-dot{width:7px;height:7px;border-radius:50%;background:var(--g200);flex-shrink:0}
+
+.celery-flow{margin:14px 0}
+.cf-row{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.cf-box{flex:1;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:10px;padding:10px 14px;backdrop-filter:blur(8px)}
+.cf-box-title{font-size:12px;font-weight:700;color:var(--ink)}
+.cf-box-sub{font-size:11px;color:var(--ink3);margin-top:1px}
+.cf-arrow{color:var(--ink3);font-size:14px;flex-shrink:0}
+.cf-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;margin-left:auto;flex-shrink:0}
+.cf-beat{background:var(--p50);color:var(--p800)}
+.cf-worker{background:var(--t50);color:var(--t800)}
+.cf-db{background:var(--b50);color:var(--b800)}
+.cf-notif{background:var(--a50);color:var(--a600)}
+
+.model-pill{display:inline-flex;align-items:center;gap:6px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:8px;padding:5px 10px;font-size:12px;font-weight:600;color:var(--ink);backdrop-filter:blur(6px);margin:3px}
+.model-pill-icon{width:6px;height:6px;border-radius:50%}
+
+.issue-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid rgba(180,178,169,.15)}
+.issue-row:last-child{border-bottom:none}
+.issue-num{font-size:11px;font-weight:700;color:var(--p600);width:28px;flex-shrink:0;font-family:monospace;margin-top:1px}
+.issue-title{font-size:13px;color:var(--ink);flex:1;line-height:1.4}
+.issue-tags{display:flex;gap:4px;flex-wrap:wrap;margin-top:3px}
+.issue-tag{font-size:10px;font-weight:600;padding:1px 6px;border-radius:4px}
+.it-be{background:var(--a50);color:var(--a600)}
+.it-fe{background:var(--b50);color:var(--b800)}
+.it-m{background:var(--g50);color:var(--g600)}
+.it-ch{background:var(--p50);color:var(--p800)}
+
+.dependency-block{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:12px;padding:14px;backdrop-filter:blur(8px);margin-bottom:10px}
+.dep-sprint{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:8px}
+.dep-item{display:flex;align-items:center;gap:8px;font-size:13px;color:var(--ink);padding:3px 0}
+.dep-check{width:14px;height:14px;border-radius:4px;border:2px solid var(--border);flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.dep-done{background:var(--teal);border-color:var(--teal)}
+
+.transition-map{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin:12px 0}
+.t-node{border-radius:10px;padding:8px 6px;text-align:center;font-size:11px;font-weight:700;border:1px solid transparent}
+.t-arrow{display:flex;align-items:center;justify-content:center;color:var(--ink3);font-size:16px;padding:4px 0}
+.status-logic{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:12px;padding:14px;backdrop-filter:blur(8px)}
+.sl-row{display:flex;align-items:center;gap:10px;padding:6px 0;border-bottom:1px solid rgba(180,178,169,.15);font-size:13px}
+.sl-row:last-child{border-bottom:none}
+.sl-trigger{color:var(--ink2);flex:1}
+.sl-result{font-weight:600;color:var(--t600)}
+
+.week-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:12px 0}
+.week-card{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:12px;padding:14px;backdrop-filter:blur(8px)}
+.week-label{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
+.week-title{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:8px}
+.week-item{font-size:12px;color:var(--ink2);padding:2px 0;display:flex;gap:5px}
+.week-item::before{content:'·';color:var(--ink3)}
+
+.progress-bar{height:5px;background:rgba(180,178,169,.25);border-radius:3px;overflow:hidden;margin-top:10px}
+.progress-fill{height:100%;border-radius:3px;transition:width .3s}
+</style>
+
+<h2 class="sr-only">Sprint 2 implementation plan: money layer covering invoices, payments, time logging, and Celery reminders</h2>
+
+<div class="wrap">
+  <div class="page-header">
+    <div class="sprint-pill">Sprint 2 · Weeks 4–6</div>
+    <div class="page-title">The Money Layer</div>
+    <div class="page-sub">Invoices · Payments · Time logging · Celery reminders — pick a tab to explore each module</div>
+  </div>
+
+  <div class="nav-pills">
+    <div class="pill active" onclick="show('overview')">Overview</div>
+    <div class="pill" onclick="show('invoice')">Invoice screen</div>
+    <div class="pill" onclick="show('payment')">Payment flow</div>
+    <div class="pill" onclick="show('timelog')">Time logging</div>
+    <div class="pill" onclick="show('celery')">Celery tasks</div>
+    <div class="pill" onclick="show('issues')">GitHub issues</div>
+    <div class="pill" onclick="show('checklist')">Sprint checklist</div>
+  </div>
+
+  <div id="s-overview" class="section active">
+    <div class="grid3">
+      <div class="stat-tile"><div class="stat-label">New models</div><div class="stat-val">4</div><div class="stat-sub">Invoice · LineItem · Payment · TimeLog</div></div>
+      <div class="stat-tile"><div class="stat-label">New endpoints</div><div class="stat-val">18</div><div class="stat-sub">Invoices · Payments · TimeLogs · Notifications</div></div>
+      <div class="stat-tile"><div class="stat-label">New screens</div><div class="stat-val">5</div><div class="stat-sub">Invoice list · detail · time · notifications · project detail</div></div>
+    </div>
+
+    <div class="glass-card">
+      <div class="section-title"><span class="dot" style="background:var(--purple)"></span>Sprint 2 builds naturally on Sprint 1</div>
+      <div style="font-size:13px;color:var(--ink2);line-height:1.7;margin-bottom:14px">Every model in Sprint 2 hangs off entities you already built. <code style="background:var(--p50);color:var(--p800);padding:1px 5px;border-radius:4px;font-size:12px">Invoice → Client + Project</code>, <code style="background:var(--p50);color:var(--p800);padding:1px 5px;border-radius:4px;font-size:12px">Payment → Invoice</code>, <code style="background:var(--p50);color:var(--p800);padding:1px 5px;border-radius:4px;font-size:12px">TimeLog → Project + User</code>. No new root entities. Sprint 1's foreign keys are the scaffolding.</div>
+
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:16px">
+        <div class="model-pill"><span class="model-pill-icon" style="background:var(--g200)"></span>Organisation ✓</div>
+        <div class="model-pill"><span class="model-pill-icon" style="background:var(--g200)"></span>User ✓</div>
+        <div class="model-pill"><span class="model-pill-icon" style="background:var(--g200)"></span>Client ✓</div>
+        <div class="model-pill"><span class="model-pill-icon" style="background:var(--g200)"></span>Lead ✓</div>
+        <div class="model-pill"><span class="model-pill-icon" style="background:var(--g200)"></span>Proposal ✓</div>
+        <div class="model-pill"><span class="model-pill-icon" style="background:var(--g200)"></span>Project ✓</div>
+        <div style="display:flex;align-items:center;font-size:13px;color:var(--ink3);margin:3px 6px">→ Sprint 2 adds:</div>
+        <div class="model-pill"><span class="model-pill-icon" style="background:var(--teal)"></span>Invoice</div>
+        <div class="model-pill"><span class="model-pill-icon" style="background:var(--teal)"></span>InvoiceLineItem</div>
+        <div class="model-pill"><span class="model-pill-icon" style="background:var(--teal)"></span>Payment</div>
+        <div class="model-pill"><span class="model-pill-icon" style="background:var(--teal)"></span>TimeLog</div>
+        <div class="model-pill"><span class="model-pill-icon" style="background:var(--amber)"></span>Celery Beat tasks</div>
+      </div>
+
+      <div class="section-title" style="margin-top:8px"><span class="dot" style="background:var(--teal)"></span>Invoice auto-status logic</div>
+      <div class="status-logic">
+        <div class="sl-row"><span style="font-weight:700;color:var(--ink);width:80px;flex-shrink:0">Trigger</span><span class="sl-trigger" style="font-weight:700">Condition</span><span style="font-weight:700;color:var(--ink);width:100px;text-align:right">New status</span></div>
+        <div class="sl-row"><span style="width:80px;flex-shrink:0;font-size:11px;color:var(--ink3)">post_save</span><span class="sl-trigger">sum(payments) = 0</span><span class="sl-result" style="width:100px;text-align:right">sent</span></div>
+        <div class="sl-row"><span style="width:80px;flex-shrink:0;font-size:11px;color:var(--ink3)">post_save</span><span class="sl-trigger">0 &lt; sum(payments) &lt; total</span><span class="sl-result" style="width:100px;text-align:right">partial</span></div>
+        <div class="sl-row"><span style="width:80px;flex-shrink:0;font-size:11px;color:var(--ink3)">post_save</span><span class="sl-trigger">sum(payments) &gt;= total</span><span class="sl-result" style="width:100px;text-align:right">paid</span></div>
+        <div class="sl-row"><span style="width:80px;flex-shrink:0;font-size:11px;color:var(--ink3)">Celery daily</span><span class="sl-trigger">due_date &lt; today AND status != paid</span><span class="sl-result" style="color:var(--red);width:100px;text-align:right">overdue</span></div>
+        <div class="sl-row"><span style="width:80px;flex-shrink:0;font-size:11px;color:var(--ink3)">post_delete</span><span class="sl-trigger">payment deleted → recalculate</span><span class="sl-result" style="width:100px;text-align:right">recalculated</span></div>
+      </div>
+    </div>
+
+    <div class="glass-card">
+      <div class="section-title"><span class="dot" style="background:var(--amber)"></span>Week-by-week delivery plan</div>
+      <div class="week-grid">
+        <div class="week-card">
+          <div class="week-label">Week 4 · Days 1–5</div>
+          <div class="week-title">Data foundation</div>
+          <div class="week-item">Invoice + LineItem models + migrations</div>
+          <div class="week-item">Payment model + post_save signal</div>
+          <div class="week-item">TimeLog model + migrations</div>
+          <div class="week-item">Invoice number Postgres sequence</div>
+          <div class="week-item">All CRUD endpoints (no UI yet)</div>
+          <div class="week-item">pytest-django tests for all new endpoints</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--teal)"></div></div>
+        </div>
+        <div class="week-card">
+          <div class="week-label">Week 5 · Days 6–10</div>
+          <div class="week-title">Frontend + Celery</div>
+          <div class="week-item">Invoice list screen (glass cards)</div>
+          <div class="week-item">Invoice detail + print stylesheet</div>
+          <div class="week-item">Record payment drawer</div>
+          <div class="week-item">Time log form + project hours view</div>
+          <div class="week-item">Celery + Beat Docker services wired</div>
+          <div class="week-item">check_overdue + proposal_deadline tasks</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--teal)"></div></div>
+        </div>
+        <div class="week-card">
+          <div class="week-label">Week 6 · Days 11–15</div>
+          <div class="week-title">Polish + dashboard upgrade</div>
+          <div class="week-item">Notifications bell + dropdown</div>
+          <div class="week-item">Dashboard: outstanding GHS tile live</div>
+          <div class="week-item">Dashboard: overdue invoices tile live</div>
+          <div class="week-item">Client detail: Payments + Time tabs</div>
+          <div class="week-item">Mobile responsiveness pass</div>
+          <div class="week-item">Sprint 2 demo + Sprint 3 kickoff</div>
+          <div class="progress-bar"><div class="progress-fill" style="width:100%;background:var(--teal)"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="s-invoice" class="section">
+    <div class="glass-card">
+      <div class="section-title"><span class="dot" style="background:var(--purple)"></span>Invoice detail screen — glass/liquid design</div>
+      <div style="font-size:12px;color:var(--ink3);margin-bottom:14px">This is the exact visual spec for the invoice detail page. Print stylesheet hides the action bar and sidebar — only the white invoice card prints.</div>
+      <div class="invoice-preview">
+        <div class="inv-header">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div class="inv-logo">ST</div>
+            <div>
+              <div class="inv-company">Stero Tech Inc.</div>
+              <div class="inv-tagline">Software solutions for Ghanaian schools</div>
+            </div>
+          </div>
+          <div style="text-align:right">
+            <div class="inv-num">STERO-2025-007</div>
+            <div class="inv-date">Issued: 15 Apr 2025 · Due: 15 May 2025</div>
+            <div style="margin-top:5px"><span class="chip chip-a">Partial payment</span></div>
+          </div>
+        </div>
+
+        <div class="grid2" style="margin-bottom:14px">
+          <div>
+            <div class="inv-section-title">Bill to</div>
+            <div class="inv-to">
+              <div class="inv-to-name">Accra Academy Senior High School</div>
+              <div class="inv-to-meta">Mrs. Abena Mensah · Finance Office</div>
+              <div class="inv-to-meta">Accra, Greater Accra Region</div>
+            </div>
+          </div>
+          <div>
+            <div class="inv-section-title">Project</div>
+            <div class="inv-to">
+              <div class="inv-to-name">School Management System v2</div>
+              <div class="inv-to-meta">Active · 42h logged · Due Apr 30</div>
+              <div style="margin-top:6px"><div class="progress-bar" style="margin-top:0"><div class="progress-fill" style="width:65%;background:var(--teal)"></div></div></div>
+            </div>
+          </div>
+        </div>
+
+        <table class="line-table">
+          <thead><tr><th>Description</th><th style="text-align:center">Qty</th><th>Unit price</th><th>Total</th></tr></thead>
+          <tbody>
+            <tr><td>School management system — core module</td><td style="text-align:center">1</td><td>GHS 8,000</td><td>GHS 8,000</td></tr>
+            <tr><td>Student portal & parent dashboard</td><td style="text-align:center">1</td><td>GHS 3,500</td><td>GHS 3,500</td></tr>
+            <tr><td>Staff payroll integration module</td><td style="text-align:center">1</td><td>GHS 2,000</td><td>GHS 2,000</td></tr>
+            <tr><td>On-site installation & training (2 days)</td><td style="text-align:center">2</td><td>GHS 750</td><td>GHS 1,500</td></tr>
+          </tbody>
+        </table>
+
+        <div class="total-section">
+          <div class="total-row"><span>Subtotal</span><span>GHS 15,000</span></div>
+          <div class="total-row"><span>VAT (0%)</span><span>GHS 0</span></div>
+          <div class="total-row main"><span>Total due</span><span>GHS 15,000</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card">
+      <div class="section-title"><span class="dot" style="background:var(--amber)"></span>Invoice list screen — state summary</div>
+      <div class="row">
+        <span class="chip chip-p">Draft</span>
+        <span class="row-label">Student portal v2 · GIS International</span>
+        <span class="row-meta">GHS 4,200</span>
+        <span style="margin-left:8px;font-size:12px;color:var(--ink3)">Not sent</span>
+      </div>
+      <div class="row">
+        <span class="chip chip-b">Sent</span>
+        <span class="row-label">Library system · Ridge International</span>
+        <span class="row-meta">GHS 6,800</span>
+        <span style="margin-left:8px;font-size:12px;color:var(--ink3)">Due in 12d</span>
+      </div>
+      <div class="row">
+        <span class="chip chip-a">Partial</span>
+        <span class="row-label">School mgmt system · Accra Academy</span>
+        <span class="row-meta">GHS 15,000</span>
+        <span style="margin-left:8px;font-size:12px;color:var(--amber)">GHS 5,000 paid</span>
+      </div>
+      <div class="row">
+        <span class="chip chip-t">Paid</span>
+        <span class="row-label">Fee collection module · Tema SHS</span>
+        <span class="row-meta">GHS 3,200</span>
+        <span style="margin-left:8px;font-size:12px;color:var(--teal)">Paid in full</span>
+      </div>
+      <div class="row">
+        <span class="chip chip-r">Overdue</span>
+        <span class="row-label">Payroll integration · Achimota</span>
+        <span class="row-meta">GHS 7,500</span>
+        <span style="margin-left:8px;font-size:12px;color:var(--red)">14 days overdue</span>
+      </div>
+    </div>
+  </div>
+
+  <div id="s-payment" class="section">
+    <div class="glass-card">
+      <div class="section-title"><span class="dot" style="background:var(--teal)"></span>Payment timeline — STERO-2025-007</div>
+      <div style="font-size:12px;color:var(--ink3);margin-bottom:12px">Total: GHS 15,000 · Collected: GHS 5,000 · Remaining: GHS 10,000</div>
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:14px">
+        <div style="flex:1;height:8px;border-radius:4px;background:rgba(180,178,169,.25);overflow:hidden"><div style="width:33%;height:100%;background:var(--teal);border-radius:4px"></div></div>
+        <span style="font-size:12px;font-weight:700;color:var(--teal)">33% collected</span>
+      </div>
+
+      <div class="pay-entry">
+        <div class="pay-icon" style="background:var(--a50)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#633806" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
+        <div>
+          <div class="pay-name">MTN Mobile Money</div>
+          <div class="pay-ref">REF: GH-MOMO-2024041500423</div>
+        </div>
+        <div style="text-align:right">
+          <div class="pay-amt" style="color:var(--teal)">+GHS 3,000</div>
+          <div class="pay-bal">15 Apr · Remaining: GHS 12,000</div>
+        </div>
+      </div>
+
+      <div class="pay-entry">
+        <div class="pay-icon" style="background:var(--b50)"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#0C447C" stroke-width="2"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg></div>
+        <div>
+          <div class="pay-name">Bank transfer · GCB</div>
+          <div class="pay-ref">REF: GCB-TXN-88234912</div>
+        </div>
+        <div style="text-align:right">
+          <div class="pay-amt" style="color:var(--teal)">+GHS 2,000</div>
+          <div class="pay-bal">22 Apr · Remaining: GHS 10,000</div>
+        </div>
+      </div>
+
+      <div style="border:1px dashed var(--border);border-radius:10px;padding:12px;text-align:center;margin-top:8px">
+        <div style="font-size:13px;color:var(--ink3)">GHS 10,000 still outstanding</div>
+        <div style="font-size:12px;color:var(--ink3);margin-top:2px">Record next payment when received</div>
+      </div>
+    </div>
+
+    <div class="glass-card">
+      <div class="section-title"><span class="dot" style="background:var(--purple)"></span>Record payment drawer — field spec</div>
+      <div class="grid2">
+        <div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px">Amount (GHS)</div>
+          <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:8px;padding:9px 12px;font-size:14px;font-weight:600;color:var(--ink);backdrop-filter:blur(6px)">GHS 5,000</div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px">Payment date</div>
+          <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:8px;padding:9px 12px;font-size:14px;color:var(--ink);backdrop-filter:blur(6px)">29 Apr 2025</div>
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px">Payment method</div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          <div style="padding:8px 14px;border-radius:8px;border:2px solid var(--purple);background:var(--p50);font-size:12px;font-weight:700;color:var(--p800)">MTN MoMo</div>
+          <div style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--glass-bg);font-size:12px;font-weight:600;color:var(--ink2);backdrop-filter:blur(6px)">Vodafone Cash</div>
+          <div style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--glass-bg);font-size:12px;font-weight:600;color:var(--ink2);backdrop-filter:blur(6px)">AirtelTigo</div>
+          <div style="padding:8px 14px;border-radius:8px;border:1px solid var(--border);background:var(--glass-bg);font-size:12px;font-weight:600;color:var(--ink2);backdrop-filter:blur(6px)">Bank transfer</div>
+        </div>
+      </div>
+      <div style="margin-top:12px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px">Provider reference</div>
+        <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--ink);font-family:monospace;backdrop-filter:blur(6px)">GH-MOMO-2025042900887</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="s-timelog" class="section">
+    <div class="glass-card">
+      <div class="section-title"><span class="dot" style="background:var(--blue)"></span>Time logs — School management system</div>
+      <div style="display:flex;gap:14px;margin-bottom:14px">
+        <div class="stat-tile" style="flex:1"><div class="stat-label">Total hours</div><div class="stat-val">42.5h</div><div class="stat-sub">This project</div></div>
+        <div class="stat-tile" style="flex:1"><div class="stat-label">Billable</div><div class="stat-val">38h</div><div class="stat-sub" style="color:var(--teal)">89%</div></div>
+        <div class="stat-tile" style="flex:1"><div class="stat-label">Effective rate</div><div class="stat-val">GHS 197</div><div class="stat-sub">per hour</div></div>
+        <div class="stat-tile" style="flex:1"><div class="stat-label">Budget burn</div><div class="stat-val">71%</div><div class="stat-sub" style="color:var(--amber)">GHS 8,400 / 11,800</div></div>
+      </div>
+
+      <div class="timelog-row">
+        <div class="billable-dot"></div>
+        <div class="timelog-date">29 Apr</div>
+        <div class="timelog-desc">Implemented fee payment module with MoMo webhook integration</div>
+        <div class="timelog-h">3.5h</div>
+        <div class="chip chip-t" style="font-size:9px">billable</div>
+      </div>
+      <div class="timelog-row">
+        <div class="billable-dot"></div>
+        <div class="timelog-date">28 Apr</div>
+        <div class="timelog-desc">Student dashboard UI — responsive layout and data tables</div>
+        <div class="timelog-h">5h</div>
+        <div class="chip chip-t" style="font-size:9px">billable</div>
+      </div>
+      <div class="timelog-row">
+        <div class="nonbill-dot"></div>
+        <div class="timelog-date">27 Apr</div>
+        <div class="timelog-desc">Internal review call — requirements clarification</div>
+        <div class="timelog-h">1h</div>
+        <div class="chip" style="background:var(--g50);color:var(--g600);font-size:9px">non-billable</div>
+      </div>
+      <div class="timelog-row">
+        <div class="billable-dot"></div>
+        <div class="timelog-date">26 Apr</div>
+        <div class="timelog-desc">Database schema design and Django model setup</div>
+        <div class="timelog-h">4h</div>
+        <div class="chip chip-t" style="font-size:9px">billable</div>
+      </div>
+      <div class="timelog-row">
+        <div class="billable-dot"></div>
+        <div class="timelog-date">25 Apr</div>
+        <div class="timelog-desc">Authentication system and staff role management</div>
+        <div class="timelog-h">6h</div>
+        <div class="chip chip-t" style="font-size:9px">billable</div>
+      </div>
+    </div>
+
+    <div class="glass-card">
+      <div class="section-title"><span class="dot" style="background:var(--amber)"></span>Log time drawer</div>
+      <div style="font-size:12px;color:var(--ink3);margin-bottom:12px">Opens as right-side drawer. All fields required except notes.</div>
+      <div class="grid2">
+        <div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px">Project</div>
+          <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--p800);font-weight:600;backdrop-filter:blur(6px)">School management system</div>
+        </div>
+        <div>
+          <div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px">Date</div>
+          <div style="background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:8px;padding:9px 12px;font-size:13px;color:var(--ink);backdrop-filter:blur(6px)">Today · 30 Apr 2025</div>
+        </div>
+      </div>
+      <div style="margin-top:10px">
+        <div style="font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px">Hours worked</div>
+        <div style="display:flex;gap:6px;flex-wrap:wrap">
+          <div style="padding:7px 12px;border-radius:8px;border:1px solid var(--border);background:var(--glass-bg);font-size:13px;font-weight:600;color:var(--ink2);backdrop-filter:blur(6px)">0.5h</div>
+          <div style="padding:7px 12px;border-radius:8px;border:1px solid var(--border);background:var(--glass-bg);font-size:13px;font-weight:600;color:var(--ink2);backdrop-filter:blur(6px)">1h</div>
+          <div style="padding:7px 12px;border-radius:8px;border:2px solid var(--purple);background:var(--p50);font-size:13px;font-weight:700;color:var(--p800)">2h</div>
+          <div style="padding:7px 12px;border-radius:8px;border:1px solid var(--border);background:var(--glass-bg);font-size:13px;font-weight:600;color:var(--ink2);backdrop-filter:blur(6px)">3h</div>
+          <div style="padding:7px 12px;border-radius:8px;border:1px solid var(--border);background:var(--glass-bg);font-size:13px;font-weight:600;color:var(--ink2);backdrop-filter:blur(6px)">4h</div>
+          <div style="padding:7px 12px;border-radius:8px;border:1px solid var(--border);background:var(--glass-bg);font-size:13px;font-weight:600;color:var(--ink2);backdrop-filter:blur(6px)">custom</div>
+        </div>
+      </div>
+      <div style="margin-top:10px;display:flex;align-items:center;gap:10px">
+        <div style="flex:1;height:28px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:8px;display:flex;align-items:center;padding:0 12px;font-size:13px;color:var(--ink3);backdrop-filter:blur(6px)">What did you work on?</div>
+        <div style="display:flex;align-items:center;gap:6px;font-size:12px;color:var(--teal);font-weight:600;padding:6px 12px;border-radius:8px;background:var(--t50);border:1px solid var(--t400)"><span style="width:8px;height:8px;border-radius:50%;background:var(--teal);display:inline-block"></span>Billable</div>
+      </div>
+    </div>
+  </div>
+
+  <div id="s-celery" class="section">
+    <div class="glass-card">
+      <div class="section-title"><span class="dot" style="background:var(--amber)"></span>Celery architecture — how it wires into Sprint 2</div>
+      <div style="font-size:12px;color:var(--ink3);margin-bottom:14px">Two Docker Compose services added at the start of Week 5: <code style="background:var(--p50);color:var(--p800);padding:1px 5px;border-radius:4px">celery_worker</code> and <code style="background:var(--p50);color:var(--p800);padding:1px 5px;border-radius:4px">celery_beat</code>. Redis is already in the stack from Sprint 1.</div>
+
+      <div class="celery-flow">
+        <div class="cf-row">
+          <div class="cf-box"><div class="cf-box-title">Celery Beat</div><div class="cf-box-sub">Runs daily at 07:00 WAT</div></div>
+          <span class="cf-badge cf-beat">scheduler</span>
+        </div>
+        <div style="padding:2px 20px;color:var(--ink3);font-size:13px">↓  enqueues tasks via Redis broker</div>
+        <div class="cf-row">
+          <div class="cf-box"><div class="cf-box-title">check_overdue_invoices</div><div class="cf-box-sub">Queries invoices where due_date &lt; today AND status != paid</div></div>
+          <span class="cf-badge cf-worker">worker task</span>
+        </div>
+        <div style="padding:2px 20px;color:var(--ink3);font-size:13px">↓  for each overdue invoice</div>
+        <div class="cf-row">
+          <div class="cf-box"><div class="cf-box-title">Updates invoice.status → overdue</div><div class="cf-box-sub">Atomic DB update — skips already-overdue</div></div>
+          <span class="cf-badge cf-db">postgres</span>
+        </div>
+        <div style="padding:2px 20px;color:var(--ink3);font-size:13px">↓  creates notification record</div>
+        <div class="cf-row">
+          <div class="cf-box"><div class="cf-box-title">Notification.objects.create()</div><div class="cf-box-sub">type=invoice_overdue · entity_id=invoice.id</div></div>
+          <span class="cf-badge cf-notif">notification</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="glass-card">
+      <div class="section-title"><span class="dot" style="background:var(--teal)"></span>Both scheduled tasks</div>
+      <div class="row">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600;color:var(--ink)">check_overdue_invoices</div>
+          <div style="font-size:11px;color:var(--ink3);margin-top:2px">Every day 07:00 · Marks overdue, creates Notification records</div>
+        </div>
+        <span class="chip chip-r">Finance</span>
+      </div>
+      <div class="row">
+        <div style="flex:1">
+          <div style="font-size:13px;font-weight:600;color:var(--ink)">check_proposal_deadlines</div>
+          <div style="font-size:11px;color:var(--ink3);margin-top:2px">Every day 07:00 · Alerts when deadline ≤ 3 days away, not yet decided</div>
+        </div>
+        <span class="chip chip-a">Pipeline</span>
+      </div>
+      <div style="margin-top:12px;font-size:12px;color:var(--ink3);background:var(--p50);border-radius:8px;padding:10px 12px;border-left:3px solid var(--purple)">
+        <strong style="color:var(--p800)">Design rule:</strong> Tasks only create Notification records. They never send email, never call external APIs. Sprint 3 can add email/push on top of the same Notification model without touching these tasks.
+      </div>
+    </div>
+  </div>
+
+  <div id="s-issues" class="section">
+    <div class="glass-card">
+      <div class="section-title"><span class="dot" style="background:var(--purple)"></span>Sprint 2 GitHub issues — all 20</div>
+      <div style="font-size:12px;color:var(--ink3);margin-bottom:12px">Create these before touching code. Labels: <span class="chip chip-a" style="font-size:9px">backend</span> <span class="chip chip-b" style="font-size:9px">frontend</span> <span class="chip" style="background:var(--g50);color:var(--g600);font-size:9px">model</span> <span class="chip chip-p" style="font-size:9px">chore</span></div>
+
+      <div class="issue-row"><div class="issue-num">#19</div><div><div class="issue-title">Add Celery + Beat to docker-compose.yml — wire before writing tasks</div><div class="issue-tags"><span class="issue-tag it-ch">chore</span></div></div></div>
+      <div class="issue-row"><div class="issue-num">#20</div><div><div class="issue-title">Invoice model + InvoiceLineItem model + migrations</div><div class="issue-tags"><span class="issue-tag it-m">model</span><span class="issue-tag it-be">backend</span></div></div></div>
+      <div class="issue-row"><div class="issue-num">#21</div><div><div class="issue-title">Payment model + post_save signal → auto-update invoice status</div><div class="issue-tags"><span class="issue-tag it-m">model</span><span class="issue-tag it-be">backend</span></div></div></div>
+      <div class="issue-row"><div class="issue-num">#22</div><div><div class="issue-title">TimeLog model + migrations</div><div class="issue-tags"><span class="issue-tag it-m">model</span><span class="issue-tag it-be">backend</span></div></div></div>
+      <div class="issue-row"><div class="issue-num">#23</div><div><div class="issue-title">Invoice number Postgres sequence (atomic, race-condition-safe)</div><div class="issue-tags"><span class="issue-tag it-be">backend</span></div></div></div>
+      <div class="issue-row"><div class="issue-num">#24</div><div><div class="issue-title">Invoice CRUD endpoints + /send/ + /overdue/ + line_items nested write</div><div class="issue-tags"><span class="issue-tag it-be">backend</span></div></div></div>
+      <div class="issue-row"><div class="issue-num">#25</div><div><div class="issue-title">Payment endpoints — create, list, delete (with invoice recalculation)</div><div class="issue-tags"><span class="issue-tag it-be">backend</span></div></div></div>
+      <div class="issue-row"><div class="issue-num">#26</div><div><div class="issue-title">TimeLog CRUD endpoints + project hours aggregation</div><div class="issue-tags"><span class="issue-tag it-be">backend</span></div></div></div>
+      <div class="issue-row"><div class="issue-num">#27</div><div><div class="issue-title">Notification model + list + read + read-all endpoints</div><div class="issue-tags"><span class="issue-tag it-m">model</span><span class="issue-tag it-be">backend</span></div></div></div>
+      <div class="issue-row"><div class="issue-num">#28</div><div><div class="issue-title">Celery task: check_overdue_invoices (daily 07:00 WAT)</div><div class="issue-tags"><span class="issue-tag it-be">backend</span></div></div></div>
+      <div class="issue-row"><div class="issue-num">#29</div><div><div class="issue-title">Celery task: check_proposal_deadlines (daily 07:00 WAT)</div><div class="issue-tags"><span class="issue-tag it-be">backend</span></div></div></div>
+      <div class="issue-row"><div class="issue-num">#30</div><div><div class="issue-title">pytest-django — tests for all Sprint 2 endpoints (target: 100% coverage)</div><div class="issue-tags"><span class="issue-tag it-ch">chore</span><span class="issue-tag it-be">backend</span></div></div></div>
+      <div class="issue-row"><div class="issue-num">#31</div><div><div class="issue-title">Invoice list screen — glass card list with status chips and GHS amounts</div><div class="issue-tags"><span class="issue-tag it-fe">frontend</span></div></div></div>
+      <div class="issue-row"><div class="issue-num">#32</div><div><div class="issue-title">Invoice detail screen — document layout + line items + payment timeline</div><div class="issue-tags"><span class="issue-tag it-fe">frontend</span></div></div></div>
+      <div class="issue-row"><div class="issue-num">#33</div><div><div class="issue-title">Invoice detail — print stylesheet (hides nav/sidebar/action bar)</div><div class="issue-tags"><span class="issue-tag it-fe">frontend</span></div></div></div>
+      <div class="issue-row"><div class="issue-num">#34</div><div><div class="issue-title">Record payment right-side drawer (method selector + reference field)</div><div class="issue-tags"><span class="issue-tag it-fe">frontend</span></div></div></div>
+      <div class="issue-row"><div class="issue-num">#35</div><div><div class="issue-title">Time log form drawer + project hours summary panel</div><div class="issue-tags"><span class="issue-tag it-fe">frontend</span></div></div></div>
+      <div class="issue-row"><div class="issue-num">#36</div><div><div class="issue-title">Notification bell component — unread dot, dropdown list, mark-read</div><div class="issue-tags"><span class="issue-tag it-fe">frontend</span></div></div></div>
+      <div class="issue-row"><div class="issue-num">#37</div><div><div class="issue-title">Dashboard upgrade — outstanding GHS tile + overdue invoices tile live</div><div class="issue-tags"><span class="issue-tag it-fe">frontend</span></div></div></div>
+      <div class="issue-row"><div class="issue-num">#38</div><div><div class="issue-title">Client detail — Payments tab + Time tab wired to live data</div><div class="issue-tags"><span class="issue-tag it-fe">frontend</span></div></div></div>
+    </div>
+  </div>
+
+  <div id="s-checklist" class="section">
+    <div class="glass-card">
+      <div class="section-title"><span class="dot" style="background:var(--teal)"></span>Sprint 1 exit gate — must be true before Sprint 2 starts</div>
+      <div style="font-size:12px;color:var(--ink3);margin-bottom:12px">These are your entry criteria. If any is false, fix it before writing Sprint 2 code.</div>
+      <div class="dependency-block">
+        <div class="dep-sprint" style="color:var(--p800)">Sprint 1 must be done</div>
+        <div class="dep-item"><div class="dep-check dep-done"><svg width="8" height="8" viewBox="0 0 10 10"><polyline points="1,5 4,8 9,2" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Organisation + User + Client + Lead + Proposal models all migrated and seeded</div>
+        <div class="dep-item"><div class="dep-check dep-done"><svg width="8" height="8" viewBox="0 0 10 10"><polyline points="1,5 4,8 9,2" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>JWT auth flow working end-to-end (login → refresh → protected route)</div>
+        <div class="dep-item"><div class="dep-check dep-done"><svg width="8" height="8" viewBox="0 0 10 10"><polyline points="1,5 4,8 9,2" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Proposal → won → convert to Project working (project record exists)</div>
+        <div class="dep-item"><div class="dep-check dep-done"><svg width="8" height="8" viewBox="0 0 10 10"><polyline points="1,5 4,8 9,2" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Dashboard API returning live data (not hardcoded)</div>
+        <div class="dep-item"><div class="dep-check dep-done"><svg width="8" height="8" viewBox="0 0 10 10"><polyline points="1,5 4,8 9,2" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>Redis container healthy in Docker Compose (Sprint 2 Celery depends on it)</div>
+        <div class="dep-item"><div class="dep-check dep-done"><svg width="8" height="8" viewBox="0 0 10 10"><polyline points="1,5 4,8 9,2" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></div>AuditLog signal wired (not visible in UI, but writing records to DB)</div>
+      </div>
+    </div>
+
+    <div class="glass-card">
+      <div class="section-title"><span class="dot" style="background:var(--amber)"></span>Sprint 2 out-of-scope — do not touch</div>
+      <div class="row"><span class="chip chip-r">Out</span><span class="row-label">AI assistant / Anthropic API calls</span><span class="row-meta">Sprint 3</span></div>
+      <div class="row"><span class="chip chip-r">Out</span><span class="row-label">Analytics charts (revenue trend, win rate)</span><span class="row-meta">Sprint 3</span></div>
+      <div class="row"><span class="chip chip-r">Out</span><span class="row-label">PDF invoice generation / email sending</span><span class="row-meta">Sprint 4+</span></div>
+      <div class="row"><span class="chip chip-r">Out</span><span class="row-label">Expense model / P&L view</span><span class="row-meta">Sprint 4+</span></div>
+      <div class="row"><span class="chip chip-r">Out</span><span class="row-label">Multi-user / role-based permissions</span><span class="row-meta">Sprint 4+</span></div>
+      <div class="row"><span class="chip chip-r">Out</span><span class="row-label">Contract model</span><span class="row-meta">Sprint 4+</span></div>
+      <div style="margin-top:12px;font-size:12px;color:var(--ink3);background:var(--a50);border-radius:8px;padding:10px 12px;border-left:3px solid var(--amber)">
+        <strong style="color:var(--a600)">Print-to-PDF rule:</strong> The invoice detail print stylesheet is IN scope. A server-side PDF generation library (WeasyPrint, reportlab) is NOT. Browser print is free, correct, and prints your actual glassmorphic design. Add server-side PDF only when a client asks for automated email attachments.
+      </div>
+    </div>
+
+    <div class="glass-card">
+      <div class="section-title"><span class="dot" style="background:var(--purple)"></span>Sprint 2 definition of done</div>
+      <div class="row"><div style="width:14px;height:14px;border-radius:4px;border:2px solid var(--border);flex-shrink:0"></div><span class="row-label">I can create an invoice with line items linked to a client + project</span></div>
+      <div class="row"><div style="width:14px;height:14px;border-radius:4px;border:2px solid var(--border);flex-shrink:0"></div><span class="row-label">Recording a MoMo payment updates the invoice status automatically</span></div>
+      <div class="row"><div style="width:14px;height:14px;border-radius:4px;border:2px solid var(--border);flex-shrink:0"></div><span class="row-label">An overdue invoice shows the red chip on the invoice list</span></div>
+      <div class="row"><div style="width:14px;height:14px;border-radius:4px;border:2px solid var(--border);flex-shrink:0"></div><span class="row-label">I can log 3.5 hours to a project and see the running total update</span></div>
+      <div class="row"><div style="width:14px;height:14px;border-radius:4px;border:2px solid var(--border);flex-shrink:0"></div><span class="row-label">The notification bell shows unread count and I can mark all as read</span></div>
+      <div class="row"><div style="width:14px;height:14px;border-radius:4px;border:2px solid var(--border);flex-shrink:0"></div><span class="row-label">The dashboard Outstanding tile shows the live GHS sum of unpaid invoices</span></div>
+      <div class="row"><div style="width:14px;height:14px;border-radius:4px;border:2px solid var(--border);flex-shrink:0"></div><span class="row-label">Printing the invoice detail shows a clean document (nav and buttons hidden)</span></div>
+      <div class="row"><div style="width:14px;height:14px;border-radius:4px;border:2px solid var(--border);flex-shrink:0"></div><span class="row-label">Celery Beat runs both tasks daily and I can see task logs in Docker</span></div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+function show(id){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.pill').forEach(p=>p.classList.remove('active'));
+  document.getElementById('s-'+id).classList.add('active');
+  event.target.classList.add('active');
+}
+</script>
