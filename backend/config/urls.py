@@ -2,6 +2,8 @@ from django.contrib import admin
 from django.urls import include, path
 from drf_spectacular.views import SpectacularAPIView, SpectacularSwaggerView
 
+API_V1_PREFIX = "api/v1/"
+
 urlpatterns = [
     path("admin/", admin.site.urls),
     # OpenAPI schema — generated automatically from your ViewSets
@@ -12,6 +14,7 @@ urlpatterns = [
         name="swagger-ui",
     ),
     # All v1 API routes delegated to apps
-    path("api/v1/", include("apps.accounts.urls")),
-    path("api/v1/", include("apps.clients.urls")),
+    path(API_V1_PREFIX, include("apps.accounts.urls")),
+    path(API_V1_PREFIX, include("apps.clients.urls")),
+    path(API_V1_PREFIX, include("apps.proposals.urls")),
 ]
