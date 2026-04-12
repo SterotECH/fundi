@@ -3,13 +3,15 @@ from datetime import timedelta
 import pytest
 from django.urls import reverse
 from django.utils import timezone
+from django_celery_beat.models import PeriodicTask
 
 from apps.accounts.factories import OrganisationFactory, UserFactory
 from apps.clients.factories import ClientFactory
 from apps.clients.models import Client
-from apps.core import services
+from apps.core import services, tasks
 from apps.core.models import AuditLog, Notification
 from apps.invoices.factories import InvoiceFactory, PaymentFactory
+from apps.invoices.models import Invoice
 from apps.projects.factories import ProjectFactory
 from apps.projects.models import Project
 from apps.proposals.factories import ProposalFactory
@@ -144,7 +146,7 @@ def test_dashboard_api_returns_sprint_2_summary_data(
     )
     Notification.objects.create(
         user=org.users.first(),
-        type=Notification.NotificationType.OVERDUE,
+        type=Notification.NotificationType.INVOICE_OVERDUE,
         message="Invoice overdue",
         is_read=False,
     )
@@ -199,12 +201,12 @@ def test_dashboard_api_returns_sprint_2_summary_data(
 def test_notification_model_defaults_to_unread_and_orders_newest_first(user):
     older = Notification.objects.create(
         user=user,
-        type=Notification.NotificationType.DEADLINE,
+        type=Notification.NotificationType.PROPOSAL_DEADLINE,
         message="Older reminder",
     )
     newer = Notification.objects.create(
         user=user,
-        type=Notification.NotificationType.OVERDUE,
+        type=Notification.NotificationType.INVOICE_OVERDUE,
         message="Newer reminder",
     )
 
@@ -218,7 +220,7 @@ def test_notification_model_defaults_to_unread_and_orders_newest_first(user):
 def test_list_notifications_service_filters_and_returns_unread_count(user):
     unread = Notification.objects.create(
         user=user,
-        type=Notification.NotificationType.DEADLINE,
+        type=Notification.NotificationType.PROPOSAL_DEADLINE,
         message="Unread reminder",
         is_read=False,
     )
@@ -242,12 +244,12 @@ def test_list_notifications_service_filters_and_returns_unread_count(user):
 def test_mark_all_notifications_read_service_updates_rows_and_writes_audit(user, org):
     first = Notification.objects.create(
         user=user,
-        type=Notification.NotificationType.DEADLINE,
+        type=Notification.NotificationType.PROPOSAL_DEADLINE,
         message="First unread",
     )
     second = Notification.objects.create(
         user=user,
-        type=Notification.NotificationType.OVERDUE,
+        type=Notification.NotificationType.INVOICE_OVERDUE,
         message="Second unread",
     )
 
@@ -272,7 +274,7 @@ def test_notification_list_endpoint_returns_unread_count_and_user_rows(
 ):
     unread = Notification.objects.create(
         user=user,
-        type=Notification.NotificationType.DEADLINE,
+        type=Notification.NotificationType.PROPOSAL_DEADLINE,
         message="Own unread",
     )
     Notification.objects.create(
@@ -284,7 +286,7 @@ def test_notification_list_endpoint_returns_unread_count_and_user_rows(
     other_user = UserFactory(organisation=OrganisationFactory())
     Notification.objects.create(
         user=other_user,
-        type=Notification.NotificationType.OVERDUE,
+        type=Notification.NotificationType.INVOICE_OVERDUE,
         message="Other unread",
     )
 
@@ -307,7 +309,7 @@ def test_notification_read_endpoint_marks_read_and_records_actor(
 ):
     notification = Notification.objects.create(
         user=user,
-        type=Notification.NotificationType.DEADLINE,
+        type=Notification.NotificationType.PROPOSAL_DEADLINE,
         message="Review proposal deadline",
     )
 
@@ -334,7 +336,7 @@ def test_notification_read_endpoint_marks_read_and_records_actor(
 def test_notification_read_all_endpoint_marks_all_read(authenticated_client, user):
     first = Notification.objects.create(
         user=user,
-        type=Notification.NotificationType.DEADLINE,
+        type=Notification.NotificationType.PROPOSAL_DEADLINE,
         message="First unread",
     )
     second = Notification.objects.create(
@@ -365,12 +367,12 @@ def test_notification_read_all_endpoint_marks_all_read(authenticated_client, use
 def test_notification_detail_is_user_scoped(authenticated_client, user):
     own = Notification.objects.create(
         user=user,
-        type=Notification.NotificationType.DEADLINE,
+        type=Notification.NotificationType.PROPOSAL_DEADLINE,
         message="Own detail",
     )
     other = Notification.objects.create(
         user=UserFactory(organisation=OrganisationFactory()),
-        type=Notification.NotificationType.OVERDUE,
+        type=Notification.NotificationType.INVOICE_OVERDUE,
         message="Other detail",
     )
 
@@ -395,7 +397,7 @@ def test_notification_read_endpoint_is_idempotent_for_already_read_notification(
 ):
     notification = Notification.objects.create(
         user=user,
-        type=Notification.NotificationType.DEADLINE,
+        type=Notification.NotificationType.PROPOSAL_DEADLINE,
         message="Already read",
         is_read=True,
     )
@@ -428,6 +430,131 @@ def test_mark_all_notifications_read_service_returns_zero_when_nothing_to_update
     updated = services.mark_all_notifications_read(user=user)
 
     assert updated == 0
+
+
+@pytest.mark.django_db
+def test_check_overdue_invoices_marks_status_and_notifies_active_org_users(
+    org,
+    user,
+):
+    second_user = UserFactory(organisation=org)
+    UserFactory(organisation=org, is_active=False)
+    invoice = InvoiceFactory(
+        organisation=org,
+        status=Invoice.InvoiceStatus.SENT,
+        due_date=timezone.localdate() - timedelta(days=1),
+        invoice_number="STERO-2026-0001",
+    )
+    InvoiceFactory(
+        organisation=org,
+        status=Invoice.InvoiceStatus.PAID,
+        due_date=timezone.localdate() - timedelta(days=2),
+    )
+
+    result = services.check_overdue_invoices()
+
+    invoice.refresh_from_db()
+    assert result == {
+        "invoices_checked": 1,
+        "invoices_marked_overdue": 1,
+        "notifications_created": 2,
+    }
+    assert invoice.status == Invoice.InvoiceStatus.OVERDUE
+    notifications = Notification.objects.filter(
+        type=Notification.NotificationType.INVOICE_OVERDUE,
+        entity_type="Invoice",
+        entity_id=invoice.id,
+    ).order_by("user__email")
+    assert set(notifications.values_list("user", flat=True)) == {
+        user.id,
+        second_user.id,
+    }
+
+    duplicate_result = services.check_overdue_invoices()
+
+    assert duplicate_result == {
+        "invoices_checked": 1,
+        "invoices_marked_overdue": 0,
+        "notifications_created": 0,
+    }
+
+
+@pytest.mark.django_db
+def test_check_proposal_deadlines_notifies_active_org_users_once_per_day(org, user):
+    second_user = UserFactory(organisation=org)
+    UserFactory(organisation=org, is_active=False)
+    due_soon = ProposalFactory(
+        organisation=org,
+        status=Proposal.ProposalStatus.SENT,
+        deadline=timezone.localdate() + timedelta(days=3),
+    )
+    ProposalFactory(
+        organisation=org,
+        status=Proposal.ProposalStatus.WON,
+        deadline=timezone.localdate() + timedelta(days=1),
+    )
+    ProposalFactory(
+        organisation=org,
+        status=Proposal.ProposalStatus.SENT,
+        deadline=timezone.localdate() + timedelta(days=10),
+    )
+
+    result = services.check_proposal_deadlines()
+
+    assert result == {
+        "proposals_checked": 1,
+        "notifications_created": 2,
+    }
+    notifications = Notification.objects.filter(
+        type=Notification.NotificationType.PROPOSAL_DEADLINE,
+        entity_type="Proposal",
+        entity_id=due_soon.id,
+    ).order_by("user__email")
+    assert set(notifications.values_list("user", flat=True)) == {
+        user.id,
+        second_user.id,
+    }
+
+    duplicate_result = services.check_proposal_deadlines()
+
+    assert duplicate_result == {
+        "proposals_checked": 1,
+        "notifications_created": 0,
+    }
+
+
+@pytest.mark.django_db
+def test_celery_task_wrappers_return_service_payloads(org):
+    InvoiceFactory(
+        organisation=org,
+        status=Invoice.InvoiceStatus.PARTIAL,
+        due_date=timezone.localdate() - timedelta(days=1),
+    )
+    ProposalFactory(
+        organisation=org,
+        status=Proposal.ProposalStatus.SENT,
+        deadline=timezone.localdate() + timedelta(days=1),
+    )
+
+    overdue_result = tasks.check_overdue_invoices()
+    deadline_result = tasks.check_proposal_deadlines()
+
+    assert overdue_result["invoices_checked"] == 1
+    assert overdue_result["invoices_marked_overdue"] == 1
+    assert deadline_result["proposals_checked"] == 1
+
+
+@pytest.mark.django_db
+def test_celery_beat_periodic_tasks_are_seeded():
+    overdue_task = PeriodicTask.objects.get(name="Check overdue invoices daily")
+    deadline_task = PeriodicTask.objects.get(name="Check proposal deadlines daily")
+
+    assert overdue_task.task == "apps.core.tasks.check_overdue_invoices"
+    assert deadline_task.task == "apps.core.tasks.check_proposal_deadlines"
+    assert overdue_task.crontab.minute == "0"
+    assert overdue_task.crontab.hour == "7"
+    assert str(overdue_task.crontab.timezone) == "Africa/Accra"
+    assert deadline_task.crontab == overdue_task.crontab
 
 
 @pytest.mark.django_db

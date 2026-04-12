@@ -221,3 +221,127 @@ def create_notification(
         entity_type=entity_type,
         entity_id=entity_id,
     )
+
+
+def create_daily_notification_once(
+    *,
+    user: User,
+    notification_type: str,
+    message: str,
+    entity_type: str,
+    entity_id: UUID,
+) -> tuple[Notification, bool]:
+    """
+    Create one notification for a user/entity/type per calendar day.
+
+    Celery Beat can rerun or be triggered manually. The Sprint 2 contract
+    requires a same-day duplicate guard keyed by user, notification type,
+    entity, and today's date.
+    """
+    today = timezone.localdate()
+    notifications = Notification.objects.filter(created_at__date=today)
+    return notifications.get_or_create(
+        user=user,
+        type=notification_type,
+        entity_type=entity_type,
+        entity_id=entity_id,
+        defaults={"message": message},
+    )
+
+
+def check_overdue_invoices() -> dict[str, int]:
+    """
+    Mark overdue invoices and create daily invoice-overdue notifications.
+
+    The current data model has organisation users, but no per-invoice owner.
+    Until ownership exists, every active user in the invoice organisation is
+    treated as the responsible recipient.
+    """
+    today = timezone.localdate()
+    invoices = (
+        Invoice.objects.select_related("organisation", "client")
+        .prefetch_related("organisation__users")
+        .filter(due_date__lt=today)
+        .exclude(status=Invoice.InvoiceStatus.PAID)
+        .order_by("due_date", "-created_at")
+    )
+
+    invoices_checked = 0
+    invoices_marked_overdue = 0
+    notifications_created = 0
+
+    for invoice in invoices:
+        invoices_checked += 1
+        if invoice.status != Invoice.InvoiceStatus.OVERDUE:
+            invoice.status = Invoice.InvoiceStatus.OVERDUE
+            invoice.save(update_fields=["status", "updated_at"])
+            invoices_marked_overdue += 1
+
+        label = invoice.invoice_number or str(invoice.id)
+        message = f"Invoice {label} for {invoice.client.name} is overdue."
+        users = invoice.organisation.users.filter(is_active=True)
+        for user in users:
+            _notification, created = create_daily_notification_once(
+                user=user,
+                notification_type=Notification.NotificationType.INVOICE_OVERDUE,
+                message=message,
+                entity_type="Invoice",
+                entity_id=invoice.id,
+            )
+            if created:
+                notifications_created += 1
+
+    return {
+        "invoices_checked": invoices_checked,
+        "invoices_marked_overdue": invoices_marked_overdue,
+        "notifications_created": notifications_created,
+    }
+
+
+def check_proposal_deadlines() -> dict[str, int]:
+    """
+    Create daily proposal-deadline notifications for proposals due within 3 days.
+
+    Proposals are organisation-owned rather than user-owned, so every active
+    user in the proposal organisation receives the reminder.
+    """
+    today = timezone.localdate()
+    deadline_limit = today + timedelta(days=3)
+    proposals = (
+        Proposal.objects.select_related("organisation", "client")
+        .prefetch_related("organisation__users")
+        .filter(deadline__lte=deadline_limit)
+        .exclude(
+            status__in=[
+                Proposal.ProposalStatus.WON,
+                Proposal.ProposalStatus.LOST,
+            ]
+        )
+        .order_by("deadline", "-created_at")
+    )
+
+    proposals_checked = 0
+    notifications_created = 0
+
+    for proposal in proposals:
+        proposals_checked += 1
+        message = (
+            f"Proposal {proposal.title} for {proposal.client.name} "
+            f"is due on {proposal.deadline.isoformat()}."
+        )
+        users = proposal.organisation.users.filter(is_active=True)
+        for user in users:
+            _notification, created = create_daily_notification_once(
+                user=user,
+                notification_type=Notification.NotificationType.PROPOSAL_DEADLINE,
+                message=message,
+                entity_type="Proposal",
+                entity_id=proposal.id,
+            )
+            if created:
+                notifications_created += 1
+
+    return {
+        "proposals_checked": proposals_checked,
+        "notifications_created": notifications_created,
+    }

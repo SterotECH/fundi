@@ -63,8 +63,8 @@ class AuditLog(models.Model):
 
 class Notification(models.Model):
     class NotificationType(models.TextChoices):
-        DEADLINE = "deadline", "Deadline"
-        OVERDUE = "overdue", "Overdue"
+        INVOICE_OVERDUE = "invoice_overdue", "Invoice Overdue"
+        PROPOSAL_DEADLINE = "proposal_deadline", "Proposal Deadline"
         PROJECT_DUE = "project_due", "Project Due"
 
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
@@ -76,10 +76,7 @@ class Notification(models.Model):
     if TYPE_CHECKING:
         user_id: uuid.UUID
 
-    type = models.CharField(
-        max_length=20,
-        choices=NotificationType.choices
-    )
+    type = models.CharField(max_length=20, choices=NotificationType.choices)
     message = models.TextField()
     entity_type = models.CharField(max_length=255, null=True, blank=True)
     entity_id = models.UUIDField(null=True, blank=True)
