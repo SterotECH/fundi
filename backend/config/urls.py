@@ -17,4 +17,5 @@ urlpatterns = [
     path(API_V1_PREFIX, include("apps.accounts.urls")),
     path(API_V1_PREFIX, include("apps.clients.urls")),
     path(API_V1_PREFIX, include("apps.proposals.urls")),
+    path(API_V1_PREFIX, include("apps.projects.urls")),
 ]
