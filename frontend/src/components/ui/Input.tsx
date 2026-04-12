@@ -37,42 +37,42 @@ export function Input({
     error ? "text-error-hover" : "text-text-secondary",
   );
 
-  if (variant === "hud") {
-    return (
-      <label className={cn("block", wrapperClassName)} htmlFor={inputId}>
-        {label ? <span className={labelClassName}>{label}</span> : null}
-        <span className={cn("field-shell mt-3 border-info/20 bg-white/5", shellClassName)}>
-          {leftIcon ? (
-            <span className="shrink-0 text-info">{leftIcon}</span>
-          ) : null}
-          <input
-            className={cn("text-white placeholder:text-white/38", className)}
-            id={inputId}
-            {...props}
-          />
-        </span>
-        {error ? (
-          <span className={cn("flex items-center gap-2", messageClassName)} role="alert">
-            {error}
-          </span>
-        ) : hint ? (
-          <span className={messageClassName}>{hint}</span>
-        ) : null}
-      </label>
-    );
-  }
+   if (variant === "hud") {
+     return (
+       <label className={cn("block", wrapperClassName)} htmlFor={inputId}>
+         {label ? <span className={labelClassName}>{label}</span> : null}
+         <span className={cn("field-shell mt-3 border-info/20 bg-white/5", shellClassName)}>
+           {leftIcon ? (
+             <span className="shrink-0 text-info">{leftIcon}</span>
+           ) : null}
+           <input
+             className={cn("text-white placeholder:text-white/38", className)}
+             id={inputId}
+             {...props}
+           />
+         </span>
+         {error ? (
+           <span className={cn("flex items-center gap-2", messageClassName)} role="alert">
+             {error}
+           </span>
+         ) : hint ? (
+           <span className={messageClassName}>{hint}</span>
+         ) : null}
+       </label>
+     );
+   }
 
-  return (
-    <label className={cn("block", wrapperClassName)} htmlFor={inputId}>
-      {label ? <span className={labelClassName}>{label}</span> : null}
-      <input className={cn("field-input", className)} id={inputId} {...props} />
-      {error ? (
-        <span className={messageClassName} role="alert">
-          {error}
-        </span>
-      ) : hint ? (
-        <span className={messageClassName}>{hint}</span>
-      ) : null}
-    </label>
-  );
+   return (
+     <label className={cn("block", wrapperClassName)} htmlFor={inputId}>
+       {label ? <span className={labelClassName}>{label}</span> : null}
+       <input className={cn("field-input", className)} id={inputId} {...props} />
+       {error ? (
+         <span className={messageClassName} role="alert">
+           {error}
+         </span>
+       ) : hint ? (
+         <span className={messageClassName}>{hint}</span>
+       ) : null}
+     </label>
+   );
 }

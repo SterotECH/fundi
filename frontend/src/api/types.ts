@@ -78,4 +78,17 @@ export type DashboardSummary = {
     due_date: string;
     budget: string;
   }>;
+  total_outstanding: string;
+  overdue_invoices: Array<{
+    id: string;
+    invoice_number: string | null;
+    client: string;
+    client_name: string;
+    status: string;
+    due_date: string | null;
+    total: string;
+    amount_paid: string;
+    amount_remaining: string;
+  }>;
+  unread_notifications_count: number;
 };

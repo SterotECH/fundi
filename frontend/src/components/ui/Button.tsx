@@ -12,11 +12,11 @@ type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
 };
 
 const variants: Record<ButtonVariant, string> = {
-  primary: "button-primary",
-  secondary: "button-secondary",
-  danger: "button-danger",
-  success: "button-success",
-  hud: "inline-flex items-center justify-center gap-2 rounded-md border border-info/35 bg-primary px-4 py-3 text-sm font-semibold text-white transition-all duration-200 hover:border-info/55 hover:bg-primary-hover hover:shadow-[0_0_28px_color-mix(in_srgb,var(--primary)_38%,transparent)] focus:outline-2 focus:outline-offset-2 focus:outline-ring",
+  primary: "button-primary relative overflow-hidden",
+  secondary: "button-secondary relative overflow-hidden",
+  danger: "button-danger relative overflow-hidden",
+  success: "button-success relative overflow-hidden",
+  hud: "inline-flex items-center justify-center gap-2 rounded-md border border-info/35 bg-primary px-4 py-3 text-sm font-semibold text-white transition-all duration-300 hover:border-info/55 hover:bg-primary-hover hover:shadow-[0_0_28px_color-mix(in_srgb,var(--primary)_38%,transparent)] focus:outline-2 focus:outline-offset-2 focus:outline-ring relative overflow-hidden",
 };
 
 export function Button({
