@@ -1,8 +1,10 @@
+from typing import Any, cast
+
 from django.contrib.auth import authenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 
 
-def login_user(email: str, password: str):
+def login_user(email: str, password: str) -> tuple[Any | None, str | None, str | None]:
     """
     Authenticate user and return (user, access_token, refresh_token).
     Returns None if credentials are invalid.
@@ -17,10 +19,10 @@ def login_user(email: str, password: str):
     return user, str(refresh.access_token), str(refresh)
 
 
-def logout_user(refresh_token: str):
+def logout_user(refresh_token: str) -> None:
     """Blacklist the refresh token so it can't be used again."""
     try:
-        token = RefreshToken(refresh_token)
+        token = RefreshToken(cast(Any, refresh_token))
         token.blacklist()
     except Exception:
         pass  # Already blacklisted or invalid — either way, logout succeeded

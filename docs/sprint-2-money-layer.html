@@ -598,9 +598,9 @@
         <div class="field"><span class="field-name">client</span><span class="field-type">FK → Client</span><span class="badge-fk">FK</span></div>
         <div class="field"><span class="field-name">project</span><span class="field-type">nullable FK → Project</span><span class="badge-fk">FK</span></div>
         <div class="field"><span class="field-name">invoice_number</span><span class="field-type">string, unique (Postgres seq)</span></div>
-        <div class="field"><span class="field-name">subtotal_ghs</span><span class="field-type">Decimal(12,2)</span></div>
-        <div class="field"><span class="field-name">tax_ghs</span><span class="field-type">Decimal(12,2), default 0</span></div>
-        <div class="field"><span class="field-name">total_ghs</span><span class="field-type">Decimal(12,2)</span></div>
+        <div class="field"><span class="field-name">subtotal</span><span class="field-type">Decimal(12,2)</span></div>
+        <div class="field"><span class="field-name">tax</span><span class="field-type">Decimal(12,2), default 0</span></div>
+        <div class="field"><span class="field-name">total</span><span class="field-type">Decimal(12,2)</span></div>
         <div class="field"><span class="field-name">status</span><span class="field-type">enum: draft/sent/partial/paid/overdue</span></div>
         <div class="field"><span class="field-name">issue_date</span><span class="field-type">date, auto today</span></div>
         <div class="field"><span class="field-name">due_date</span><span class="field-type">date, default +30 days</span></div>
@@ -619,8 +619,8 @@
         <div class="field"><span class="field-name">invoice</span><span class="field-type">FK → Invoice</span><span class="badge-fk">FK</span></div>
         <div class="field"><span class="field-name">description</span><span class="field-type">string</span></div>
         <div class="field"><span class="field-name">quantity</span><span class="field-type">Decimal(8,2)</span></div>
-        <div class="field"><span class="field-name">unit_price_ghs</span><span class="field-type">Decimal(12,2)</span></div>
-        <div class="field"><span class="field-name">line_total_ghs</span><span class="field-type">Decimal(12,2), computed</span></div>
+        <div class="field"><span class="field-name">unit_price</span><span class="field-type">Decimal(12,2)</span></div>
+        <div class="field"><span class="field-name">line_total</span><span class="field-type">Decimal(12,2), computed</span></div>
       </div>
     </div>
 
@@ -632,7 +632,7 @@
       <div class="field-list">
         <div class="field"><span class="field-name">id</span><span class="field-type">UUID</span><span class="badge-pk">PK</span></div>
         <div class="field"><span class="field-name">invoice</span><span class="field-type">FK → Invoice</span><span class="badge-fk">FK</span></div>
-        <div class="field"><span class="field-name">amount_ghs</span><span class="field-type">Decimal(12,2)</span></div>
+        <div class="field"><span class="field-name">amount</span><span class="field-type">Decimal(12,2)</span></div>
         <div class="field"><span class="field-name">method</span><span class="field-type">enum: mtn_momo/vodafone/airteltigo/bank/cash</span></div>
         <div class="field"><span class="field-name">provider_reference</span><span class="field-type">string (MoMo/bank ref)</span></div>
         <div class="field"><span class="field-name">payment_date</span><span class="field-type">date</span></div>
@@ -684,7 +684,7 @@
       <div class="field-list">
         <div class="field"><span class="field-name">id / client / proposal</span><span class="field-type">already exists</span></div>
         <div class="field"><span class="field-name">title / status / due_date</span><span class="field-type">already exists</span></div>
-        <div class="field"><span class="field-name">budget_ghs</span><span class="field-type">already exists — now used for burn %</span></div>
+        <div class="field"><span class="field-name">budget</span><span class="field-type">already exists — now used for burn %</span></div>
       </div>
     </div>
 
@@ -711,7 +711,7 @@
   <div class="endpoint-group">
     <div class="endpoint-group-label">Invoices</div>
     <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/invoices/</span><span class="endpoint-desc">List invoices. Filter by <code>status</code>, <code>client_id</code>, <code>project_id</code>. Paginated.</span></div>
-    <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/invoices/</span><span class="endpoint-desc">Create invoice with nested line items. Body: <code>{client_id, project_id?, due_date, notes?, line_items: [{description, quantity, unit_price_ghs}]}</code>. Auto-calculates totals.</span></div>
+    <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/invoices/</span><span class="endpoint-desc">Create invoice with nested line items. Body: <code>{client_id, project_id?, due_date, notes?, line_items: [{description, quantity, unit_price}]}</code>. Auto-calculates totals.</span></div>
     <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/invoices/{id}/</span><span class="endpoint-desc">Invoice detail with nested line items and payment history. Includes <code>amount_paid</code> and <code>amount_remaining</code> computed fields.</span></div>
     <div class="endpoint"><span class="method PATCH">PATCH</span><span class="endpoint-url">/invoices/{id}/</span><span class="endpoint-desc">Update invoice. Only allowed when status is <code>draft</code>. Rejects updates to sent/paid invoices.</span></div>
     <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/invoices/{id}/send/</span><span class="endpoint-desc">Transition draft → sent. Assigns invoice number from Postgres sequence. Returns updated invoice.</span></div>
@@ -722,7 +722,7 @@
   <div class="endpoint-group">
     <div class="endpoint-group-label">Payments</div>
     <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/invoices/{invoice_id}/payments/</span><span class="endpoint-desc">List all payments for an invoice with running balance after each.</span></div>
-    <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/invoices/{invoice_id}/payments/</span><span class="endpoint-desc">Record payment. Body: <code>{amount_ghs, method, provider_reference, payment_date, notes?}</code>. Triggers <code>recalculate_invoice_status()</code> synchronously before <code>201</code> response.</span></div>
+    <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/invoices/{invoice_id}/payments/</span><span class="endpoint-desc">Record payment. Body: <code>{amount, method, provider_reference, payment_date, notes?}</code>. Triggers <code>recalculate_invoice_status()</code> synchronously before <code>201</code> response.</span></div>
     <div class="endpoint"><span class="method DELETE">DELETE</span><span class="endpoint-url">/invoices/{invoice_id}/payments/{id}/</span><span class="endpoint-desc">Delete payment. Triggers <code>recalculate_invoice_status()</code> synchronously. Returns <code>204</code>.</span></div>
   </div>
 
@@ -732,7 +732,7 @@
     <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/timelogs/</span><span class="endpoint-desc">Create time log. Body: <code>{project_id, log_date, hours, description, billable}</code>.</span></div>
     <div class="endpoint"><span class="method PATCH">PATCH</span><span class="endpoint-url">/timelogs/{id}/</span><span class="endpoint-desc">Update time log entry.</span></div>
     <div class="endpoint"><span class="method DELETE">DELETE</span><span class="endpoint-url">/timelogs/{id}/</span><span class="endpoint-desc">Delete time log. Returns <code>204</code>.</span></div>
-    <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/projects/{id}/timelogs/</span><span class="endpoint-desc">Time logs for a specific project. Returns list + aggregate: <code>{total_hours, billable_hours, non_billable_hours, effective_rate_ghs}</code>.</span></div>
+    <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/projects/{id}/timelogs/</span><span class="endpoint-desc">Time logs for a specific project. Returns list + aggregate: <code>{total_hours, billable_hours, non_billable_hours, effective_rate}</code>.</span></div>
   </div>
 
   <div class="endpoint-group">
@@ -744,7 +744,7 @@
 
   <div class="endpoint-group">
     <div class="endpoint-group-label">Dashboard (updated)</div>
-    <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/dashboard/</span><span class="endpoint-desc">Now returns additional Sprint 2 fields: <code>total_outstanding_ghs</code>, <code>overdue_invoices: []</code>, <code>unread_notifications_count</code>. Existing fields unchanged.</span></div>
+    <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/dashboard/</span><span class="endpoint-desc">Now returns additional Sprint 2 fields: <code>total_outstanding</code>, <code>overdue_invoices: []</code>, <code>unread_notifications_count</code>. Existing fields unchanged.</span></div>
   </div>
 
   <div class="callout callout-amber">
@@ -778,12 +778,12 @@
     </div>
     <div class="sl-row">
       <div class="sl-trigger-col">post_save Payment</div>
-      <div class="sl-condition">0 &lt; sum(payments) &lt; total_ghs</div>
+      <div class="sl-condition">0 &lt; sum(payments) &lt; total</div>
       <div class="sl-result"><span class="chip chip-a">partial</span></div>
     </div>
     <div class="sl-row">
       <div class="sl-trigger-col">post_save Payment</div>
-      <div class="sl-condition">sum(payments) &ge; total_ghs</div>
+      <div class="sl-condition">sum(payments) &ge; total</div>
       <div class="sl-result"><span class="chip chip-t">paid</span></div>
     </div>
     <div class="sl-row">
@@ -1068,7 +1068,7 @@
 
   <div class="callout callout-teal">
     <div class="callout-title">Effective rate calculation</div>
-    <p>The effective rate shown in the hours panel is <code>project.budget_ghs / total_billable_hours</code>. This is computed at query time in the <code>/projects/{id}/timelogs/</code> endpoint — not stored on the model. When Sprint 3 adds analytics, this same calculation feeds the profitability-per-client chart without any schema changes.</p>
+    <p>The effective rate shown in the hours panel is <code>project.budget / total_billable_hours</code>. This is computed at query time in the <code>/projects/{id}/timelogs/</code> endpoint — not stored on the model. When Sprint 3 adds analytics, this same calculation feeds the profitability-per-client chart without any schema changes.</p>
   </div>
 </div>
 
@@ -1173,7 +1173,7 @@
       <div class="issue"><div class="issue-num">#26</div><div class="issue-body"><div class="issue-title">Payment endpoints: list, create (triggers status recalc), delete (triggers status recalc)</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
       <div class="issue"><div class="issue-num">#27</div><div class="issue-body"><div class="issue-title">TimeLog CRUD endpoints + /projects/{id}/timelogs/ aggregate (total_hours, billable_hours, effective_rate)</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
       <div class="issue"><div class="issue-num">#28</div><div class="issue-body"><div class="issue-title">Notification endpoints: list, /read/, /read-all/ + unread_count in response</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
-      <div class="issue"><div class="issue-num">#29</div><div class="issue-body"><div class="issue-title">Dashboard endpoint upgrade: add total_outstanding_ghs, overdue_invoices[], unread_notifications_count</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#29</div><div class="issue-body"><div class="issue-title">Dashboard endpoint upgrade: add total_outstanding, overdue_invoices[], unread_notifications_count</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
       <div class="issue"><div class="issue-num">#30</div><div class="issue-body"><div class="issue-title">Celery task: check_overdue_invoices — daily 07:00 WAT, get_or_create notification guard</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
       <div class="issue"><div class="issue-num">#31</div><div class="issue-body"><div class="issue-title">Celery task: check_proposal_deadlines — daily 07:00 WAT, deadlines ≤ 3 days, not yet decided</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
       <div class="issue"><div class="issue-num">#32</div><div class="issue-body"><div class="issue-title">pytest-django — full test coverage for all Sprint 2 endpoints including status transition edge cases</div><div class="issue-tags"><span class="chip issue-tag it-ch">chore</span><span class="chip issue-tag it-be">backend</span></div></div></div>

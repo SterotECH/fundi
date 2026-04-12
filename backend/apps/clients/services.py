@@ -7,6 +7,7 @@ from django.db.models import Q, QuerySet
 from apps.accounts.models import Organisation
 from apps.clients.exceptions import LeadAlreadyConvertedError
 from apps.clients.models import Client, Lead
+from apps.invoices.models import Invoice
 from apps.projects.models import Project
 from apps.proposals.models import Proposal
 
@@ -164,17 +165,22 @@ def list_client_proposals(
     )
 
 
-def list_client_invoices(*, organisation: Organisation, client_id: str) -> Any:
+def list_client_invoices(
+    *, organisation: Organisation, client_id: str
+) -> QuerySet[Invoice]:
     """
     Return all invoices that belong to one client in one organisation.
 
-    What this method should do when you implement it:
-    - verify organisation ownership before exposing financial data
-    - query invoices for the client with explicit ordering
-    - later, consider annotations for totals/outstanding balances if needed
-    - return the queryset for serialization
+    The initial client lookup keeps cross-organisation ids indistinguishable
+    from missing ids and lets the global exception handler return the standard
+    404 response.
     """
-    raise NotImplementedError("Stub only. Implement client invoice listing here.")
+    get_client_detail(organisation=organisation, client_id=client_id)
+    return (
+        Invoice.objects.select_related("organisation", "client", "project")
+        .filter(organisation=organisation, client_id=client_id)
+        .order_by("-issue_date", "-created_at")
+    )
 
 
 def list_client_projects(

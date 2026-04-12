@@ -5,6 +5,8 @@ from django.db.models import Q, QuerySet
 from django.utils import timezone
 
 from apps.accounts.models import Organisation
+from apps.projects.models import Project
+from apps.projects.services import create_project
 from apps.proposals.exceptions import (
     CannotConvertProposalError,
     CannotDeleteProposalError,
@@ -13,10 +15,8 @@ from apps.proposals.exceptions import (
     InvalidProposalTransitionError,
 )
 from apps.proposals.models import Proposal
-from apps.projects.models import Project
-from apps.projects.services import create_project
 
-ALLOWED_STATUS_TRANSITIONS = {
+ALLOWED_STATUS_TRANSITIONS: dict[str, list[str]] = {
     Proposal.ProposalStatus.DRAFT: [
         Proposal.ProposalStatus.SENT,
     ],

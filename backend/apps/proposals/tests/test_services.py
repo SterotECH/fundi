@@ -6,6 +6,7 @@ from django.utils import timezone
 
 from apps.accounts.factories import OrganisationFactory
 from apps.clients.factories import ClientFactory
+from apps.projects.models import Project
 from apps.proposals import services
 from apps.proposals.exceptions import (
     CannotConvertProposalError,
@@ -16,7 +17,6 @@ from apps.proposals.exceptions import (
 )
 from apps.proposals.factories import ProposalFactory
 from apps.proposals.models import Proposal
-from apps.projects.models import Project
 
 
 @pytest.mark.django_db

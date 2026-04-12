@@ -1,6 +1,12 @@
+from typing import TYPE_CHECKING
+from uuid import UUID
+
 from django.db import models
 
 from apps.core.models import BaseModel
+
+if TYPE_CHECKING:
+    from django.db.models.manager import Manager as RelatedManager
 
 
 class Client(BaseModel):
@@ -17,6 +23,13 @@ class Client(BaseModel):
     organisation = models.ForeignKey(
         "accounts.Organisation", on_delete=models.CASCADE, related_name="clients"
     )
+    if TYPE_CHECKING:
+        organisation_id: UUID
+        proposals: RelatedManager["Proposal"]
+        projects: RelatedManager["Project"]
+        invoices: RelatedManager["Invoice"]
+        leads: RelatedManager["Lead"]
+
     name = models.CharField(max_length=255)
     email = models.EmailField(blank=True)
     contact_person = models.CharField(max_length=255, blank=True)
@@ -26,7 +39,7 @@ class Client(BaseModel):
     is_archived = models.BooleanField(default=False)
     notes = models.TextField(blank=True)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
 
@@ -47,6 +60,10 @@ class Lead(BaseModel):
     organisation = models.ForeignKey(
         "accounts.Organisation", on_delete=models.CASCADE, related_name="leads"
     )
+    if TYPE_CHECKING:
+        organisation_id: UUID
+        converted_to_client_id: UUID | None
+
     name = models.CharField(max_length=255)
     email = models.EmailField(blank=True)
     contact_person = models.CharField(max_length=255, blank=True)
@@ -69,3 +86,9 @@ class Lead(BaseModel):
         blank=True,
         related_name="leads",
     )
+
+
+if TYPE_CHECKING:
+    from apps.invoices.models import Invoice
+    from apps.projects.models import Project
+    from apps.proposals.models import Proposal

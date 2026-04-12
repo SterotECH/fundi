@@ -10,6 +10,7 @@ the refactor yourself.
 from rest_framework import serializers
 
 from apps.clients.models import Client, Lead
+from apps.invoices.models import Invoice
 from apps.projects.models import Project
 from apps.proposals.models import Proposal
 
@@ -117,25 +118,26 @@ class ClientProposalListItemSerializer(serializers.ModelSerializer):
         ]
 
 
-class ClientInvoiceListItemSerializer(serializers.Serializer):
+class ClientInvoiceListItemSerializer(serializers.ModelSerializer):
     """
-    Placeholder serializer for `GET /clients/{id}/invoices/`.
-
-    This should become a dedicated invoice serializer later because invoice data
-    has its own business language and formatting rules.
-
-    Suggested shape to implement later:
-    - `id`
-    - `invoice_number`
-    - `status`
-    - `issue_date`
-    - `due_date`
-    - `total_amount`
-    - `outstanding_amount`
+    Minimal invoice row for the client detail invoice tab.
     """
 
-    # TODO: Add invoice read-only fields after the Invoice model exists.
-    pass
+    project_title = serializers.CharField(source="project.title", read_only=True)
+
+    class Meta:
+        model = Invoice
+        fields = [
+            "id",
+            "invoice_number",
+            "status",
+            "issue_date",
+            "due_date",
+            "project",
+            "project_title",
+            "total",
+            "created_at",
+        ]
 
 
 class ClientProjectListItemSerializer(serializers.ModelSerializer):
@@ -165,7 +167,7 @@ class LeadWriteSerializer(serializers.ModelSerializer):
     (like `converted_to_client`) should not be writable from the request body.
     """
 
-    source = serializers.ChoiceField(choices=Lead.LeadSource.choices)
+    source = serializers.ChoiceField(choices=Lead.LeadSource.choices)  # type: ignore[assignment]
     status = serializers.ChoiceField(choices=Lead.LeadStatus.choices)
 
     class Meta:

@@ -1,4 +1,6 @@
 # apps/accounts/views.py
+from typing import cast
+
 from rest_framework import status
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
@@ -37,6 +39,7 @@ class LoginView(APIView):
                 "user": UserSerializer(user).data,
             }
         )
+        refresh_token = cast(str, refresh_token)
 
         # Set refresh token as HttpOnly cookie — Decision 04
         response.set_cookie(

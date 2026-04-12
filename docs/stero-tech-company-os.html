@@ -853,6 +853,7 @@
       <div class="model-field"><span class="field-name">id</span><span class="field-type">UUID</span><span class="field-pk">PK</span></div>
       <div class="model-field"><span class="field-name">project</span><span class="field-type">FK → Project</span><span class="field-fk">FK</span></div>
       <div class="model-field"><span class="field-name">title</span><span class="field-type">string</span></div>
+      <div class="model-field"><span class="field-name">description</span><span class="field-type">text, blank</span></div>
       <div class="model-field"><span class="field-name">due_date</span><span class="field-type">date</span></div>
       <div class="model-field"><span class="field-name">completed</span><span class="field-type">boolean</span></div>
       <div class="model-field"><span class="field-name">completed_at</span><span class="field-type">datetime, nullable</span></div>
@@ -870,8 +871,9 @@
       <div class="model-field"><span class="field-name">client</span><span class="field-type">FK → Client</span><span class="field-fk">FK</span></div>
       <div class="model-field"><span class="field-name">project</span><span class="field-type">nullable FK → Project</span><span class="field-fk">FK</span></div>
       <div class="model-field"><span class="field-name">invoice_number</span><span class="field-type">string, unique (sequence)</span></div>
-      <div class="model-field"><span class="field-name">subtotal_ghs / tax_ghs / total_ghs</span><span class="field-type">Decimal(12,2)</span></div>
+      <div class="model-field"><span class="field-name">subtotal / tax / total</span><span class="field-type">Decimal(12,2)</span></div>
       <div class="model-field"><span class="field-name">status</span><span class="field-type">enum: draft/sent/partial/paid/overdue</span></div>
+      <div class="model-field"><span class="field-name">notes</span><span class="field-type">text, blank</span></div>
       <div class="model-field"><span class="field-name">issue_date / due_date</span><span class="field-type">date</span></div>
     </div>
   </div>
@@ -886,8 +888,8 @@
       <div class="model-field"><span class="field-name">invoice</span><span class="field-type">FK → Invoice</span><span class="field-fk">FK</span></div>
       <div class="model-field"><span class="field-name">description</span><span class="field-type">string</span></div>
       <div class="model-field"><span class="field-name">quantity</span><span class="field-type">Decimal(8,2)</span></div>
-      <div class="model-field"><span class="field-name">unit_price_ghs</span><span class="field-type">Decimal(12,2)</span></div>
-      <div class="model-field"><span class="field-name">line_total_ghs</span><span class="field-type">Decimal(12,2), computed</span></div>
+      <div class="model-field"><span class="field-name">unit_price</span><span class="field-type">Decimal(12,2)</span></div>
+      <div class="model-field"><span class="field-name">line_total</span><span class="field-type">Decimal(12,2), computed</span></div>
     </div>
   </div>
 
@@ -899,9 +901,10 @@
     <div class="model-fields">
       <div class="model-field"><span class="field-name">id</span><span class="field-type">UUID</span><span class="field-pk">PK</span></div>
       <div class="model-field"><span class="field-name">invoice</span><span class="field-type">FK → Invoice</span><span class="field-fk">FK</span></div>
-      <div class="model-field"><span class="field-name">amount_ghs</span><span class="field-type">Decimal(12,2)</span></div>
-      <div class="model-field"><span class="field-name">method</span><span class="field-type">enum: mtn_momo/vodafone/airteltigo/bank/cash</span></div>
+      <div class="model-field"><span class="field-name">amount</span><span class="field-type">Decimal(12,2)</span></div>
+      <div class="model-field"><span class="field-name">method</span><span class="field-type">enum: mtn_momo/telecel/airtel_tigo/bank/cash</span></div>
       <div class="model-field"><span class="field-name">provider_reference</span><span class="field-type">string</span></div>
+      <div class="model-field"><span class="field-name">notes</span><span class="field-type">text, blank</span></div>
       <div class="model-field"><span class="field-name">payment_date</span><span class="field-type">date</span></div>
     </div>
   </div>
@@ -1039,25 +1042,25 @@
   <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/projects/{id}/milestones/</span><span class="endpoint-desc">Add milestone. Body: <code>{title, description, due_date, order}</code>.</span></div>
   <div class="endpoint"><span class="method PATCH">PATCH</span><span class="endpoint-url">/projects/{id}/milestones/{mid}/</span><span class="endpoint-desc">Update or complete a milestone. Body: <code>{completed: true}</code>.</span></div>
   <div class="endpoint"><span class="method DELETE">DELETE</span><span class="endpoint-url">/projects/{id}/milestones/{mid}/</span><span class="endpoint-desc">Delete milestone. Returns <code>204</code>.</span></div>
-  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/projects/{id}/timelogs/</span><span class="endpoint-desc">Time logs for project with total hours summary.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/projects/{id}/timelogs/</span><span class="endpoint-desc">Time logs for project. Returns <code>{results, total_hours, billable_hours, non_billable_hours, effective_rate}</code>.</span></div>
   <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/projects/{id}/invoices/</span><span class="endpoint-desc">Invoices linked to project.</span></div>
 </div>
 
 <div class="endpoint-group">
   <div class="endpoint-group-title">Invoices</div>
-  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/invoices/</span><span class="endpoint-desc">List invoices. Filterable by <code>status</code>, <code>client_id</code>.</span></div>
-  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/invoices/</span><span class="endpoint-desc">Create invoice with line items. Body: <code>{client_id, project_id?, due_date, line_items: [{description, quantity, unit_price_ghs}]}</code>.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/invoices/</span><span class="endpoint-desc">List invoices. Filterable by <code>status</code>, <code>client_id</code>, <code>project_id</code>.</span></div>
+  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/invoices/</span><span class="endpoint-desc">Create invoice with line items. Body: <code>{client_id, project_id?, due_date, notes?, line_items: [{description, quantity, unit_price}]}</code>. Auto-calculates totals.</span></div>
   <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/invoices/{id}/</span><span class="endpoint-desc">Invoice detail with line items and payment history.</span></div>
   <div class="endpoint"><span class="method PATCH">PATCH</span><span class="endpoint-url">/invoices/{id}/</span><span class="endpoint-desc">Update invoice. Draft status only.</span></div>
-  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/invoices/{id}/send/</span><span class="endpoint-desc">Mark invoice as sent. Updates status and sets <code>sent_date</code>.</span></div>
+  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/invoices/{id}/send/</span><span class="endpoint-desc">Transition draft → sent. Assigns invoice number from Postgres sequence and returns the updated invoice.</span></div>
   <div class="endpoint"><span class="method DELETE">DELETE</span><span class="endpoint-url">/invoices/{id}/</span><span class="endpoint-desc">Delete draft invoice only. Returns <code>204</code>.</span></div>
   <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/invoices/overdue/</span><span class="endpoint-desc">All overdue invoices across all clients.</span></div>
 </div>
 
 <div class="endpoint-group">
   <div class="endpoint-group-title">Payments</div>
-  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/invoices/{invoice_id}/payments/</span><span class="endpoint-desc">Record a payment. Body: <code>{amount_ghs, method, provider_reference, payment_date, notes?}</code>. Auto-updates invoice status.</span></div>
-  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/invoices/{invoice_id}/payments/</span><span class="endpoint-desc">List all payments for an invoice.</span></div>
+  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/invoices/{invoice_id}/payments/</span><span class="endpoint-desc">Record a payment. Body: <code>{amount, method, provider_reference, payment_date, notes?}</code>. Auto-updates invoice status.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/invoices/{invoice_id}/payments/</span><span class="endpoint-desc">List all payments for an invoice with running balance after each.</span></div>
   <div class="endpoint"><span class="method DELETE">DELETE</span><span class="endpoint-url">/invoices/{invoice_id}/payments/{id}/</span><span class="endpoint-desc">Delete a payment. Invoice status is recalculated. Returns <code>204</code>.</span></div>
 </div>
 
@@ -1071,17 +1074,17 @@
 
 <div class="endpoint-group">
   <div class="endpoint-group-title">Dashboard & Notifications</div>
-  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/dashboard/</span><span class="endpoint-desc">Aggregated data: proposals by status, upcoming deadlines (14 days), active projects, overdue invoices, total outstanding GHS.</span></div>
-  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/notifications/</span><span class="endpoint-desc">List notifications. Filterable by <code>read</code>.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/dashboard/</span><span class="endpoint-desc">Aggregated data: proposals by status, upcoming deadlines (14 days), active projects, plus Sprint 2 fields <code>total_outstanding</code>, <code>overdue_invoices</code>, and <code>unread_notifications_count</code>.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/notifications/</span><span class="endpoint-desc">List notifications. Filterable by <code>read</code>. Returns <code>{count, unread_count, results}</code>.</span></div>
   <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/notifications/{id}/read/</span><span class="endpoint-desc">Mark one notification as read.</span></div>
   <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/notifications/read-all/</span><span class="endpoint-desc">Mark all notifications as read.</span></div>
 </div>
 
 <div class="endpoint-group">
   <div class="endpoint-group-title">Analytics (Sprint 3)</div>
-  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/analytics/revenue/</span><span class="endpoint-desc">Monthly revenue from paid invoices for last 12 months. Returns <code>{months: [{month, total_ghs}]}</code>.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/analytics/revenue/</span><span class="endpoint-desc">Monthly revenue from paid invoices for last 12 months. Returns <code>{months: [{month, total}]}</code>.</span></div>
   <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/analytics/win-rate/</span><span class="endpoint-desc">Proposal win rate. Returns <code>{won, lost, total_decided, win_rate_pct}</code>.</span></div>
-  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/analytics/clients/profitability/</span><span class="endpoint-desc">Revenue vs hours per client. Returns array with <code>{client_id, revenue_ghs, total_hours, avg_hourly_rate}</code>.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/analytics/clients/profitability/</span><span class="endpoint-desc">Revenue vs hours per client. Returns array with <code>{client_id, revenue, total_hours, avg_hourly_rate}</code>.</span></div>
   <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/analytics/proposals/time-to-close/</span><span class="endpoint-desc">Avg and median days from sent to decision. Returns <code>{avg_days, median_days}</code>.</span></div>
 </div>
 

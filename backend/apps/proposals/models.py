@@ -1,6 +1,12 @@
+from typing import TYPE_CHECKING
+from uuid import UUID
+
 from django.db import models
 
 from apps.core.models import BaseModel
+
+if TYPE_CHECKING:
+    from django.db.models.manager import Manager as RelatedManager
 
 
 class Proposal(BaseModel):
@@ -25,6 +31,11 @@ class Proposal(BaseModel):
         on_delete=models.CASCADE,
         related_name="proposals",
     )
+    if TYPE_CHECKING:
+        organisation_id: UUID
+        client_id: UUID
+        projects: RelatedManager["Project"]
+
     title = models.CharField(max_length=255)
     description = models.TextField()
     amount = models.DecimalField(max_digits=12, decimal_places=2)
@@ -37,3 +48,7 @@ class Proposal(BaseModel):
     deadline = models.DateField()
     decision_date = models.DateField(null=True, blank=True)
     notes = models.TextField(blank=True)
+
+
+if TYPE_CHECKING:
+    from apps.projects.models import Project

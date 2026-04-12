@@ -7,8 +7,9 @@ from django.utils import timezone
 
 from apps.accounts.factories import OrganisationFactory
 from apps.clients.factories import ClientFactory
-from apps.projects.factories import ProjectFactory
-from apps.projects.models import Project
+from apps.invoices.factories import ProjectInvoiceFactory
+from apps.projects.factories import MilestoneFactory, ProjectFactory, TimeLogFactory
+from apps.projects.models import Milestone, Project, TimeLog
 from apps.proposals.factories import ProposalFactory
 
 
@@ -214,6 +215,36 @@ def test_retrieve_project_is_organisation_scoped(authenticated_client, org):
 
 
 @pytest.mark.django_db
+def test_project_detail_includes_milestones_and_time_summary(authenticated_client, org):
+    project = ProjectFactory(organisation=org, budget=Decimal("600.00"))
+    milestone = MilestoneFactory(project=project, title="Scope approval")
+    TimeLogFactory(
+        project=project,
+        hours=Decimal("2.00"),
+        is_billable=True,
+    )
+    TimeLogFactory(
+        project=project,
+        hours=Decimal("1.00"),
+        is_billable=False,
+    )
+
+    response = authenticated_client.get(
+        reverse("project-detail", kwargs={"pk": project.id}),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["milestones"][0]["id"] == str(milestone.id)
+    assert payload["time_summary"] == {
+        "total_hours": "3.00",
+        "billable_hours": "2.00",
+        "non_billable_hours": "1.00",
+        "effective_rate": "300.00",
+    }
+
+
+@pytest.mark.django_db
 def test_patch_project_updates_fields(authenticated_client, org):
     project = ProjectFactory(organisation=org, title="Old Title")
 
@@ -286,3 +317,345 @@ def test_delete_project_method_is_not_allowed(authenticated_client, org):
 
     assert response.status_code == 405
     assert Project.objects.filter(id=project.id).exists()
+
+
+@pytest.mark.django_db
+def test_list_project_milestones_is_project_scoped(authenticated_client, org):
+    project = ProjectFactory(organisation=org)
+    milestone = MilestoneFactory(project=project, title="Kickoff")
+    MilestoneFactory(project=ProjectFactory(organisation=org), title="Other")
+
+    response = authenticated_client.get(
+        reverse("project-milestones", kwargs={"pk": project.id}),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload) == 1
+    assert payload[0]["id"] == str(milestone.id)
+    assert payload[0]["title"] == "Kickoff"
+
+
+@pytest.mark.django_db
+def test_create_project_milestone_uses_url_project_and_accepts_description(
+    authenticated_client,
+    org,
+):
+    project = ProjectFactory(organisation=org)
+
+    response = authenticated_client.post(
+        reverse("project-milestones", kwargs={"pk": project.id}),
+        {
+            "title": "Delivery sign-off",
+            "description": "Final acceptance checklist.",
+            "due_date": str(timezone.localdate() + timedelta(days=10)),
+            "order": 3,
+        },
+        format="json",
+    )
+
+    assert response.status_code == 201
+    milestone = Milestone.objects.get(id=response.json()["id"])
+    assert milestone.project == project
+    assert milestone.description == "Final acceptance checklist."
+    assert response.json()["completed"] is False
+
+
+@pytest.mark.django_db
+def test_patch_project_milestone_updates_completed_and_description(
+    authenticated_client,
+    org,
+):
+    milestone = MilestoneFactory(
+        project=ProjectFactory(organisation=org),
+        is_completed=False,
+        description="Old note",
+    )
+
+    response = authenticated_client.patch(
+        reverse(
+            "project-milestone-detail",
+            kwargs={"pk": milestone.project_id, "milestone_id": milestone.id},
+        ),
+        {
+            "completed": True,
+            "description": "New note",
+        },
+        format="json",
+    )
+
+    milestone.refresh_from_db()
+    assert response.status_code == 200
+    assert milestone.is_completed is True
+    assert milestone.completed_at is not None
+    assert milestone.description == "New note"
+
+
+@pytest.mark.django_db
+def test_delete_project_milestone_removes_row(authenticated_client, org):
+    milestone = MilestoneFactory(project=ProjectFactory(organisation=org))
+
+    response = authenticated_client.delete(
+        reverse(
+            "project-milestone-detail",
+            kwargs={"pk": milestone.project_id, "milestone_id": milestone.id},
+        ),
+    )
+
+    assert response.status_code == 204
+    assert not Milestone.objects.filter(id=milestone.id).exists()
+
+
+@pytest.mark.django_db
+def test_project_milestone_detail_returns_404_for_other_organisation(
+    authenticated_client,
+):
+    other_milestone = MilestoneFactory(
+        project=ProjectFactory(organisation=OrganisationFactory())
+    )
+
+    response = authenticated_client.patch(
+        reverse(
+            "project-milestone-detail",
+            kwargs={
+                "pk": other_milestone.project_id,
+                "milestone_id": other_milestone.id,
+            },
+        ),
+        {"completed": True},
+        format="json",
+    )
+
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
+def test_create_project_milestone_rejects_missing_title(authenticated_client, org):
+    project = ProjectFactory(organisation=org)
+
+    response = authenticated_client.post(
+        reverse("project-milestones", kwargs={"pk": project.id}),
+        {
+            "description": "No title provided.",
+            "due_date": str(timezone.localdate() + timedelta(days=10)),
+            "order": 1,
+        },
+        format="json",
+    )
+
+    assert response.status_code == 400
+    assert "title" in response.json()
+
+
+@pytest.mark.django_db
+def test_list_timelogs_filters_by_project_and_billable(authenticated_client, org):
+    project = ProjectFactory(organisation=org)
+    matching = TimeLogFactory(project=project, is_billable=True)
+    TimeLogFactory(project=project, is_billable=False)
+    TimeLogFactory(project=ProjectFactory(organisation=org), is_billable=True)
+
+    response = authenticated_client.get(
+        reverse("timelog-list"),
+        {
+            "project_id": str(project.id),
+            "billable": "true",
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload["results"]) == 1
+    assert payload["results"][0]["id"] == str(matching.id)
+    assert payload["results"][0]["billable"] is True
+
+
+@pytest.mark.django_db
+def test_create_timelog_accepts_billable_alias(authenticated_client, org):
+    project = ProjectFactory(organisation=org)
+
+    response = authenticated_client.post(
+        reverse("timelog-list"),
+        {
+            "project_id": str(project.id),
+            "log_date": str(timezone.localdate()),
+            "hours": "3.25",
+            "description": "Internal review",
+            "billable": False,
+        },
+        format="json",
+    )
+
+    assert response.status_code == 201
+    time_log = TimeLog.objects.get(id=response.json()["id"])
+    assert time_log.project == project
+    assert time_log.is_billable is False
+    assert response.json()["billable"] is False
+
+
+@pytest.mark.django_db
+def test_create_timelog_rejects_invalid_hours_and_other_org_project(
+    authenticated_client,
+    org,
+):
+    project = ProjectFactory(organisation=org)
+    other_project = ProjectFactory(organisation=OrganisationFactory())
+
+    response = authenticated_client.post(
+        reverse("timelog-list"),
+        {
+            "project_id": str(project.id),
+            "log_date": str(timezone.localdate()),
+            "hours": "0.00",
+            "description": "Invalid hours",
+            "billable": True,
+        },
+        format="json",
+    )
+
+    assert response.status_code == 400
+    assert "hours" in response.json()
+
+    response = authenticated_client.post(
+        reverse("timelog-list"),
+        {
+            "project_id": str(other_project.id),
+            "log_date": str(timezone.localdate()),
+            "hours": "1.00",
+            "description": "Wrong project",
+            "billable": True,
+        },
+        format="json",
+    )
+
+    assert response.status_code == 400
+    assert "project_id" in response.json()
+
+
+@pytest.mark.django_db
+def test_patch_timelog_updates_fields(authenticated_client, org):
+    time_log = TimeLogFactory(project=ProjectFactory(organisation=org))
+
+    response = authenticated_client.patch(
+        reverse("timelog-detail", kwargs={"pk": time_log.id}),
+        {
+            "hours": "5.00",
+            "billable": False,
+            "description": "Updated work log",
+        },
+        format="json",
+    )
+
+    time_log.refresh_from_db()
+    assert response.status_code == 200
+    assert time_log.hours == Decimal("5.00")
+    assert time_log.is_billable is False
+    assert time_log.description == "Updated work log"
+
+
+@pytest.mark.django_db
+def test_delete_timelog_removes_row(authenticated_client, org):
+    time_log = TimeLogFactory(project=ProjectFactory(organisation=org))
+
+    response = authenticated_client.delete(
+        reverse("timelog-detail", kwargs={"pk": time_log.id}),
+    )
+
+    assert response.status_code == 204
+    assert not TimeLog.objects.filter(id=time_log.id).exists()
+
+
+@pytest.mark.django_db
+def test_retrieve_timelog_returns_404_for_other_organisation(authenticated_client):
+    other_time_log = TimeLogFactory(
+        project=ProjectFactory(organisation=OrganisationFactory())
+    )
+
+    response = authenticated_client.get(
+        reverse("timelog-detail", kwargs={"pk": other_time_log.id}),
+    )
+
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
+def test_project_timelogs_returns_results_and_aggregates(authenticated_client, org):
+    project = ProjectFactory(organisation=org, budget=Decimal("900.00"))
+    first = TimeLogFactory(
+        project=project,
+        hours=Decimal("2.00"),
+        is_billable=True,
+        log_date=timezone.localdate(),
+    )
+    second = TimeLogFactory(
+        project=project,
+        hours=Decimal("1.00"),
+        is_billable=False,
+        log_date=timezone.localdate() - timedelta(days=1),
+    )
+
+    response = authenticated_client.get(
+        reverse("project-timelogs", kwargs={"pk": project.id}),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total_hours"] == "3.00"
+    assert payload["billable_hours"] == "2.00"
+    assert payload["non_billable_hours"] == "1.00"
+    assert payload["effective_rate"] == "450.00"
+    assert [row["id"] for row in payload["results"]] == [
+        str(first.id),
+        str(second.id),
+    ]
+
+
+@pytest.mark.django_db
+def test_project_invoices_returns_only_project_linked_invoices(
+    authenticated_client,
+    org,
+):
+    project = ProjectFactory(organisation=org)
+    own_invoice = ProjectInvoiceFactory(
+        organisation=org,
+        client=project.client,
+        project=project,
+    )
+    ProjectInvoiceFactory(organisation=org)
+
+    response = authenticated_client.get(
+        reverse("project-invoices", kwargs={"pk": project.id}),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload) == 1
+    assert payload[0]["id"] == str(own_invoice.id)
+    assert payload[0]["client"] == str(project.client_id)
+
+
+@pytest.mark.django_db
+def test_project_invoices_returns_404_for_other_organisation(authenticated_client):
+    other_project = ProjectFactory(organisation=OrganisationFactory())
+
+    response = authenticated_client.get(
+        reverse("project-invoices", kwargs={"pk": other_project.id}),
+    )
+
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
+def test_project_timelogs_returns_zero_aggregates_when_empty(authenticated_client, org):
+    project = ProjectFactory(organisation=org, budget=Decimal("900.00"))
+
+    response = authenticated_client.get(
+        reverse("project-timelogs", kwargs={"pk": project.id}),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["total_hours"] == "0.00"
+    assert payload["billable_hours"] == "0.00"
+    assert payload["non_billable_hours"] == "0.00"
+    assert payload["effective_rate"] == "0.00"
+    assert payload["results"] == []

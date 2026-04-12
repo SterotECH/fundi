@@ -4,8 +4,9 @@ from decimal import Decimal
 import pytest
 from django.utils import timezone
 
-from apps.accounts.factories import OrganisationFactory
+from apps.accounts.factories import OrganisationFactory, UserFactory
 from apps.clients.factories import ClientFactory
+from apps.invoices.factories import ProjectInvoiceFactory
 from apps.projects import services
 from apps.projects.exceptions import (
     InvalidProjectBudgetError,
@@ -13,8 +14,8 @@ from apps.projects.exceptions import (
     InvalidProjectDateRangeError,
     InvalidProjectProposalError,
 )
-from apps.projects.factories import ProjectFactory
-from apps.projects.models import Project
+from apps.projects.factories import MilestoneFactory, ProjectFactory, TimeLogFactory
+from apps.projects.models import Milestone, Project, TimeLog
 from apps.proposals.factories import ProposalFactory
 
 
@@ -241,3 +242,254 @@ def test_update_project_rejects_invalid_relationships_and_values(org):
             project=project,
             data={"due_date": project.start_date - timedelta(days=1)},
         )
+
+
+@pytest.mark.django_db
+def test_list_project_milestones_returns_only_project_rows_in_order(org):
+    project = ProjectFactory(organisation=org)
+    first = MilestoneFactory(
+        project=project,
+        order=1,
+        due_date=timezone.localdate() + timedelta(days=1),
+    )
+    second = MilestoneFactory(
+        project=project,
+        order=2,
+        due_date=timezone.localdate() + timedelta(days=2),
+    )
+    MilestoneFactory(project=ProjectFactory(organisation=org), order=0)
+
+    queryset = services.list_project_milestones(
+        organisation=org,
+        project_id=str(project.id),
+    )
+
+    assert list(queryset) == [first, second]
+
+
+@pytest.mark.django_db
+def test_update_project_milestone_sets_and_clears_completed_at(org):
+    milestone = MilestoneFactory(project=ProjectFactory(organisation=org))
+
+    updated = services.update_project_milestone(
+        milestone=milestone,
+        data={"is_completed": True},
+    )
+
+    milestone.refresh_from_db()
+    assert updated == milestone
+    assert milestone.is_completed is True
+    assert milestone.completed_at is not None
+
+    services.update_project_milestone(
+        milestone=milestone,
+        data={"is_completed": False},
+    )
+
+    milestone.refresh_from_db()
+    assert milestone.is_completed is False
+    assert milestone.completed_at is None
+
+
+@pytest.mark.django_db
+def test_get_project_milestone_is_scoped_by_project_and_organisation(org):
+    project = ProjectFactory(organisation=org)
+    milestone = MilestoneFactory(project=project)
+    other_milestone = MilestoneFactory(project=ProjectFactory(organisation=org))
+
+    assert services.get_project_milestone(
+        organisation=org,
+        project_id=str(project.id),
+        milestone_id=str(milestone.id),
+    ) == milestone
+
+    with pytest.raises(Milestone.DoesNotExist):
+        services.get_project_milestone(
+            organisation=org,
+            project_id=str(project.id),
+            milestone_id=str(other_milestone.id),
+        )
+
+
+@pytest.mark.django_db
+def test_delete_project_milestone_removes_row(org):
+    milestone = MilestoneFactory(project=ProjectFactory(organisation=org))
+
+    services.delete_project_milestone(milestone=milestone)
+
+    assert not Milestone.objects.filter(id=milestone.id).exists()
+
+
+@pytest.mark.django_db
+def test_list_time_logs_filters_by_project_date_range_and_billable(org):
+    project = ProjectFactory(organisation=org)
+    matching = TimeLogFactory(
+        project=project,
+        log_date=timezone.localdate(),
+        is_billable=True,
+    )
+    TimeLogFactory(
+        project=project,
+        log_date=timezone.localdate() - timedelta(days=5),
+        is_billable=True,
+    )
+    TimeLogFactory(
+        project=project,
+        log_date=timezone.localdate(),
+        is_billable=False,
+    )
+    TimeLogFactory(project=ProjectFactory(organisation=org), is_billable=True)
+
+    queryset = services.list_time_logs(
+        organisation=org,
+        filters={
+            "project_id": str(project.id),
+            "log_date__gte": timezone.localdate() - timedelta(days=1),
+            "log_date__lte": timezone.localdate() + timedelta(days=1),
+            "billable": "true",
+        },
+    )
+
+    assert list(queryset) == [matching]
+
+
+@pytest.mark.django_db
+def test_create_time_log_attaches_user_and_rejects_project_from_other_org(org):
+    user = UserFactory(organisation=org)
+    project = ProjectFactory(organisation=org)
+
+    time_log = services.create_time_log(
+        organisation=org,
+        user=user,
+        data={
+            "project": project,
+            "log_date": timezone.localdate(),
+            "hours": Decimal("4.00"),
+            "description": "Implementation work.",
+            "is_billable": False,
+        },
+    )
+
+    assert time_log.project == project
+    assert time_log.user == user
+    assert time_log.hours == Decimal("4.00")
+    assert time_log.is_billable is False
+
+    other_project = ProjectFactory(organisation=OrganisationFactory())
+    with pytest.raises(Project.DoesNotExist):
+        services.create_time_log(
+            organisation=org,
+            user=user,
+            data={
+                "project": other_project,
+                "log_date": timezone.localdate(),
+                "hours": Decimal("1.00"),
+                "description": "Wrong tenant.",
+                "is_billable": True,
+            },
+        )
+
+
+@pytest.mark.django_db
+def test_list_project_time_logs_returns_expected_aggregates(org):
+    project = ProjectFactory(organisation=org, budget=Decimal("1200.00"))
+    billable = TimeLogFactory(
+        project=project,
+        hours=Decimal("3.00"),
+        is_billable=True,
+        log_date=timezone.localdate(),
+    )
+    non_billable = TimeLogFactory(
+        project=project,
+        hours=Decimal("1.50"),
+        is_billable=False,
+        log_date=timezone.localdate() - timedelta(days=1),
+    )
+    TimeLogFactory(project=ProjectFactory(organisation=org), hours=Decimal("9.00"))
+
+    payload = services.list_project_time_logs(
+        organisation=org,
+        project_id=str(project.id),
+    )
+
+    assert list(payload["queryset"]) == [billable, non_billable]
+    assert payload["total_hours"] == Decimal("4.50")
+    assert payload["billable_hours"] == Decimal("3.00")
+    assert payload["non_billable_hours"] == Decimal("1.50")
+    assert payload["effective_rate"] == Decimal("400.00")
+
+
+@pytest.mark.django_db
+def test_get_time_log_detail_is_organisation_scoped(org):
+    time_log = TimeLogFactory(project=ProjectFactory(organisation=org))
+    other_time_log = TimeLogFactory(
+        project=ProjectFactory(organisation=OrganisationFactory())
+    )
+
+    assert services.get_time_log_detail(
+        organisation=org,
+        time_log_id=str(time_log.id),
+    ) == time_log
+
+    with pytest.raises(TimeLog.DoesNotExist):
+        services.get_time_log_detail(
+            organisation=org,
+            time_log_id=str(other_time_log.id),
+        )
+
+
+@pytest.mark.django_db
+def test_update_time_log_rejects_project_from_other_organisation(org):
+    time_log = TimeLogFactory(project=ProjectFactory(organisation=org))
+    other_project = ProjectFactory(organisation=OrganisationFactory())
+
+    with pytest.raises(Project.DoesNotExist):
+        services.update_time_log(
+            time_log=time_log,
+            data={"project": other_project},
+        )
+
+    assert TimeLog.objects.filter(id=time_log.id).exists()
+
+
+@pytest.mark.django_db
+def test_delete_time_log_removes_row(org):
+    time_log = TimeLogFactory(project=ProjectFactory(organisation=org))
+
+    services.delete_time_log(time_log=time_log)
+
+    assert not TimeLog.objects.filter(id=time_log.id).exists()
+
+
+@pytest.mark.django_db
+def test_list_project_time_logs_returns_zero_aggregates_when_empty(org):
+    project = ProjectFactory(organisation=org, budget=Decimal("500.00"))
+
+    payload = services.list_project_time_logs(
+        organisation=org,
+        project_id=str(project.id),
+    )
+
+    assert list(payload["queryset"]) == []
+    assert payload["total_hours"] == Decimal("0.00")
+    assert payload["billable_hours"] == Decimal("0.00")
+    assert payload["non_billable_hours"] == Decimal("0.00")
+    assert payload["effective_rate"] == Decimal("0.00")
+
+
+@pytest.mark.django_db
+def test_list_project_invoices_returns_project_scoped_invoice_rows(org):
+    project = ProjectFactory(organisation=org)
+    own_invoice = ProjectInvoiceFactory(
+        organisation=org,
+        client=project.client,
+        project=project,
+    )
+    ProjectInvoiceFactory(organisation=org)
+
+    queryset = services.list_project_invoices(
+        organisation=org,
+        project_id=str(project.id),
+    )
+
+    assert list(queryset) == [own_invoice]

@@ -6,6 +6,7 @@ from rest_framework.decorators import action
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 
+from apps.accounts.models import Organisation, User
 from apps.clients import services
 from apps.clients.models import Client, Lead
 from apps.clients.serializers import (
@@ -84,8 +85,10 @@ class ClientViewSet(viewsets.ModelViewSet):
         exception handler converts that into a 404, so the view does not need a
         local try/except block.
         """
+        user = cast(User, self.request.user)
+        organisation = cast(Organisation, user.organisation)
         return services.get_client_detail(
-            organisation=self.request.user.organisation,
+            organisation=organisation,
             client_id=str(pk),
         )
 
@@ -168,17 +171,14 @@ class ClientViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["get"])
     def invoices(self, request, pk=None):
         """
-        Return invoices for this client once the invoices model is implemented.
+        Return invoices for this organisation-scoped client.
         """
-        return Response(
-            {
-                "detail": (
-                    "Stub only. This endpoint should return the invoices "
-                    "belonging to the specified client."
-                )
-            },
-            status=status.HTTP_501_NOT_IMPLEMENTED,
+        queryset = services.list_client_invoices(
+            organisation=request.user.organisation,
+            client_id=str(pk),
         )
+        serializer = ClientInvoiceListItemSerializer(queryset, many=True)
+        return Response(serializer.data)
 
     @action(detail=True, methods=["get"])
     def projects(self, request, pk=None):
@@ -235,8 +235,10 @@ class LeadViewSet(viewsets.ModelViewSet):
         exception handler converts that into a 404, so the view does not need a
         local try/except block.
         """
+        user = cast(User, self.request.user)
+        organisation = cast(Organisation, user.organisation)
         return services.get_lead_detail(
-            organisation=self.request.user.organisation,
+            organisation=organisation,
             lead_id=str(pk),
         )
 

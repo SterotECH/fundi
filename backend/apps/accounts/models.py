@@ -1,4 +1,5 @@
 import uuid
+from typing import TYPE_CHECKING, cast
 
 from django.contrib.auth.models import (
     AbstractBaseUser,
@@ -8,6 +9,9 @@ from django.contrib.auth.models import (
 from django.db import models
 
 from apps.core.models import BaseModel
+
+if TYPE_CHECKING:
+    from django.db.models.manager import Manager as RelatedManager
 
 
 class Organisation(BaseModel):
@@ -25,8 +29,16 @@ class Organisation(BaseModel):
         choices=SubscriptionPlan.choices,
         default=SubscriptionPlan.FREE,
     )
+    if TYPE_CHECKING:
+        users: RelatedManager["User"]
+        clients: RelatedManager["Client"]
+        leads: RelatedManager["Lead"]
+        proposals: RelatedManager["Proposal"]
+        projects: RelatedManager["Project"]
+        invoices: RelatedManager["Invoice"]
+        audit_logs: RelatedManager["AuditLog"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.name
 
     class Meta:
@@ -36,7 +48,7 @@ class Organisation(BaseModel):
 class UserManager(BaseUserManager):
     use_in_migrations = True
 
-    def create_user(self, email, password=None, **extra_fields):
+    def create_user(self, email, password=None, **extra_fields) -> "User":
         if not email:
             raise ValueError("Users must have an email address")
 
@@ -45,15 +57,16 @@ class UserManager(BaseUserManager):
             raise ValueError("Users must belong to an organisation")
 
         email = self.normalize_email(email)
-        user = self.model(
+        raw_user = self.model(
             email=email,
             **extra_fields,
         )
+        user = cast("User", raw_user)
         user.set_password(password)
         user.save(using=self._db)
         return user
 
-    def create_superuser(self, email, password=None, **extra_fields):
+    def create_superuser(self, email, password=None, **extra_fields) -> "User":
         extra_fields.setdefault("is_staff", True)
         extra_fields.setdefault("is_superuser", True)
         extra_fields.setdefault("is_active", True)
@@ -86,6 +99,12 @@ class User(AbstractBaseUser, PermissionsMixin):
         blank=True,
         related_name="users",
     )
+    if TYPE_CHECKING:
+        organisation_id: uuid.UUID | None
+        notifications: RelatedManager["Notification"]
+        audit_logs: RelatedManager["AuditLog"]
+        time_logs: RelatedManager["TimeLog"]
+
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
     role = models.CharField(
@@ -101,8 +120,16 @@ class User(AbstractBaseUser, PermissionsMixin):
     USERNAME_FIELD = "email"
     REQUIRED_FIELDS = ["full_name", "organisation"]
 
-    def __str__(self):
+    def __str__(self) -> str:
         return f"{self.full_name} ({self.email})"
 
     class Meta:
         ordering = ["full_name", "created_at"]
+
+
+if TYPE_CHECKING:
+    from apps.clients.models import Client, Lead
+    from apps.core.models import AuditLog, Notification
+    from apps.invoices.models import Invoice
+    from apps.projects.models import Project, TimeLog
+    from apps.proposals.models import Proposal

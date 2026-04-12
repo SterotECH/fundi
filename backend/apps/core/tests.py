@@ -4,10 +4,12 @@ import pytest
 from django.urls import reverse
 from django.utils import timezone
 
-from apps.accounts.factories import OrganisationFactory
+from apps.accounts.factories import OrganisationFactory, UserFactory
 from apps.clients.factories import ClientFactory
 from apps.clients.models import Client
-from apps.core.models import AuditLog
+from apps.core import services
+from apps.core.models import AuditLog, Notification
+from apps.invoices.factories import InvoiceFactory, PaymentFactory
 from apps.projects.factories import ProjectFactory
 from apps.projects.models import Project
 from apps.proposals.factories import ProposalFactory
@@ -93,7 +95,7 @@ def test_audit_log_records_authenticated_request_user(authenticated_client, user
 
 
 @pytest.mark.django_db
-def test_dashboard_api_returns_only_sprint_1_organisation_data(
+def test_dashboard_api_returns_sprint_2_summary_data(
     authenticated_client,
     org,
 ):
@@ -121,7 +123,31 @@ def test_dashboard_api_returns_only_sprint_1_organisation_data(
         status=Project.ProjectStatus.ACTIVE,
     )
     ProjectFactory(organisation=org, status=Project.ProjectStatus.PLANNING)
-    ProjectFactory(organisation=OrganisationFactory(), status=Project.ProjectStatus.ACTIVE)
+    ProjectFactory(
+        organisation=OrganisationFactory(),
+        status=Project.ProjectStatus.ACTIVE,
+    )
+    overdue_invoice = InvoiceFactory(
+        organisation=org,
+        client=client,
+        status="sent",
+        due_date=timezone.localdate() - timedelta(days=2),
+        total="900.00",
+        subtotal="900.00",
+    )
+    PaymentFactory(invoice=overdue_invoice, amount="200.00")
+    InvoiceFactory(
+        organisation=org,
+        client=client,
+        status="paid",
+        due_date=timezone.localdate() - timedelta(days=4),
+    )
+    Notification.objects.create(
+        user=org.users.first(),
+        type=Notification.NotificationType.OVERDUE,
+        message="Invoice overdue",
+        is_read=False,
+    )
 
     response = authenticated_client.get(reverse("dashboard"))
 
@@ -152,5 +178,267 @@ def test_dashboard_api_returns_only_sprint_1_organisation_data(
             "budget": "1000.00",
         }
     ]
-    assert "invoices" not in payload
-    assert "payments" not in payload
+    assert payload["total_outstanding"] == "700.00"
+    assert payload["overdue_invoices"] == [
+        {
+            "id": str(overdue_invoice.id),
+            "invoice_number": None,
+            "client": str(client.id),
+            "client_name": client.name,
+            "status": "sent",
+            "due_date": overdue_invoice.due_date.isoformat(),
+            "total": "900.00",
+            "amount_paid": "200.00",
+            "amount_remaining": "700.00",
+        }
+    ]
+    assert payload["unread_notifications_count"] == 1
+
+
+@pytest.mark.django_db
+def test_notification_model_defaults_to_unread_and_orders_newest_first(user):
+    older = Notification.objects.create(
+        user=user,
+        type=Notification.NotificationType.DEADLINE,
+        message="Older reminder",
+    )
+    newer = Notification.objects.create(
+        user=user,
+        type=Notification.NotificationType.OVERDUE,
+        message="Newer reminder",
+    )
+
+    notifications = list(Notification.objects.all())
+
+    assert older.is_read is False
+    assert notifications == [newer, older]
+
+
+@pytest.mark.django_db
+def test_list_notifications_service_filters_and_returns_unread_count(user):
+    unread = Notification.objects.create(
+        user=user,
+        type=Notification.NotificationType.DEADLINE,
+        message="Unread reminder",
+        is_read=False,
+    )
+    Notification.objects.create(
+        user=user,
+        type=Notification.NotificationType.PROJECT_DUE,
+        message="Read reminder",
+        is_read=True,
+    )
+
+    payload = services.list_notifications(
+        user=user,
+        filters={"read": "false"},
+    )
+
+    assert list(payload["queryset"]) == [unread]
+    assert payload["unread_count"] == 1
+
+
+@pytest.mark.django_db
+def test_mark_all_notifications_read_service_updates_rows_and_writes_audit(user, org):
+    first = Notification.objects.create(
+        user=user,
+        type=Notification.NotificationType.DEADLINE,
+        message="First unread",
+    )
+    second = Notification.objects.create(
+        user=user,
+        type=Notification.NotificationType.OVERDUE,
+        message="Second unread",
+    )
+
+    updated = services.mark_all_notifications_read(user=user)
+
+    first.refresh_from_db()
+    second.refresh_from_db()
+    assert updated == 2
+    assert first.is_read is True
+    assert second.is_read is True
+    assert AuditLog.objects.filter(
+        organisation=org,
+        entity_type="Notification",
+        action=AuditLog.Action.UPDATED,
+    ).count() == 2
+
+
+@pytest.mark.django_db
+def test_notification_list_endpoint_returns_unread_count_and_user_rows(
+    authenticated_client,
+    user,
+):
+    unread = Notification.objects.create(
+        user=user,
+        type=Notification.NotificationType.DEADLINE,
+        message="Own unread",
+    )
+    Notification.objects.create(
+        user=user,
+        type=Notification.NotificationType.PROJECT_DUE,
+        message="Own read",
+        is_read=True,
+    )
+    other_user = UserFactory(organisation=OrganisationFactory())
+    Notification.objects.create(
+        user=other_user,
+        type=Notification.NotificationType.OVERDUE,
+        message="Other unread",
+    )
+
+    response = authenticated_client.get(
+        reverse("notification-list"),
+        {"read": "false"},
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert payload["unread_count"] == 1
+    assert len(payload["results"]) == 1
+    assert payload["results"][0]["id"] == str(unread.id)
+
+
+@pytest.mark.django_db
+def test_notification_read_endpoint_marks_read_and_records_actor(
+    authenticated_client,
+    user,
+):
+    notification = Notification.objects.create(
+        user=user,
+        type=Notification.NotificationType.DEADLINE,
+        message="Review proposal deadline",
+    )
+
+    response = authenticated_client.post(
+        reverse("notification-read", kwargs={"pk": notification.id}),
+        {},
+        format="json",
+    )
+
+    notification.refresh_from_db()
+    assert response.status_code == 200
+    assert notification.is_read is True
+
+    audit_log = AuditLog.objects.filter(
+        entity_type="Notification",
+        entity_id=notification.id,
+        action=AuditLog.Action.UPDATED,
+    ).latest("timestamp")
+    assert audit_log.user == user
+    assert audit_log.diff["is_read"] == {"before": False, "after": True}
+
+
+@pytest.mark.django_db
+def test_notification_read_all_endpoint_marks_all_read(authenticated_client, user):
+    first = Notification.objects.create(
+        user=user,
+        type=Notification.NotificationType.DEADLINE,
+        message="First unread",
+    )
+    second = Notification.objects.create(
+        user=user,
+        type=Notification.NotificationType.PROJECT_DUE,
+        message="Second unread",
+    )
+
+    response = authenticated_client.post(
+        reverse("notification-read-all"),
+        {},
+        format="json",
+    )
+
+    first.refresh_from_db()
+    second.refresh_from_db()
+    assert response.status_code == 204
+    assert first.is_read is True
+    assert second.is_read is True
+    assert AuditLog.objects.filter(
+        entity_type="Notification",
+        action=AuditLog.Action.UPDATED,
+        user=user,
+    ).count() >= 2
+
+
+@pytest.mark.django_db
+def test_notification_detail_is_user_scoped(authenticated_client, user):
+    own = Notification.objects.create(
+        user=user,
+        type=Notification.NotificationType.DEADLINE,
+        message="Own detail",
+    )
+    other = Notification.objects.create(
+        user=UserFactory(organisation=OrganisationFactory()),
+        type=Notification.NotificationType.OVERDUE,
+        message="Other detail",
+    )
+
+    response = authenticated_client.get(
+        reverse("notification-detail", kwargs={"pk": own.id}),
+    )
+
+    assert response.status_code == 200
+    assert response.json()["id"] == str(own.id)
+
+    response = authenticated_client.get(
+        reverse("notification-detail", kwargs={"pk": other.id}),
+    )
+
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
+def test_notification_read_endpoint_is_idempotent_for_already_read_notification(
+    authenticated_client,
+    user,
+):
+    notification = Notification.objects.create(
+        user=user,
+        type=Notification.NotificationType.DEADLINE,
+        message="Already read",
+        is_read=True,
+    )
+    before_count = AuditLog.objects.filter(
+        entity_type="Notification",
+        entity_id=notification.id,
+        action=AuditLog.Action.UPDATED,
+    ).count()
+
+    response = authenticated_client.post(
+        reverse("notification-read", kwargs={"pk": notification.id}),
+        {},
+        format="json",
+    )
+
+    notification.refresh_from_db()
+    after_count = AuditLog.objects.filter(
+        entity_type="Notification",
+        entity_id=notification.id,
+        action=AuditLog.Action.UPDATED,
+    ).count()
+
+    assert response.status_code == 200
+    assert notification.is_read is True
+    assert after_count == before_count
+
+
+@pytest.mark.django_db
+def test_mark_all_notifications_read_service_returns_zero_when_nothing_to_update(user):
+    updated = services.mark_all_notifications_read(user=user)
+
+    assert updated == 0
+
+
+@pytest.mark.django_db
+def test_invoice_model_create_writes_audit_log(org):
+    invoice = InvoiceFactory(organisation=org)
+
+    audit_log = AuditLog.objects.filter(
+        entity_type="Invoice",
+        entity_id=invoice.id,
+        action=AuditLog.Action.CREATED,
+    ).latest("timestamp")
+
+    assert audit_log.organisation == org
+    assert audit_log.diff["total"]["after"] == "1000.00"

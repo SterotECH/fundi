@@ -1,3 +1,7 @@
+from datetime import date
+from decimal import Decimal
+from typing import Any, cast
+
 from django.utils import timezone
 from rest_framework import serializers
 
@@ -28,23 +32,22 @@ class ProposalWriteSerializer(serializers.ModelSerializer):
         source="client",
     )
 
-    def __init__(self, *args, **kwargs):
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
         super().__init__(*args, **kwargs)
         request = self.context.get("request")
         organisation = getattr(getattr(request, "user", None), "organisation", None)
+        client_id = cast(serializers.PrimaryKeyRelatedField, self.fields["client_id"])
         if organisation is not None:
-            self.fields["client_id"].queryset = Client.objects.filter(
-                organisation=organisation
-            )
+            client_id.queryset = Client.objects.filter(organisation=organisation)
         else:
-            self.fields["client_id"].queryset = Client.objects.none()
+            client_id.queryset = Client.objects.none()
 
-    def validate_amount(self, value):
+    def validate_amount(self, value: Decimal) -> Decimal:
         if value <= 0:
             raise serializers.ValidationError("Amount must be positive.")
         return value
 
-    def validate_deadline(self, value):
+    def validate_deadline(self, value: date) -> date:
         if self.instance is None and value < timezone.localdate():
             raise serializers.ValidationError("Deadline cannot be in the past.")
         return value

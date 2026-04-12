@@ -4,6 +4,7 @@ from django.urls import reverse
 from apps.accounts.factories import OrganisationFactory
 from apps.clients.factories import ClientFactory, LeadFactory
 from apps.clients.models import Client, Lead
+from apps.invoices.factories import InvoiceFactory
 from apps.projects.factories import ProjectFactory
 from apps.proposals.factories import ProposalFactory
 
@@ -342,14 +343,33 @@ def test_client_projects_endpoint_returns_404_for_wrong_organisation(
 
 
 @pytest.mark.django_db
-def test_client_invoices_endpoint_remains_sprint_2_stub(authenticated_client, org):
+def test_client_invoices_endpoint_returns_client_invoices(authenticated_client, org):
     client = ClientFactory(organisation=org)
+    own_invoice = InvoiceFactory(organisation=org, client=client)
+    InvoiceFactory(organisation=org)
 
     response = authenticated_client.get(
         reverse("client-invoices", kwargs={"pk": client.id}),
     )
 
-    assert response.status_code == 501
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload) == 1
+    assert payload[0]["id"] == str(own_invoice.id)
+    assert payload[0]["total"] == "1000.00"
+
+
+@pytest.mark.django_db
+def test_client_invoices_endpoint_returns_404_for_wrong_organisation(
+    authenticated_client,
+):
+    other_client = ClientFactory(organisation=OrganisationFactory())
+
+    response = authenticated_client.get(
+        reverse("client-invoices", kwargs={"pk": other_client.id}),
+    )
+
+    assert response.status_code == 404
 
 
 @pytest.mark.django_db

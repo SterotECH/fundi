@@ -5,6 +5,8 @@ from rest_framework import permissions, status, viewsets
 from rest_framework.decorators import action
 from rest_framework.response import Response
 
+from apps.accounts.models import Organisation, User
+from apps.projects.serializers import ProjectDetailSerializer
 from apps.proposals import services
 from apps.proposals.models import Proposal
 from apps.proposals.serializers import (
@@ -14,7 +16,6 @@ from apps.proposals.serializers import (
     ProposalStatusUpdateSerializer,
     ProposalWriteSerializer,
 )
-from apps.projects.serializers import ProjectDetailSerializer
 
 
 class ProposalViewSet(viewsets.ModelViewSet):
@@ -46,9 +47,11 @@ class ProposalViewSet(viewsets.ModelViewSet):
         return super().get_serializer_class()
 
     def _get_proposal(self, pk: str) -> Proposal:
+        user = cast(User, self.request.user)
+        organisation = cast(Organisation, user.organisation)
         return services.get_proposal_detail(
             proposal_id=pk,
-            organisation=self.request.user.organisation,
+            organisation=organisation,
         )
 
     def list(self, request, *args, **kwargs):

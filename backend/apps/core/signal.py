@@ -1,3 +1,4 @@
+from collections.abc import Mapping
 from datetime import date, datetime
 from decimal import Decimal
 from uuid import UUID
@@ -8,9 +9,13 @@ from django.dispatch import receiver
 from apps.core.middleware import get_current_user
 from apps.core.models import AuditLog
 
+# The docs require a complete audit trail across model create/update/delete,
+# including money-layer records such as invoices, payments, and line items.
 AUDITED_APP_LABELS = {
     "accounts",
     "clients",
+    "core",
+    "invoices",
     "proposals",
     "projects",
 }
@@ -33,7 +38,9 @@ def _snapshot(instance):
     return data
 
 
-def get_model_diff(before, after):
+def get_model_diff(
+    before: Mapping[str, object], after: Mapping[str, object]
+) -> dict[str, dict[str, object]]:
     changes = {}
     all_keys = set(before.keys()) | set(after.keys())
     for key in all_keys:
@@ -56,6 +63,12 @@ def _get_organisation(instance):
     organisation = getattr(instance, "organisation", None)
     if organisation is not None:
         return organisation
+
+    user = getattr(instance, "user", None)
+    if user is not None:
+        user_organisation = getattr(user, "organisation", None)
+        if user_organisation is not None:
+            return user_organisation
 
     if instance._meta.label == "accounts.Organisation":
         return instance
@@ -109,7 +122,7 @@ def write_after_delete(sender, instance, **kwargs):
         return
 
     before = _snapshot(instance)
-    after = {}
+    after: dict[str, object] = {}
     audit(
         sender=sender,
         instance=instance,

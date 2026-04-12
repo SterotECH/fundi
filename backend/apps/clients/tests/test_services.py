@@ -5,6 +5,7 @@ from apps.clients import services
 from apps.clients.exceptions import LeadAlreadyConvertedError
 from apps.clients.factories import ClientFactory, LeadFactory
 from apps.clients.models import Client, Lead
+from apps.invoices.factories import InvoiceFactory
 from apps.projects.factories import ProjectFactory
 from apps.proposals.factories import ProposalFactory
 
@@ -258,9 +259,26 @@ def test_list_client_projects_raises_for_wrong_organisation_client(org):
 
 
 @pytest.mark.django_db
-def test_list_client_invoices_remains_sprint_2_stub(org):
-    with pytest.raises(NotImplementedError):
+def test_list_client_invoices_is_client_and_organisation_scoped(org):
+    client = ClientFactory(organisation=org)
+    own_invoice = InvoiceFactory(organisation=org, client=client)
+    InvoiceFactory(organisation=org)
+    InvoiceFactory(organisation=OrganisationFactory())
+
+    queryset = services.list_client_invoices(
+        organisation=org,
+        client_id=str(client.id),
+    )
+
+    assert list(queryset) == [own_invoice]
+
+
+@pytest.mark.django_db
+def test_list_client_invoices_raises_for_wrong_organisation_client(org):
+    other_client = ClientFactory(organisation=OrganisationFactory())
+
+    with pytest.raises(Client.DoesNotExist):
         services.list_client_invoices(
             organisation=org,
-            client_id="00000000-0000-0000-0000-000000000000",
+            client_id=str(other_client.id),
         )

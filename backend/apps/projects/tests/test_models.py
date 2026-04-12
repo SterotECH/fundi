@@ -5,7 +5,7 @@ import pytest
 from django.utils import timezone
 
 from apps.clients.factories import ClientFactory
-from apps.projects.factories import ProjectFactory
+from apps.projects.factories import MilestoneFactory, ProjectFactory, TimeLogFactory
 from apps.projects.models import Project
 from apps.proposals.factories import ProposalFactory
 
@@ -52,3 +52,24 @@ def test_project_status_choices_match_documented_delivery_states():
         "hold",
         "done",
     }
+
+
+@pytest.mark.django_db
+def test_milestone_factory_creates_project_scoped_milestone_with_description():
+    milestone = MilestoneFactory(description="Discovery workshop completed.")
+
+    assert milestone.id is not None
+    assert milestone.project.organisation == milestone.project.client.organisation
+    assert milestone.description == "Discovery workshop completed."
+    assert milestone.is_completed is False
+    assert milestone.completed_at is None
+
+
+@pytest.mark.django_db
+def test_time_log_factory_keeps_user_in_project_organisation():
+    time_log = TimeLogFactory(hours=Decimal("3.50"))
+
+    assert time_log.id is not None
+    assert time_log.user.organisation == time_log.project.organisation
+    assert time_log.hours == Decimal("3.50")
+    assert time_log.is_billable is True
