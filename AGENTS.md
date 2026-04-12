@@ -9,9 +9,9 @@
 - `docker compose up --build`: build and start the full stack.
 - `docker compose up -d`: run services in the background.
 - `docker compose exec backend python manage.py migrate`: apply migrations.
-- `docker compose exec backend pytest`: run backend tests.
-- `docker compose exec backend pytest --cov=apps --cov-report=term-missing`: run coverage for Django apps.
 - `cd backend && poetry install`: install local backend dependencies.
+- `cd backend && .venv/bin/python -m pytest`: run backend tests locally.
+- `cd backend && .venv/bin/python -m pytest --cov=apps --cov-report=term-missing`: run backend coverage locally.
 
 ## Engineering Rules
 
@@ -25,7 +25,7 @@ Use 4-space indentation and standard Python naming: `snake_case` for functions, 
 
 ## Testing Guidelines
 
-Backend tests use `pytest` and `pytest-django` with `DJANGO_SETTINGS_MODULE=config.settings.test`. Valid test file names are `tests.py`, `test_*.py`, and `*_test.py`. Minimum standard: every endpoint gets at least one pytest-django test. Add coverage for service logic and organisation scoping, not just happy-path responses.
+Backend tests run locally with `.venv/bin/python -m pytest`, not through `docker compose exec backend`. Use `pytest` and `pytest-django` with `DJANGO_SETTINGS_MODULE=config.settings.test`. Valid test file names are `tests.py`, `test_*.py`, and `*_test.py`. Minimum standard: every endpoint gets at least one pytest-django test. Add coverage for service logic and organisation scoping, not just happy-path responses.
 
 ## Commit & Pull Request Guidelines
 

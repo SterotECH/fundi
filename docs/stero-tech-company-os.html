@@ -1,0 +1,1492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Stero Tech Company OS — Master Planning Document</title>
+<style>
+  :root {
+    --purple-50: #EEEDFE; --purple-100: #CECBF6; --purple-200: #AFA9EC;
+    --purple-400: #7F77DD; --purple-600: #534AB7; --purple-800: #3C3489; --purple-900: #26215C;
+    --teal-50: #E1F5EE; --teal-400: #1D9E75; --teal-600: #0F6E56; --teal-800: #085041;
+    --amber-50: #FAEEDA; --amber-400: #BA7517; --amber-600: #854F0B;
+    --red-50: #FCEBEB; --red-400: #E24B4A; --red-800: #791F1F;
+    --blue-50: #E6F1FB; --blue-400: #378ADD; --blue-800: #0C447C;
+    --gray-50: #F1EFE8; --gray-100: #D3D1C7; --gray-400: #888780; --gray-600: #5F5E5A; --gray-800: #444441;
+    --coral-50: #FAECE7; --coral-400: #D85A30; --coral-800: #712B13;
+    --text: #1a1a1a;
+    --text-muted: #5F5E5A;
+    --text-faint: #888780;
+    --border: #D3D1C7;
+    --border-light: #E8E6DF;
+    --bg: #ffffff;
+    --bg-secondary: #F8F7F3;
+    --bg-tertiary: #F1EFE8;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+    font-size: 15px;
+    line-height: 1.75;
+    color: var(--text);
+    background: var(--bg);
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 0 24px 80px;
+  }
+
+  /* Cover */
+  .cover {
+    padding: 64px 0 48px;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 48px;
+  }
+  .cover-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--purple-50);
+    color: var(--purple-800);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    padding: 5px 12px;
+    border-radius: 20px;
+    margin-bottom: 24px;
+  }
+  .cover-logo {
+    width: 48px;
+    height: 48px;
+    background: var(--purple-600);
+    border-radius: 12px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 18px;
+    font-weight: 700;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+  .cover h1 {
+    font-size: 38px;
+    font-weight: 700;
+    letter-spacing: -0.02em;
+    color: var(--text);
+    margin: 16px 0 12px;
+    line-height: 1.15;
+  }
+  .cover p {
+    font-size: 17px;
+    color: var(--text-muted);
+    max-width: 640px;
+    line-height: 1.6;
+  }
+  .cover-meta {
+    margin-top: 24px;
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+  }
+  .meta-chip {
+    font-size: 13px;
+    color: var(--text-muted);
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    padding: 4px 12px;
+    border-radius: 6px;
+  }
+  .meta-chip strong { color: var(--text); font-weight: 600; }
+
+  /* Table of contents */
+  .toc {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px 32px;
+    margin-bottom: 56px;
+  }
+  .toc h2 {
+    font-size: 13px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 16px;
+  }
+  .toc ol {
+    list-style: none;
+    counter-reset: toc;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 0;
+  }
+  .toc li {
+    counter-increment: toc;
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 5px 0;
+  }
+  .toc li::before {
+    content: counter(toc, decimal-leading-zero);
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--purple-400);
+    flex-shrink: 0;
+    font-variant-numeric: tabular-nums;
+  }
+  .toc a {
+    font-size: 14px;
+    color: var(--text);
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color .15s, color .15s;
+  }
+  .toc a:hover { color: var(--purple-600); border-color: var(--purple-200); }
+
+  /* Section headings */
+  .section-marker {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+    padding-top: 56px;
+  }
+  .section-num {
+    width: 32px;
+    height: 32px;
+    background: var(--purple-600);
+    color: #fff;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    flex-shrink: 0;
+  }
+  h2 {
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  h3 {
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--text);
+    margin: 32px 0 12px;
+  }
+  h4 {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin: 24px 0 8px;
+  }
+
+  /* Prose */
+  p { margin-bottom: 14px; color: var(--text); }
+  p:last-child { margin-bottom: 0; }
+
+  /* Sprint group */
+  .sprint-block {
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    margin-bottom: 28px;
+    overflow: hidden;
+  }
+  .sprint-header {
+    padding: 14px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sprint-badge {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 20px;
+  }
+  .s1 { background: var(--purple-50); color: var(--purple-800); }
+  .s2 { background: var(--teal-50); color: var(--teal-800); }
+  .s3 { background: var(--amber-50); color: var(--amber-600); }
+  .s4 { background: var(--blue-50); color: var(--blue-800); }
+  .sprint-title { font-size: 15px; font-weight: 600; color: var(--text); }
+  .sprint-sub { font-size: 13px; color: var(--text-muted); margin-left: auto; }
+  .sprint-body { padding: 0 20px; }
+
+  /* User stories */
+  .story-group { padding: 14px 0; border-bottom: 1px solid var(--border-light); }
+  .story-group:last-child { border-bottom: none; }
+  .story-group-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text-faint);
+    margin-bottom: 8px;
+  }
+  .story {
+    font-size: 14px;
+    color: var(--text);
+    line-height: 1.6;
+    padding: 4px 0 4px 16px;
+    border-left: 2px solid var(--border);
+    margin-bottom: 6px;
+  }
+  .story:last-child { margin-bottom: 0; }
+  .story em { color: var(--purple-600); font-style: normal; font-weight: 500; }
+
+  /* Tables */
+  .table-wrap { overflow-x: auto; margin: 20px 0; }
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13.5px;
+  }
+  th {
+    background: var(--bg-secondary);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    color: var(--text-muted);
+    padding: 10px 14px;
+    text-align: left;
+    border-bottom: 1px solid var(--border);
+    white-space: nowrap;
+  }
+  td {
+    padding: 9px 14px;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: top;
+    line-height: 1.55;
+  }
+  tr:last-child td { border-bottom: none; }
+  td code, th code {
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 12px;
+    background: var(--bg-secondary);
+    padding: 1px 5px;
+    border-radius: 4px;
+    color: var(--purple-800);
+  }
+
+  /* ERD model cards */
+  .model-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+    margin: 20px 0;
+  }
+  .model-card {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .model-card-header {
+    background: var(--purple-50);
+    padding: 10px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--purple-100);
+  }
+  .model-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--purple-800);
+    font-family: 'SF Mono', 'Fira Code', monospace;
+  }
+  .model-tag {
+    font-size: 10px;
+    font-weight: 600;
+    background: var(--purple-100);
+    color: var(--purple-800);
+    padding: 2px 7px;
+    border-radius: 10px;
+  }
+  .model-fields { padding: 8px 0; }
+  .model-field {
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+    padding: 4px 14px;
+    font-size: 12.5px;
+  }
+  .field-name {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    color: var(--text);
+    font-weight: 500;
+    flex-shrink: 0;
+  }
+  .field-type { color: var(--text-faint); font-size: 11.5px; flex-shrink: 0; }
+  .field-note { color: var(--purple-600); font-size: 11px; margin-left: auto; }
+  .field-pk { color: var(--amber-600); font-size: 10px; font-weight: 700; background: var(--amber-50); padding: 1px 5px; border-radius: 4px; }
+  .field-fk { color: var(--teal-600); font-size: 10px; font-weight: 700; background: var(--teal-50); padding: 1px 5px; border-radius: 4px; }
+
+  /* API endpoint groups */
+  .endpoint-group {
+    margin-bottom: 28px;
+  }
+  .endpoint-group-title {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--text-faint);
+    letter-spacing: .07em;
+    text-transform: uppercase;
+    margin-bottom: 10px;
+    padding-bottom: 6px;
+    border-bottom: 1px solid var(--border);
+  }
+  .endpoint {
+    display: grid;
+    grid-template-columns: 70px 260px 1fr;
+    gap: 12px;
+    align-items: start;
+    padding: 8px 12px;
+    border-radius: 8px;
+    margin-bottom: 4px;
+    background: var(--bg-secondary);
+    font-size: 13px;
+  }
+  .method {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 7px;
+    border-radius: 5px;
+    text-align: center;
+    letter-spacing: .03em;
+    align-self: start;
+    margin-top: 2px;
+  }
+  .GET { background: var(--blue-50); color: var(--blue-800); }
+  .POST { background: var(--teal-50); color: var(--teal-800); }
+  .PATCH { background: var(--amber-50); color: var(--amber-600); }
+  .DELETE { background: var(--red-50); color: var(--red-800); }
+  .endpoint-url {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 12px;
+    color: var(--purple-800);
+    word-break: break-all;
+    align-self: start;
+  }
+  .endpoint-desc { color: var(--text-muted); line-height: 1.5; }
+
+  /* Callout boxes */
+  .callout {
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin: 20px 0;
+    border-left: 3px solid;
+  }
+  .callout-warn { background: var(--amber-50); border-color: var(--amber-400); }
+  .callout-info { background: var(--blue-50); border-color: var(--blue-400); }
+  .callout-success { background: var(--teal-50); border-color: var(--teal-400); }
+  .callout-purple { background: var(--purple-50); border-color: var(--purple-400); }
+  .callout-title {
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+  .callout-warn .callout-title { color: var(--amber-600); }
+  .callout-info .callout-title { color: var(--blue-800); }
+  .callout-success .callout-title { color: var(--teal-800); }
+  .callout-purple .callout-title { color: var(--purple-800); }
+  .callout p { font-size: 14px; margin-bottom: 0; color: var(--text); }
+  .callout ul { font-size: 14px; padding-left: 18px; color: var(--text); }
+  .callout li { margin-bottom: 4px; }
+
+  /* Scope freeze */
+  .scope-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin: 16px 0; }
+  .scope-col {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  .scope-col-header {
+    padding: 10px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    letter-spacing: .06em;
+    text-transform: uppercase;
+    border-bottom: 1px solid var(--border);
+  }
+  .in-header { background: var(--teal-50); color: var(--teal-800); }
+  .out-header { background: var(--red-50); color: var(--red-800); }
+  .scope-list { padding: 10px 0; }
+  .scope-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 5px 16px;
+    font-size: 13.5px;
+    line-height: 1.5;
+  }
+  .scope-icon { flex-shrink: 0; margin-top: 3px; font-size: 12px; }
+
+  /* Roadmap timeline */
+  .roadmap { margin: 20px 0; }
+  .roadmap-row {
+    display: flex;
+    gap: 16px;
+    align-items: flex-start;
+    padding: 16px 0;
+    border-bottom: 1px solid var(--border-light);
+  }
+  .roadmap-row:last-child { border-bottom: none; }
+  .roadmap-sprint {
+    width: 90px;
+    flex-shrink: 0;
+    text-align: center;
+  }
+  .roadmap-num {
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 13px;
+    font-weight: 700;
+    margin: 0 auto 4px;
+  }
+  .roadmap-weeks { font-size: 11px; color: var(--text-faint); }
+  .roadmap-content { flex: 1; }
+  .roadmap-title { font-size: 15px; font-weight: 600; color: var(--text); margin-bottom: 4px; }
+  .roadmap-items { font-size: 13px; color: var(--text-muted); line-height: 1.7; }
+
+  /* Design decisions */
+  .decision-list { margin: 16px 0; }
+  .decision {
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+  }
+  .decision-num {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--purple-600);
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+  .decision-title { font-size: 15px; font-weight: 600; margin-bottom: 8px; }
+  .decision p { font-size: 13.5px; color: var(--text-muted); line-height: 1.6; margin-bottom: 0; }
+
+  /* GitHub board */
+  .label-grid { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; }
+  .gh-label {
+    font-size: 12px;
+    font-weight: 600;
+    padding: 3px 11px;
+    border-radius: 20px;
+    border: 1px solid transparent;
+  }
+
+  /* Wireframe descriptions */
+  .wireframe-block {
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px 24px;
+    margin-bottom: 20px;
+  }
+  .wireframe-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .wireframe-screen {
+    font-size: 11px;
+    font-weight: 600;
+    background: var(--purple-50);
+    color: var(--purple-800);
+    padding: 2px 8px;
+    border-radius: 5px;
+  }
+  .wireframe-block p, .wireframe-block li { font-size: 13.5px; color: var(--text-muted); line-height: 1.65; }
+  .wireframe-block ul { padding-left: 18px; margin-top: 8px; }
+  .wireframe-block li { margin-bottom: 4px; }
+
+  /* UI Guide */
+  .color-swatches { display: flex; flex-wrap: wrap; gap: 10px; margin: 12px 0; }
+  .swatch { width: 100px; text-align: center; }
+  .swatch-box { height: 36px; border-radius: 8px; margin-bottom: 5px; border: 1px solid rgba(0,0,0,.08); }
+  .swatch-label { font-size: 11px; color: var(--text-muted); }
+  .swatch-name { font-size: 12px; font-weight: 600; color: var(--text); }
+
+  /* Navigation tree */
+  .nav-tree {
+    font-family: 'SF Mono', 'Fira Code', monospace;
+    font-size: 13px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    line-height: 2;
+    color: var(--text);
+  }
+  .nav-indent { padding-left: 20px; color: var(--text-muted); }
+  .nav-future { color: var(--text-faint); font-style: italic; }
+
+  /* Footer */
+  .doc-footer {
+    margin-top: 64px;
+    padding-top: 24px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 13px;
+    color: var(--text-faint);
+  }
+
+  /* Print styles */
+  @media print {
+    body { max-width: 100%; padding: 0; font-size: 13px; }
+    .cover { padding: 32px 0 24px; }
+    .section-marker { padding-top: 32px; }
+    .sprint-block, .model-card, .endpoint, .callout, .decision, .wireframe-block { break-inside: avoid; }
+  }
+
+  /* Divider */
+  hr { border: none; border-top: 1px solid var(--border); margin: 40px 0; }
+
+  ul, ol { padding-left: 20px; margin-bottom: 14px; }
+  li { margin-bottom: 4px; line-height: 1.6; }
+
+  strong { font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-badge">
+    <span class="cover-logo">ST</span>
+    Stero Tech Inc.
+  </div>
+  <h1>Company OS<br>Master Planning Document</h1>
+  <p>A complete pre-build blueprint for the Stero Tech CRM — architected from day one as a full company operating system. No code yet. Just decisions made in the right order.</p>
+  <div class="cover-meta">
+    <div class="meta-chip"><strong>Version</strong> 1.0</div>
+    <div class="meta-chip"><strong>Status</strong> Pre-Sprint 1</div>
+    <div class="meta-chip"><strong>Sprints</strong> 3 planned + roadmap to Sprint 8</div>
+    <div class="meta-chip"><strong>Stack</strong> Django 6 · React · PostgreSQL · Anthropic</div>
+    <div class="meta-chip"><strong>Currency</strong> GHS (Ghana Cedi)</div>
+  </div>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<div class="toc">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#s1">User stories</a></li>
+    <li><a href="#s2">Entity relationship diagram</a></li>
+    <li><a href="#s3">API contract</a></li>
+    <li><a href="#s4">UI/UX guidelines & wireframes</a></li>
+    <li><a href="#s5">GitHub project board setup</a></li>
+    <li><a href="#s6">Sprint 1 scope freeze</a></li>
+    <li><a href="#s7">Company OS roadmap</a></li>
+    <li><a href="#s8">Critical design decisions</a></li>
+  </ol>
+</div>
+
+
+<!-- SECTION 1: USER STORIES -->
+<div class="section-marker" id="s1">
+  <div class="section-num">01</div>
+  <h2>User Stories</h2>
+</div>
+<p>Written as "As Stero, I want to… so that…" for every major feature. Grouped by sprint. These stories define acceptance — if the feature doesn't satisfy the story, the story isn't done.</p>
+
+<!-- Sprint 1 -->
+<div class="sprint-block">
+  <div class="sprint-header">
+    <span class="sprint-badge s1">Sprint 1</span>
+    <span class="sprint-title">The Usable Core</span>
+    <span class="sprint-sub">Weeks 1–3</span>
+  </div>
+  <div class="sprint-body">
+    <div class="story-group">
+      <div class="story-group-title">Authentication</div>
+      <div class="story">As Stero, I want to <em>log in with my email and password</em> so that my business data is protected behind a credential wall.</div>
+      <div class="story">As Stero, I want my <em>session to stay alive via token refresh</em> so that I don't have to re-login every hour while working.</div>
+      <div class="story">As Stero, I want to <em>log out cleanly</em> so that I can end my session from any device.</div>
+    </div>
+    <div class="story-group">
+      <div class="story-group-title">Client Management</div>
+      <div class="story">As Stero, I want to <em>create a client profile</em> with name, contact person, phone, email, address, and school type so that I have a single source of truth for every institution I serve.</div>
+      <div class="story">As Stero, I want to <em>view a searchable, paginated list of clients</em> so that I can quickly find any school.</div>
+      <div class="story">As Stero, I want to <em>view a client detail page</em> showing all linked proposals, projects, invoices, and payments so that I can understand the full relationship at a glance.</div>
+      <div class="story">As Stero, I want to <em>archive (not delete) clients</em> so that I preserve historical data while keeping my active list clean.</div>
+    </div>
+    <div class="story-group">
+      <div class="story-group-title">Lead Management</div>
+      <div class="story">As Stero, I want to <em>add a lead</em> with name, contact info, source, and notes so that I can track prospects before they become paying clients.</div>
+      <div class="story">As Stero, I want to <em>convert a lead to a client with one action</em> so that I don't re-enter data when a prospect commits.</div>
+      <div class="story">As Stero, I want to <em>mark a lead as dead or inactive</em> so that my pipeline only shows live opportunities.</div>
+    </div>
+    <div class="story-group">
+      <div class="story-group-title">Proposal Tracker</div>
+      <div class="story">As Stero, I want to <em>create a proposal</em> linked to a client with title, description, amount, and deadline so that I have a formal record of every pitch.</div>
+      <div class="story">As Stero, I want to <em>move a proposal through status stages</em> (draft → sent → negotiating → won → lost) so that I can track where every deal stands.</div>
+      <div class="story">As Stero, I want to see a <em>visual deadline indicator</em> when a proposal is approaching or has passed so that I never miss a follow-up window.</div>
+      <div class="story">As Stero, I want to <em>convert a won proposal into a project with one click</em> so that I don't re-enter the same data twice.</div>
+    </div>
+    <div class="story-group">
+      <div class="story-group-title">Dashboard</div>
+      <div class="story">As Stero, I want to <em>see upcoming proposal deadlines</em> on my dashboard so that I can plan my follow-up calls for the week.</div>
+      <div class="story">As Stero, I want to <em>see counts of open proposals by status</em> so that I know the health of my pipeline at a glance.</div>
+      <div class="story">As Stero, I want to <em>see my currently active projects</em> so that I know what I should be building right now.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Sprint 2 -->
+<div class="sprint-block">
+  <div class="sprint-header">
+    <span class="sprint-badge s2">Sprint 2</span>
+    <span class="sprint-title">The Money Layer</span>
+    <span class="sprint-sub">Weeks 4–6</span>
+  </div>
+  <div class="sprint-body">
+    <div class="story-group">
+      <div class="story-group-title">Invoice Management</div>
+      <div class="story">As Stero, I want to <em>create an invoice</em> linked to a project and client with auto-generated invoice numbers so that every invoice is uniquely identifiable.</div>
+      <div class="story">As Stero, I want to <em>add line items to an invoice</em> so that I can document exactly what I'm charging for.</div>
+      <div class="story">As Stero, I want to <em>track invoice status</em> (draft, sent, partial, paid, overdue) so that I know the collection state of every invoice.</div>
+      <div class="story">As Stero, I want to <em>see which invoices are overdue</em> so that I can follow up proactively.</div>
+    </div>
+    <div class="story-group">
+      <div class="story-group-title">Payment Tracking</div>
+      <div class="story">As Stero, I want to <em>record a payment</em> specifying amount in GHS, method (MTN MoMo, Vodafone Cash, AirtelTigo, bank transfer), reference number, and date so that I have a complete payment audit trail.</div>
+      <div class="story">As Stero, I want the <em>invoice status to automatically update</em> to "partial" or "paid" based on total payments recorded so that I don't manage it manually.</div>
+      <div class="story">As Stero, I want to <em>see total revenue collected vs invoiced per client</em> so that I know who still owes me money.</div>
+    </div>
+    <div class="story-group">
+      <div class="story-group-title">Time Logging</div>
+      <div class="story">As Stero, I want to <em>log hours worked on a project</em> with a date, duration, and description so that I can track how much time I spend per client.</div>
+      <div class="story">As Stero, I want to <em>mark time logs as billable or non-billable</em> so that I can distinguish client time from internal work.</div>
+      <div class="story">As Stero, I want to <em>see total hours logged per project</em> so that I know if I'm over-budget on time.</div>
+    </div>
+    <div class="story-group">
+      <div class="story-group-title">Deadline Reminders (Celery)</div>
+      <div class="story">As Stero, I want to receive an <em>in-app notification when a proposal deadline is 3 days away</em> so that I never let a pitch expire without action.</div>
+      <div class="story">As Stero, I want to receive a <em>notification when an invoice becomes overdue</em> so that I can chase payment immediately.</div>
+      <div class="story">As Stero, I want <em>Celery to run these checks on a daily schedule</em> so that reminders are fully automatic.</div>
+    </div>
+  </div>
+</div>
+
+<!-- Sprint 3 -->
+<div class="sprint-block">
+  <div class="sprint-header">
+    <span class="sprint-badge s3">Sprint 3</span>
+    <span class="sprint-title">The Intelligence Layer</span>
+    <span class="sprint-sub">Weeks 7–9</span>
+  </div>
+  <div class="sprint-body">
+    <div class="story-group">
+      <div class="story-group-title">AI Business Assistant</div>
+      <div class="story">As Stero, I want to <em>ask questions like "How much revenue did I collect this month?"</em> so that I get instant answers without building reports myself.</div>
+      <div class="story">As Stero, I want the <em>AI to read my live CRM data</em> when answering so that responses are accurate and current.</div>
+      <div class="story">As Stero, I want to <em>ask the assistant to draft a follow-up email</em> for a specific proposal so that I can copy-paste a professional message without writing it from scratch.</div>
+      <div class="story">As Stero, I want the assistant to <em>summarise an overdue client's outstanding balance</em> in one message so that I'm prepared before making a payment call.</div>
+    </div>
+    <div class="story-group">
+      <div class="story-group-title">Pipeline Analytics</div>
+      <div class="story">As Stero, I want to <em>see total revenue collected broken down by month</em> so that I can spot seasonal trends.</div>
+      <div class="story">As Stero, I want to <em>see my proposal win rate</em> so that I can evaluate how good my pitching is.</div>
+      <div class="story">As Stero, I want to <em>see revenue and time invested per client</em> so that I can identify my most and least profitable relationships.</div>
+      <div class="story">As Stero, I want to <em>see average time-to-close per proposal</em> so that I can benchmark how long deals typically take.</div>
+    </div>
+    <div class="story-group">
+      <div class="story-group-title">Polish & Mobile</div>
+      <div class="story">As Stero, I want <em>all screens to work comfortably on my phone</em> so that I can check the CRM between meetings without a laptop.</div>
+      <div class="story">As Stero, I want <em>consistent loading states, empty states, and error states</em> throughout the app so that it feels professional when I demo it to a client.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- SECTION 2: ERD -->
+<div class="section-marker" id="s2">
+  <div class="section-num">02</div>
+  <h2>Entity Relationship Diagram</h2>
+</div>
+<p>All models, fields, types, and relationships. Every model includes <code>created_at (datetime)</code> implicitly. PKs are UUID throughout — never integer sequences, to avoid leaking record counts.</p>
+
+<div class="callout callout-purple">
+  <div class="callout-title">Architecture principle</div>
+  <p>Every model below also receives an <code>organisation (FK → Organisation)</code> field from day one. On launch, one Organisation record exists (Stero Tech Inc.) and the FK is invisible in the UI. This single field is what makes the entire system multi-tenant when you're ready to grow.</p>
+</div>
+
+<div class="model-grid">
+
+  <div class="model-card">
+    <div class="model-card-header">
+      <span class="model-name">Organisation</span>
+      <span class="model-tag">Root</span>
+    </div>
+    <div class="model-fields">
+      <div class="model-field"><span class="field-name">id</span><span class="field-type">UUID</span><span class="field-pk">PK</span></div>
+      <div class="model-field"><span class="field-name">name</span><span class="field-type">string</span></div>
+      <div class="model-field"><span class="field-name">slug</span><span class="field-type">string, unique</span></div>
+      <div class="model-field"><span class="field-name">currency</span><span class="field-type">string, default GHS</span></div>
+      <div class="model-field"><span class="field-name">country</span><span class="field-type">string, default GH</span></div>
+      <div class="model-field"><span class="field-name">subscription_plan</span><span class="field-type">enum</span></div>
+    </div>
+  </div>
+
+  <div class="model-card">
+    <div class="model-card-header">
+      <span class="model-name">User</span>
+      <span class="model-tag">Auth</span>
+    </div>
+    <div class="model-fields">
+      <div class="model-field"><span class="field-name">id</span><span class="field-type">UUID</span><span class="field-pk">PK</span></div>
+      <div class="model-field"><span class="field-name">organisation</span><span class="field-type">FK → Organisation</span><span class="field-fk">FK</span></div>
+      <div class="model-field"><span class="field-name">email</span><span class="field-type">string, unique</span></div>
+      <div class="model-field"><span class="field-name">password_hash</span><span class="field-type">string</span></div>
+      <div class="model-field"><span class="field-name">full_name</span><span class="field-type">string</span></div>
+      <div class="model-field"><span class="field-name">role</span><span class="field-type">enum (future)</span></div>
+    </div>
+  </div>
+
+  <div class="model-card">
+    <div class="model-card-header">
+      <span class="model-name">Client</span>
+      <span class="model-tag">Core</span>
+    </div>
+    <div class="model-fields">
+      <div class="model-field"><span class="field-name">id</span><span class="field-type">UUID</span><span class="field-pk">PK</span></div>
+      <div class="model-field"><span class="field-name">organisation</span><span class="field-type">FK → Organisation</span><span class="field-fk">FK</span></div>
+      <div class="model-field"><span class="field-name">name</span><span class="field-type">string</span></div>
+      <div class="model-field"><span class="field-name">type</span><span class="field-type">enum: SHS/JHS/intl/uni</span></div>
+      <div class="model-field"><span class="field-name">contact_person</span><span class="field-type">string</span></div>
+      <div class="model-field"><span class="field-name">email</span><span class="field-type">string</span></div>
+      <div class="model-field"><span class="field-name">phone</span><span class="field-type">string</span></div>
+      <div class="model-field"><span class="field-name">address</span><span class="field-type">text</span></div>
+      <div class="model-field"><span class="field-name">region</span><span class="field-type">string (Ghana)</span></div>
+      <div class="model-field"><span class="field-name">is_archived</span><span class="field-type">boolean, default False</span></div>
+      <div class="model-field"><span class="field-name">notes</span><span class="field-type">text</span></div>
+    </div>
+  </div>
+
+  <div class="model-card">
+    <div class="model-card-header">
+      <span class="model-name">Lead</span>
+      <span class="model-tag">Pipeline</span>
+    </div>
+    <div class="model-fields">
+      <div class="model-field"><span class="field-name">id</span><span class="field-type">UUID</span><span class="field-pk">PK</span></div>
+      <div class="model-field"><span class="field-name">organisation</span><span class="field-type">FK → Organisation</span><span class="field-fk">FK</span></div>
+      <div class="model-field"><span class="field-name">name</span><span class="field-type">string</span></div>
+      <div class="model-field"><span class="field-name">contact_person</span><span class="field-type">string</span></div>
+      <div class="model-field"><span class="field-name">email / phone</span><span class="field-type">string</span></div>
+      <div class="model-field"><span class="field-name">source</span><span class="field-type">enum: referral/cold/etc</span></div>
+      <div class="model-field"><span class="field-name">status</span><span class="field-type">enum: new/contacted/qualified/dead</span></div>
+      <div class="model-field"><span class="field-name">converted_to_client</span><span class="field-type">nullable FK → Client</span><span class="field-fk">FK</span></div>
+    </div>
+  </div>
+
+  <div class="model-card">
+    <div class="model-card-header">
+      <span class="model-name">Proposal</span>
+      <span class="model-tag">Pipeline</span>
+    </div>
+    <div class="model-fields">
+      <div class="model-field"><span class="field-name">id</span><span class="field-type">UUID</span><span class="field-pk">PK</span></div>
+      <div class="model-field"><span class="field-name">client</span><span class="field-type">FK → Client</span><span class="field-fk">FK</span></div>
+      <div class="model-field"><span class="field-name">title</span><span class="field-type">string</span></div>
+      <div class="model-field"><span class="field-name">description</span><span class="field-type">text</span></div>
+      <div class="model-field"><span class="field-name">amount</span><span class="field-type">Decimal(12,2)</span></div>
+      <div class="model-field"><span class="field-name">status</span><span class="field-type">enum: draft/sent/neg/won/lost</span></div>
+      <div class="model-field"><span class="field-name">sent_date</span><span class="field-type">date, nullable</span></div>
+      <div class="model-field"><span class="field-name">deadline</span><span class="field-type">date</span></div>
+      <div class="model-field"><span class="field-name">decision_date</span><span class="field-type">date, nullable</span></div>
+    </div>
+  </div>
+
+  <div class="model-card">
+    <div class="model-card-header">
+      <span class="model-name">Project</span>
+      <span class="model-tag">Delivery</span>
+    </div>
+    <div class="model-fields">
+      <div class="model-field"><span class="field-name">id</span><span class="field-type">UUID</span><span class="field-pk">PK</span></div>
+      <div class="model-field"><span class="field-name">client</span><span class="field-type">FK → Client</span><span class="field-fk">FK</span></div>
+      <div class="model-field"><span class="field-name">proposal</span><span class="field-type">nullable FK → Proposal</span><span class="field-fk">FK</span></div>
+      <div class="model-field"><span class="field-name">title</span><span class="field-type">string</span></div>
+      <div class="model-field"><span class="field-name">status</span><span class="field-type">enum: planning/active/hold/done</span></div>
+      <div class="model-field"><span class="field-name">start_date / due_date</span><span class="field-type">date</span></div>
+      <div class="model-field"><span class="field-name">budget</span><span class="field-type">Decimal(12,2)</span></div>
+    </div>
+  </div>
+
+  <div class="model-card">
+    <div class="model-card-header">
+      <span class="model-name">Milestone</span>
+      <span class="model-tag">Delivery</span>
+    </div>
+    <div class="model-fields">
+      <div class="model-field"><span class="field-name">id</span><span class="field-type">UUID</span><span class="field-pk">PK</span></div>
+      <div class="model-field"><span class="field-name">project</span><span class="field-type">FK → Project</span><span class="field-fk">FK</span></div>
+      <div class="model-field"><span class="field-name">title</span><span class="field-type">string</span></div>
+      <div class="model-field"><span class="field-name">due_date</span><span class="field-type">date</span></div>
+      <div class="model-field"><span class="field-name">completed</span><span class="field-type">boolean</span></div>
+      <div class="model-field"><span class="field-name">completed_at</span><span class="field-type">datetime, nullable</span></div>
+      <div class="model-field"><span class="field-name">order</span><span class="field-type">integer</span></div>
+    </div>
+  </div>
+
+  <div class="model-card">
+    <div class="model-card-header">
+      <span class="model-name">Invoice</span>
+      <span class="model-tag">Finance</span>
+    </div>
+    <div class="model-fields">
+      <div class="model-field"><span class="field-name">id</span><span class="field-type">UUID</span><span class="field-pk">PK</span></div>
+      <div class="model-field"><span class="field-name">client</span><span class="field-type">FK → Client</span><span class="field-fk">FK</span></div>
+      <div class="model-field"><span class="field-name">project</span><span class="field-type">nullable FK → Project</span><span class="field-fk">FK</span></div>
+      <div class="model-field"><span class="field-name">invoice_number</span><span class="field-type">string, unique (sequence)</span></div>
+      <div class="model-field"><span class="field-name">subtotal_ghs / tax_ghs / total_ghs</span><span class="field-type">Decimal(12,2)</span></div>
+      <div class="model-field"><span class="field-name">status</span><span class="field-type">enum: draft/sent/partial/paid/overdue</span></div>
+      <div class="model-field"><span class="field-name">issue_date / due_date</span><span class="field-type">date</span></div>
+    </div>
+  </div>
+
+  <div class="model-card">
+    <div class="model-card-header">
+      <span class="model-name">InvoiceLineItem</span>
+      <span class="model-tag">Finance</span>
+    </div>
+    <div class="model-fields">
+      <div class="model-field"><span class="field-name">id</span><span class="field-type">UUID</span><span class="field-pk">PK</span></div>
+      <div class="model-field"><span class="field-name">invoice</span><span class="field-type">FK → Invoice</span><span class="field-fk">FK</span></div>
+      <div class="model-field"><span class="field-name">description</span><span class="field-type">string</span></div>
+      <div class="model-field"><span class="field-name">quantity</span><span class="field-type">Decimal(8,2)</span></div>
+      <div class="model-field"><span class="field-name">unit_price_ghs</span><span class="field-type">Decimal(12,2)</span></div>
+      <div class="model-field"><span class="field-name">line_total_ghs</span><span class="field-type">Decimal(12,2), computed</span></div>
+    </div>
+  </div>
+
+  <div class="model-card">
+    <div class="model-card-header">
+      <span class="model-name">Payment</span>
+      <span class="model-tag">Finance</span>
+    </div>
+    <div class="model-fields">
+      <div class="model-field"><span class="field-name">id</span><span class="field-type">UUID</span><span class="field-pk">PK</span></div>
+      <div class="model-field"><span class="field-name">invoice</span><span class="field-type">FK → Invoice</span><span class="field-fk">FK</span></div>
+      <div class="model-field"><span class="field-name">amount_ghs</span><span class="field-type">Decimal(12,2)</span></div>
+      <div class="model-field"><span class="field-name">method</span><span class="field-type">enum: mtn_momo/vodafone/airteltigo/bank/cash</span></div>
+      <div class="model-field"><span class="field-name">provider_reference</span><span class="field-type">string</span></div>
+      <div class="model-field"><span class="field-name">payment_date</span><span class="field-type">date</span></div>
+    </div>
+  </div>
+
+  <div class="model-card">
+    <div class="model-card-header">
+      <span class="model-name">TimeLog</span>
+      <span class="model-tag">Operations</span>
+    </div>
+    <div class="model-fields">
+      <div class="model-field"><span class="field-name">id</span><span class="field-type">UUID</span><span class="field-pk">PK</span></div>
+      <div class="model-field"><span class="field-name">project</span><span class="field-type">FK → Project</span><span class="field-fk">FK</span></div>
+      <div class="model-field"><span class="field-name">user</span><span class="field-type">FK → User</span><span class="field-fk">FK</span></div>
+      <div class="model-field"><span class="field-name">log_date</span><span class="field-type">date</span></div>
+      <div class="model-field"><span class="field-name">hours</span><span class="field-type">Decimal(5,2)</span></div>
+      <div class="model-field"><span class="field-name">description</span><span class="field-type">string</span></div>
+      <div class="model-field"><span class="field-name">billable</span><span class="field-type">boolean, default True</span></div>
+    </div>
+  </div>
+
+  <div class="model-card">
+    <div class="model-card-header">
+      <span class="model-name">Notification</span>
+      <span class="model-tag">System</span>
+    </div>
+    <div class="model-fields">
+      <div class="model-field"><span class="field-name">id</span><span class="field-type">UUID</span><span class="field-pk">PK</span></div>
+      <div class="model-field"><span class="field-name">user</span><span class="field-type">FK → User</span><span class="field-fk">FK</span></div>
+      <div class="model-field"><span class="field-name">type</span><span class="field-type">enum: deadline/overdue/project_due</span></div>
+      <div class="model-field"><span class="field-name">message</span><span class="field-type">string (rendered)</span></div>
+      <div class="model-field"><span class="field-name">entity_type / entity_id</span><span class="field-type">string / UUID</span></div>
+      <div class="model-field"><span class="field-name">read</span><span class="field-type">boolean, default False</span></div>
+    </div>
+  </div>
+
+  <div class="model-card">
+    <div class="model-card-header">
+      <span class="model-name">AuditLog</span>
+      <span class="model-tag">System</span>
+    </div>
+    <div class="model-fields">
+      <div class="model-field"><span class="field-name">id</span><span class="field-type">UUID</span><span class="field-pk">PK</span></div>
+      <div class="model-field"><span class="field-name">user</span><span class="field-type">FK → User</span><span class="field-fk">FK</span></div>
+      <div class="model-field"><span class="field-name">organisation</span><span class="field-type">FK → Organisation</span><span class="field-fk">FK</span></div>
+      <div class="model-field"><span class="field-name">action</span><span class="field-type">enum: created/updated/deleted/status_changed</span></div>
+      <div class="model-field"><span class="field-name">entity_type / entity_id</span><span class="field-type">string / UUID</span></div>
+      <div class="model-field"><span class="field-name">diff</span><span class="field-type">JSON (before/after)</span></div>
+      <div class="model-field"><span class="field-name">timestamp</span><span class="field-type">datetime</span></div>
+    </div>
+  </div>
+
+</div>
+
+<h3>Future models (Sprint 4+)</h3>
+<p>These are planned but not built in the first three sprints. The schema above is designed so they slot in without any migrations to existing tables.</p>
+
+<div class="table-wrap">
+<table>
+  <thead>
+    <tr><th>Model</th><th>Sprint</th><th>Purpose</th></tr>
+  </thead>
+  <tbody>
+    <tr><td><code>Membership</code></td><td>4</td><td>Links User to Organisation with a role. The multi-user unlock.</td></tr>
+    <tr><td><code>Department</code></td><td>4</td><td>Groups staff into functional teams (Dev, Sales, Finance).</td></tr>
+    <tr><td><code>Contract</code></td><td>4</td><td>Formal signed agreements with start/end dates and document URL.</td></tr>
+    <tr><td><code>Expense</code></td><td>4</td><td>Company costs for true P&amp;L calculation.</td></tr>
+    <tr><td><code>Task</code></td><td>4</td><td>Internal task management, assignable to staff.</td></tr>
+    <tr><td><code>Document</code></td><td>4</td><td>File attachments on any entity via generic FK.</td></tr>
+    <tr><td><code>ClientUser</code></td><td>7</td><td>Portal-only account for school contacts to view invoices/projects.</td></tr>
+  </tbody>
+</table>
+</div>
+
+
+<!-- SECTION 3: API CONTRACT -->
+<div class="section-marker" id="s3">
+  <div class="section-num">03</div>
+  <h2>API Contract</h2>
+</div>
+<p>All endpoints are prefixed with <code>/api/v1/</code>. Authentication is required on all endpoints except <code>/auth/login/</code> and <code>/auth/refresh/</code>. Standard responses: <code>200 OK</code>, <code>201 Created</code>, <code>204 No Content</code>, <code>400 Bad Request</code>, <code>401 Unauthorized</code>, <code>404 Not Found</code>.</p>
+
+<div class="callout callout-info">
+  <div class="callout-title">State machine enforcement</div>
+  <p>Proposal and Invoice status changes must go through dedicated <code>/transition/</code> and <code>/send/</code> endpoints — never via <code>PATCH</code> directly. The backend enforces allowed transitions and rejects invalid ones with <code>400</code>.</p>
+</div>
+
+<div class="endpoint-group">
+  <div class="endpoint-group-title">Auth</div>
+  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/auth/login/</span><span class="endpoint-desc">Obtain access + refresh tokens. Body: <code>{email, password}</code>. Returns: <code>{access, refresh, user}</code>.</span></div>
+  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/auth/refresh/</span><span class="endpoint-desc">Refresh access token. Body: <code>{refresh}</code>. Returns: <code>{access}</code>.</span></div>
+  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/auth/logout/</span><span class="endpoint-desc">Blacklist refresh token. Body: <code>{refresh}</code>. Returns: <code>204</code>.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/auth/me/</span><span class="endpoint-desc">Get current user profile.</span></div>
+  <div class="endpoint"><span class="method PATCH">PATCH</span><span class="endpoint-url">/auth/me/</span><span class="endpoint-desc">Update profile or password. Body: <code>{full_name?, password?}</code>.</span></div>
+</div>
+
+<div class="endpoint-group">
+  <div class="endpoint-group-title">Clients</div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/clients/</span><span class="endpoint-desc">List clients. Filterable by <code>is_archived</code>, searchable by name. Paginated.</span></div>
+  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/clients/</span><span class="endpoint-desc">Create client. Body: <code>{name, type, contact_person, email, phone, address, region, notes}</code>.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/clients/{id}/</span><span class="endpoint-desc">Client detail with nested summary counts.</span></div>
+  <div class="endpoint"><span class="method PATCH">PATCH</span><span class="endpoint-url">/clients/{id}/</span><span class="endpoint-desc">Update client fields (partial update supported).</span></div>
+  <div class="endpoint"><span class="method DELETE">DELETE</span><span class="endpoint-url">/clients/{id}/</span><span class="endpoint-desc">Soft-archive client. Sets <code>is_archived=True</code>. Returns <code>204</code>.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/clients/{id}/proposals/</span><span class="endpoint-desc">All proposals for this client.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/clients/{id}/invoices/</span><span class="endpoint-desc">All invoices for this client.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/clients/{id}/projects/</span><span class="endpoint-desc">All projects for this client.</span></div>
+</div>
+
+<div class="endpoint-group">
+  <div class="endpoint-group-title">Leads</div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/leads/</span><span class="endpoint-desc">List leads. Filterable by <code>status</code>. Paginated.</span></div>
+  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/leads/</span><span class="endpoint-desc">Create lead. Body: <code>{name, contact_person, email, phone, source, notes}</code>.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/leads/{id}/</span><span class="endpoint-desc">Lead detail.</span></div>
+  <div class="endpoint"><span class="method PATCH">PATCH</span><span class="endpoint-url">/leads/{id}/</span><span class="endpoint-desc">Update lead fields.</span></div>
+  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/leads/{id}/convert/</span><span class="endpoint-desc">Convert lead to client. Populates <code>converted_to_client</code>. Returns <code>{client}</code>.</span></div>
+</div>
+
+<div class="endpoint-group">
+  <div class="endpoint-group-title">Proposals</div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/proposals/</span><span class="endpoint-desc">List proposals. Filterable by <code>status</code>, <code>client_id</code>. Orderable by <code>deadline</code>.</span></div>
+  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/proposals/</span><span class="endpoint-desc">Create proposal. Body: <code>{client_id, title, description, amount, deadline, notes}</code>.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/proposals/{id}/</span><span class="endpoint-desc">Proposal detail.</span></div>
+  <div class="endpoint"><span class="method PATCH">PATCH</span><span class="endpoint-url">/proposals/{id}/</span><span class="endpoint-desc">Update proposal fields (draft/sent only for amount changes).</span></div>
+  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/proposals/{id}/transition/</span><span class="endpoint-desc">Change status via state machine. Body: <code>{status: "sent"|"negotiating"|"won"|"lost"}</code>.</span></div>
+  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/proposals/{id}/convert/</span><span class="endpoint-desc">Convert won proposal to project. Body: <code>{title?, start_date, due_date}</code>. Returns <code>{project}</code>.</span></div>
+  <div class="endpoint"><span class="method DELETE">DELETE</span><span class="endpoint-url">/proposals/{id}/</span><span class="endpoint-desc">Hard delete. Draft status only. Returns <code>204</code>.</span></div>
+</div>
+
+<div class="endpoint-group">
+  <div class="endpoint-group-title">Projects</div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/projects/</span><span class="endpoint-desc">List projects. Filterable by <code>status</code>, <code>client_id</code>.</span></div>
+  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/projects/</span><span class="endpoint-desc">Create project manually. Body: <code>{client_id, title, description, start_date, due_date, budget, proposal_id?}</code>.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/projects/{id}/</span><span class="endpoint-desc">Project detail with milestones and time summary.</span></div>
+  <div class="endpoint"><span class="method PATCH">PATCH</span><span class="endpoint-url">/projects/{id}/</span><span class="endpoint-desc">Update project fields.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/projects/{id}/milestones/</span><span class="endpoint-desc">List milestones for project.</span></div>
+  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/projects/{id}/milestones/</span><span class="endpoint-desc">Add milestone. Body: <code>{title, description, due_date, order}</code>.</span></div>
+  <div class="endpoint"><span class="method PATCH">PATCH</span><span class="endpoint-url">/projects/{id}/milestones/{mid}/</span><span class="endpoint-desc">Update or complete a milestone. Body: <code>{completed: true}</code>.</span></div>
+  <div class="endpoint"><span class="method DELETE">DELETE</span><span class="endpoint-url">/projects/{id}/milestones/{mid}/</span><span class="endpoint-desc">Delete milestone. Returns <code>204</code>.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/projects/{id}/timelogs/</span><span class="endpoint-desc">Time logs for project with total hours summary.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/projects/{id}/invoices/</span><span class="endpoint-desc">Invoices linked to project.</span></div>
+</div>
+
+<div class="endpoint-group">
+  <div class="endpoint-group-title">Invoices</div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/invoices/</span><span class="endpoint-desc">List invoices. Filterable by <code>status</code>, <code>client_id</code>.</span></div>
+  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/invoices/</span><span class="endpoint-desc">Create invoice with line items. Body: <code>{client_id, project_id?, due_date, line_items: [{description, quantity, unit_price_ghs}]}</code>.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/invoices/{id}/</span><span class="endpoint-desc">Invoice detail with line items and payment history.</span></div>
+  <div class="endpoint"><span class="method PATCH">PATCH</span><span class="endpoint-url">/invoices/{id}/</span><span class="endpoint-desc">Update invoice. Draft status only.</span></div>
+  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/invoices/{id}/send/</span><span class="endpoint-desc">Mark invoice as sent. Updates status and sets <code>sent_date</code>.</span></div>
+  <div class="endpoint"><span class="method DELETE">DELETE</span><span class="endpoint-url">/invoices/{id}/</span><span class="endpoint-desc">Delete draft invoice only. Returns <code>204</code>.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/invoices/overdue/</span><span class="endpoint-desc">All overdue invoices across all clients.</span></div>
+</div>
+
+<div class="endpoint-group">
+  <div class="endpoint-group-title">Payments</div>
+  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/invoices/{invoice_id}/payments/</span><span class="endpoint-desc">Record a payment. Body: <code>{amount_ghs, method, provider_reference, payment_date, notes?}</code>. Auto-updates invoice status.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/invoices/{invoice_id}/payments/</span><span class="endpoint-desc">List all payments for an invoice.</span></div>
+  <div class="endpoint"><span class="method DELETE">DELETE</span><span class="endpoint-url">/invoices/{invoice_id}/payments/{id}/</span><span class="endpoint-desc">Delete a payment. Invoice status is recalculated. Returns <code>204</code>.</span></div>
+</div>
+
+<div class="endpoint-group">
+  <div class="endpoint-group-title">Time Logs</div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/timelogs/</span><span class="endpoint-desc">All time logs. Filterable by <code>project_id</code>, <code>log_date__gte</code>, <code>billable</code>.</span></div>
+  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/timelogs/</span><span class="endpoint-desc">Create time log. Body: <code>{project_id, log_date, hours, description, billable}</code>.</span></div>
+  <div class="endpoint"><span class="method PATCH">PATCH</span><span class="endpoint-url">/timelogs/{id}/</span><span class="endpoint-desc">Update time log.</span></div>
+  <div class="endpoint"><span class="method DELETE">DELETE</span><span class="endpoint-url">/timelogs/{id}/</span><span class="endpoint-desc">Delete time log. Returns <code>204</code>.</span></div>
+</div>
+
+<div class="endpoint-group">
+  <div class="endpoint-group-title">Dashboard & Notifications</div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/dashboard/</span><span class="endpoint-desc">Aggregated data: proposals by status, upcoming deadlines (14 days), active projects, overdue invoices, total outstanding GHS.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/notifications/</span><span class="endpoint-desc">List notifications. Filterable by <code>read</code>.</span></div>
+  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/notifications/{id}/read/</span><span class="endpoint-desc">Mark one notification as read.</span></div>
+  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/notifications/read-all/</span><span class="endpoint-desc">Mark all notifications as read.</span></div>
+</div>
+
+<div class="endpoint-group">
+  <div class="endpoint-group-title">Analytics (Sprint 3)</div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/analytics/revenue/</span><span class="endpoint-desc">Monthly revenue from paid invoices for last 12 months. Returns <code>{months: [{month, total_ghs}]}</code>.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/analytics/win-rate/</span><span class="endpoint-desc">Proposal win rate. Returns <code>{won, lost, total_decided, win_rate_pct}</code>.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/analytics/clients/profitability/</span><span class="endpoint-desc">Revenue vs hours per client. Returns array with <code>{client_id, revenue_ghs, total_hours, avg_hourly_rate}</code>.</span></div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/analytics/proposals/time-to-close/</span><span class="endpoint-desc">Avg and median days from sent to decision. Returns <code>{avg_days, median_days}</code>.</span></div>
+</div>
+
+<div class="endpoint-group">
+  <div class="endpoint-group-title">AI Assistant (Sprint 3)</div>
+  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/ai/chat/</span><span class="endpoint-desc">Send message to assistant. Body: <code>{message, conversation_history?: [{role, content}]}</code>. Backend fetches live CRM context before calling Anthropic API. Returns <code>{reply, data_context_used?}</code>.</span></div>
+</div>
+
+
+<!-- SECTION 4: UI/UX -->
+<div class="section-marker" id="s4">
+  <div class="section-num">04</div>
+  <h2>UI/UX Guidelines & Wireframes</h2>
+</div>
+
+<h3>Design language</h3>
+<p>Functional minimalism with bento grid structure. Clean flat surfaces, 0.5px borders, generous whitespace. The dashboard is built from a 12-column bento grid where tile size communicates importance. Larger tiles carry more complex content; small tiles hold single numbers.</p>
+
+<h3>Color semantics</h3>
+<p>Colors are not decorative — they encode meaning. Every badge, border, and background must follow this system consistently across every screen.</p>
+
+<div class="color-swatches">
+  <div class="swatch"><div class="swatch-box" style="background:#534AB7;border-color:#3C3489"></div><div class="swatch-name">Purple</div><div class="swatch-label">Brand · AI · Proposals</div></div>
+  <div class="swatch"><div class="swatch-box" style="background:#1D9E75;border-color:#0F6E56"></div><div class="swatch-name">Teal</div><div class="swatch-label">Success · Active · Paid</div></div>
+  <div class="swatch"><div class="swatch-box" style="background:#BA7517;border-color:#854F0B"></div><div class="swatch-name">Amber</div><div class="swatch-label">Warning · Approaching</div></div>
+  <div class="swatch"><div class="swatch-box" style="background:#E24B4A;border-color:#A32D2D"></div><div class="swatch-name">Red</div><div class="swatch-label">Overdue · Lost · Critical</div></div>
+  <div class="swatch"><div class="swatch-box" style="background:#378ADD;border-color:#185FA5"></div><div class="swatch-name">Blue</div><div class="swatch-label">Info · Planning · Sent</div></div>
+  <div class="swatch"><div class="swatch-box" style="background:#888780;border-color:#5F5E5A"></div><div class="swatch-name">Gray</div><div class="swatch-label">Neutral · Archived</div></div>
+</div>
+
+<h3>Typography hierarchy</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Level</th><th>Size</th><th>Weight</th><th>Use</th></tr></thead>
+  <tbody>
+    <tr><td>Page title</td><td>22px</td><td>700</td><td>Screen headings, section names</td></tr>
+    <tr><td>Section / card title</td><td>15px</td><td>600</td><td>Tile headers, group labels</td></tr>
+    <tr><td>Body / data</td><td>13–14px</td><td>400</td><td>List rows, descriptions, form labels</td></tr>
+    <tr><td>Labels / metadata</td><td>11–12px</td><td>400–600</td><td>Badges, timestamps, secondary info</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>Interaction patterns</h3>
+<ul>
+  <li>Every list row is clickable and navigates to a detail view. No separate "View" buttons in tables.</li>
+  <li>Status changes happen via a contextual action menu (three-dot icon on hover), never by navigating away.</li>
+  <li>Forms open as right-side drawers sliding in from the right — context remains visible while filling in fields.</li>
+  <li>Destructive actions (archive, delete) use inline confirmation ("Are you sure? Confirm / Cancel"), not a blocking modal dialog.</li>
+  <li>Every empty state includes a primary CTA — never show an empty list without "Create your first X".</li>
+  <li>Mobile is tested on every tile before a sprint closes. Ghana is a mobile-first market.</li>
+</ul>
+
+<h3>Navigation structure</h3>
+<div class="nav-tree">
+  Dashboard<br>
+  Pipeline<br>
+  <div class="nav-indent">Leads</div>
+  <div class="nav-indent">Proposals</div>
+  Clients<br>
+  Projects<br>
+  Finance<br>
+  <div class="nav-indent">Invoices</div>
+  <div class="nav-indent">Payments</div>
+  <div class="nav-indent nav-future">Expenses (Sprint 4+)</div>
+  Time<br>
+  AI Assistant<br>
+  Settings<br>
+  <div class="nav-indent">Organisation</div>
+  <div class="nav-indent nav-future">Team (Sprint 4+)</div>
+  <div class="nav-indent nav-future">Billing (Sprint 4+)</div>
+</div>
+
+<h3>Screen wireframes</h3>
+
+<div class="wireframe-block">
+  <div class="wireframe-title"><span class="wireframe-screen">Dashboard</span> Bento grid command center</div>
+  <p>A 12-column bento grid. Top bar: org logo + name, notification bell with unread dot, avatar. Row 1 (4 equal tiles): Revenue (month), Outstanding GHS, Win Rate, Active Projects — each a large number with a trend sub-label. Row 2 (left 4-col × 2-row): Pipeline chart showing proposal counts and GHS by status as horizontal bars, plus a 6-month mini revenue bar chart. Row 2 (center 4-col × 2-row): Upcoming deadlines list — each row has a colored dot (red/amber/green), proposal title, school name, and deadline chip. Row 2 (right 4-col): Overdue invoices list. Row 3 (left 8-col): Active projects grid — 2×2 card layout showing project title, client, status badge, due date, and a progress bar. Row 3 (right 4-col): AI assistant quick panel — a proactive insight callout in purple, plus three quick-action prompt buttons.</p>
+</div>
+
+<div class="wireframe-block">
+  <div class="wireframe-title"><span class="wireframe-screen">Client List</span> Searchable master list</div>
+  <p>Full-width single column. Top bar: "Clients" title, search input, filter dropdown (All / Active / Archived), "New Client" primary button. Table with columns: Name, Type badge, Contact Person, Phone, Open Proposals (count), Outstanding GHS. Row click navigates to detail. Rows with outstanding balance have a coral left border accent. Mobile collapses to card list showing name, type badge, outstanding amount.</p>
+</div>
+
+<div class="wireframe-block">
+  <div class="wireframe-title"><span class="wireframe-screen">Client Detail</span> Full relationship view</div>
+  <p>Full-width header: client name, type badge, region, contact info with icons, Edit and Archive buttons. Below header: two-column layout. Left (tab bar, default Proposals tab): Proposals | Projects | Invoices | Payments | Time — each tab shows relevant records in compact table, tab labels include counts. Right (sticky summary card): Total Invoiced, Total Collected, Outstanding, Open Proposals, Active Projects, Total Hours, plus "New Proposal" shortcut button. Mobile: tabs become horizontally scrollable pills, summary card becomes a stat strip pinned below header.</p>
+</div>
+
+<div class="wireframe-block">
+  <div class="wireframe-title"><span class="wireframe-screen">Proposal Form</span> Right-side drawer</div>
+  <p>Slides in from right, max 480px wide, full height. Fields top to bottom: Client (searchable dropdown, required), Title (text input), Description (textarea 4 rows), Amount (number input with organisation currency prefix), Deadline (date picker), Status (radio group, default draft), Notes (textarea 2 rows). Footer: Cancel (ghost) left, Save Proposal (primary) right. For sent/negotiating proposals in edit mode, two additional CTAs appear: Mark as Won (teal) and Mark as Lost (red). Validation: deadline cannot be in the past on creation, amount must be positive, client is required.</p>
+</div>
+
+<div class="wireframe-block">
+  <div class="wireframe-title"><span class="wireframe-screen">Invoice Detail</span> Print-ready document view</div>
+  <p>Centered layout max 720px, document aesthetic. Header: Stero Tech Inc. branding left, invoice number + dates + status badge right. Bill To block: client name, contact, address. Line items table: Description, Qty, Unit Price (GHS), Line Total (GHS). Subtotal, optional tax, bold total row. Below invoice: payments timeline — each row shows date, method badge (MoMo / Bank), reference, amount, running remaining balance. Action bar (non-paid only): Record Payment (primary), Mark as Sent (secondary). Print button triggers window.print() with print stylesheet hiding the action bar.</p>
+</div>
+
+<div class="wireframe-block">
+  <div class="wireframe-title"><span class="wireframe-screen">AI Assistant</span> Persistent chat panel</div>
+  <p>Full-height panel accessible as route (/assistant) or persistent right drawer. Top bar: "AI assistant" title, model indicator chip "Powered by Claude", Clear conversation icon. Message area: user bubbles right-aligned (purple background), assistant bubbles left-aligned (gray background), markdown rendering for bold/lists/tables, animated loading dots while API call is in flight. Input area (pinned to bottom): expanding textarea up to 4 rows with send button. Below input: three quick-action prompt chips — "Revenue this month", "Overdue invoices", "Draft follow-up email". Context chip in top-right shows "Reading: all CRM data" to build trust that responses are grounded in real data.</p>
+</div>
+
+
+<!-- SECTION 5: GITHUB BOARD -->
+<div class="section-marker" id="s5">
+  <div class="section-num">05</div>
+  <h2>GitHub Project Board Setup</h2>
+</div>
+
+<h3>Columns</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Column</th><th>Purpose</th><th>WIP Limit</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Backlog</strong></td><td>All issues not yet scheduled into a sprint</td><td>Unlimited</td></tr>
+    <tr><td><strong>Sprint Ready</strong></td><td>Accepted into current sprint, not started</td><td>Unlimited</td></tr>
+    <tr><td><strong>In Progress</strong></td><td>Actively being worked on</td><td>2 (solo discipline)</td></tr>
+    <tr><td><strong>In Review / Testing</strong></td><td>Code written, running tests, self-reviewing</td><td>3</td></tr>
+    <tr><td><strong>Done</strong></td><td>Merged to main, closed</td><td>Unlimited</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>Labels</h3>
+<div class="label-grid">
+  <span class="gh-label" style="background:#EEEDFE;color:#3C3489;border-color:#CECBF6">sprint-1</span>
+  <span class="gh-label" style="background:#E1F5EE;color:#085041;border-color:#9FE1CB">sprint-2</span>
+  <span class="gh-label" style="background:#EEEDFE;color:#534AB7;border-color:#AFA9EC">sprint-3</span>
+  <span class="gh-label" style="background:#FAEEDA;color:#633806;border-color:#FAC775">backend</span>
+  <span class="gh-label" style="background:#E6F1FB;color:#0C447C;border-color:#85B7EB">frontend</span>
+  <span class="gh-label" style="background:#F1EFE8;color:#444441;border-color:#D3D1C7">model</span>
+  <span class="gh-label" style="background:#EAF3DE;color:#27500A;border-color:#C0DD97">api</span>
+  <span class="gh-label" style="background:#FBEAF0;color:#72243E;border-color:#F4C0D1">ui</span>
+  <span class="gh-label" style="background:#FCEBEB;color:#791F1F;border-color:#F7C1C1">bug</span>
+  <span class="gh-label" style="background:#FAECE7;color:#712B13;border-color:#F5C4B3">decision</span>
+  <span class="gh-label" style="background:#FCEBEB;color:#A32D2D;border-color:#F09595">blocked</span>
+  <span class="gh-label" style="background:#F1EFE8;color:#5F5E5A;border-color:#D3D1C7">chore</span>
+</div>
+
+<h3>Milestones</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>Milestone</th><th>Due</th><th>Goal</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Sprint 1 — Usable Core</strong></td><td>End of Week 3</td><td>Auth, clients, leads, proposals, dashboard working end-to-end</td></tr>
+    <tr><td><strong>Sprint 2 — Money Layer</strong></td><td>End of Week 6</td><td>Invoices, payments, time logging, Celery reminders live</td></tr>
+    <tr><td><strong>Sprint 3 — Intelligence Layer</strong></td><td>End of Week 9</td><td>AI assistant, analytics, mobile polish complete</td></tr>
+  </tbody>
+</table>
+</div>
+
+<h3>Day-one issues to create (Sprint 1)</h3>
+<div class="table-wrap">
+<table>
+  <thead><tr><th>#</th><th>Issue title</th><th>Labels</th></tr></thead>
+  <tbody>
+    <tr><td>1</td><td>Project scaffolding — Django + DRF + Docker Compose + Caddy</td><td>chore, sprint-1</td></tr>
+    <tr><td>2</td><td>Custom User model (email-based, before first migration)</td><td>model, backend, sprint-1</td></tr>
+    <tr><td>3</td><td>Organisation model (root entity, before all other models)</td><td>model, backend, sprint-1</td></tr>
+    <tr><td>4</td><td>AuditLog model + Django signal wiring</td><td>model, backend, sprint-1</td></tr>
+    <tr><td>5</td><td>Client + Lead + Proposal models and migrations</td><td>model, backend, sprint-1</td></tr>
+    <tr><td>6</td><td>Auth endpoints (login, refresh, logout, me)</td><td>api, backend, sprint-1</td></tr>
+    <tr><td>7</td><td>Client CRUD endpoints + archive action</td><td>api, backend, sprint-1</td></tr>
+    <tr><td>8</td><td>Lead CRUD + convert endpoint</td><td>api, backend, sprint-1</td></tr>
+    <tr><td>9</td><td>Proposal CRUD + transition + convert endpoints</td><td>api, backend, sprint-1</td></tr>
+    <tr><td>10</td><td>Dashboard aggregation endpoint</td><td>api, backend, sprint-1</td></tr>
+    <tr><td>11</td><td>React scaffold (Vite + Tailwind v4 + React Query + Router)</td><td>chore, frontend, sprint-1</td></tr>
+    <tr><td>12</td><td>Auth flow — login page, JWT storage, protected routes, refresh interceptor</td><td>frontend, sprint-1</td></tr>
+    <tr><td>13</td><td>Dashboard page — bento grid layout</td><td>ui, frontend, sprint-1</td></tr>
+    <tr><td>14</td><td>Client list and detail pages</td><td>ui, frontend, sprint-1</td></tr>
+    <tr><td>15</td><td>Proposal form (drawer) and list page</td><td>ui, frontend, sprint-1</td></tr>
+    <tr><td>16</td><td>Lead list and convert flow</td><td>ui, frontend, sprint-1</td></tr>
+    <tr><td>17</td><td>drf-spectacular OpenAPI schema + Swagger UI</td><td>chore, backend, sprint-1</td></tr>
+    <tr><td>18</td><td>pytest-django setup + one passing test per endpoint</td><td>chore, backend, sprint-1</td></tr>
+  </tbody>
+</table>
+</div>
+
+
+<!-- SECTION 6: SCOPE FREEZE -->
+<div class="section-marker" id="s6">
+  <div class="section-num">06</div>
+  <h2>Sprint 1 Scope Freeze</h2>
+</div>
+<p>This list is a contract with yourself. If it's not in the IN column, it does not get touched in Sprint 1 — not even a "quick prototype".</p>
+
+<div class="scope-grid">
+  <div class="scope-col">
+    <div class="scope-col-header in-header">IN — Sprint 1 must deliver</div>
+    <div class="scope-list">
+      <div class="scope-item"><span class="scope-icon" style="color:#0F6E56">✓</span>Custom User model (email-based, no username)</div>
+      <div class="scope-item"><span class="scope-icon" style="color:#0F6E56">✓</span>Organisation model (one record, invisible in UI)</div>
+      <div class="scope-item"><span class="scope-icon" style="color:#0F6E56">✓</span>AuditLog model + signal (wired, no UI)</div>
+      <div class="scope-item"><span class="scope-icon" style="color:#0F6E56">✓</span>JWT login / logout / refresh / me endpoints</div>
+      <div class="scope-item"><span class="scope-icon" style="color:#0F6E56">✓</span>Full CRUD for Client (with soft-delete archive)</div>
+      <div class="scope-item"><span class="scope-icon" style="color:#0F6E56">✓</span>Full CRUD for Lead + convert-to-client action</div>
+      <div class="scope-item"><span class="scope-icon" style="color:#0F6E56">✓</span>Proposal CRUD + status transition endpoint + convert-to-project</div>
+      <div class="scope-item"><span class="scope-icon" style="color:#0F6E56">✓</span>Dashboard API (proposals by status, deadlines, active projects)</div>
+      <div class="scope-item"><span class="scope-icon" style="color:#0F6E56">✓</span>React frontend: login, dashboard, client list, client detail (proposals tab), proposal form, lead list</div>
+      <div class="scope-item"><span class="scope-icon" style="color:#0F6E56">✓</span>Docker Compose with all services wired (Django, Postgres, Redis, React, Caddy)</div>
+      <div class="scope-item"><span class="scope-icon" style="color:#0F6E56">✓</span>drf-spectacular OpenAPI schema at /api/schema/</div>
+      <div class="scope-item"><span class="scope-icon" style="color:#0F6E56">✓</span>pytest-django setup with at least one test per endpoint</div>
+    </div>
+  </div>
+  <div class="scope-col">
+    <div class="scope-col-header out-header">OUT — Do not touch in Sprint 1</div>
+    <div class="scope-list">
+      <div class="scope-item"><span class="scope-icon" style="color:#A32D2D">✗</span>Invoice creation or management</div>
+      <div class="scope-item"><span class="scope-icon" style="color:#A32D2D">✗</span>Payment recording</div>
+      <div class="scope-item"><span class="scope-icon" style="color:#A32D2D">✗</span>Time logging</div>
+      <div class="scope-item"><span class="scope-icon" style="color:#A32D2D">✗</span>Celery tasks or scheduled jobs (no workers running)</div>
+      <div class="scope-item"><span class="scope-icon" style="color:#A32D2D">✗</span>Milestone management within projects</div>
+      <div class="scope-item"><span class="scope-icon" style="color:#A32D2D">✗</span>Analytics or charts</div>
+      <div class="scope-item"><span class="scope-icon" style="color:#A32D2D">✗</span>Anthropic API / AI assistant</div>
+      <div class="scope-item"><span class="scope-icon" style="color:#A32D2D">✗</span>Email sending of any kind</div>
+      <div class="scope-item"><span class="scope-icon" style="color:#A32D2D">✗</span>PDF generation</div>
+      <div class="scope-item"><span class="scope-icon" style="color:#A32D2D">✗</span>File/document attachments</div>
+      <div class="scope-item"><span class="scope-icon" style="color:#A32D2D">✗</span>Multi-user or role-based access</div>
+      <div class="scope-item"><span class="scope-icon" style="color:#A32D2D">✗</span>Mobile push notifications</div>
+      <div class="scope-item"><span class="scope-icon" style="color:#A32D2D">✗</span>Full project management UI (project detail is a stub)</div>
+    </div>
+  </div>
+</div>
+
+<div class="callout callout-warn" style="margin-top:16px">
+  <div class="callout-title">The project record in Sprint 1</div>
+  <p>When a won proposal is converted, a Project record is created with minimal fields. There is no project detail UI in Sprint 1 — it's a stub page that shows the title and client. The full project management UI (milestones, time logs, kanban) is Sprint 2 work. Do not let "just a quick project page" become a two-week detour.</p>
+</div>
+
+
+<!-- SECTION 7: COMPANY OS ROADMAP -->
+<div class="section-marker" id="s7">
+  <div class="section-num">07</div>
+  <h2>Company OS Roadmap</h2>
+</div>
+<p>The first three sprints build a functional solo CRM. Every decision in those sprints is made with this roadmap in mind — so that Sprints 4–8 extend the system rather than rewrite it.</p>
+
+<div class="roadmap">
+  <div class="roadmap-row">
+    <div class="roadmap-sprint">
+      <div class="roadmap-num" style="background:var(--purple-50);color:var(--purple-800)">S1</div>
+      <div class="roadmap-weeks">Wks 1–3</div>
+    </div>
+    <div class="roadmap-content">
+      <div class="roadmap-title">The Usable Core</div>
+      <div class="roadmap-items">Auth · Client & Lead management · Proposal tracker with state machine · Bento dashboard</div>
+    </div>
+  </div>
+  <div class="roadmap-row">
+    <div class="roadmap-sprint">
+      <div class="roadmap-num" style="background:var(--teal-50);color:var(--teal-800)">S2</div>
+      <div class="roadmap-weeks">Wks 4–6</div>
+    </div>
+    <div class="roadmap-content">
+      <div class="roadmap-title">The Money Layer</div>
+      <div class="roadmap-items">Invoices · Payments (MoMo/bank) · Time logging · Celery deadline reminders</div>
+    </div>
+  </div>
+  <div class="roadmap-row">
+    <div class="roadmap-sprint">
+      <div class="roadmap-num" style="background:var(--amber-50);color:var(--amber-600)">S3</div>
+      <div class="roadmap-weeks">Wks 7–9</div>
+    </div>
+    <div class="roadmap-content">
+      <div class="roadmap-title">The Intelligence Layer</div>
+      <div class="roadmap-items">AI business assistant (Claude, reads live data) · Pipeline analytics · Mobile polish</div>
+    </div>
+  </div>
+  <div class="roadmap-row">
+    <div class="roadmap-sprint">
+      <div class="roadmap-num" style="background:var(--blue-50);color:var(--blue-800)">S4</div>
+      <div class="roadmap-weeks">Future</div>
+    </div>
+    <div class="roadmap-content">
+      <div class="roadmap-title">The Operations Layer</div>
+      <div class="roadmap-items">Contracts · Expenses · Document attachments · Task assignment · Staff management · Kanban per project · Membership + roles (multi-user unlock)</div>
+    </div>
+  </div>
+  <div class="roadmap-row">
+    <div class="roadmap-sprint">
+      <div class="roadmap-num" style="background:var(--gray-50);color:var(--gray-800)">S5</div>
+      <div class="roadmap-weeks">Future</div>
+    </div>
+    <div class="roadmap-content">
+      <div class="roadmap-title">The Finance Layer</div>
+      <div class="roadmap-items">P&amp;L view (revenue − expenses) · GRA VAT calculation · Payroll tracking · Budget vs actuals per project · Accountant-ready PDF export</div>
+    </div>
+  </div>
+  <div class="roadmap-row">
+    <div class="roadmap-sprint">
+      <div class="roadmap-num" style="background:var(--gray-50);color:var(--gray-800)">S6</div>
+      <div class="roadmap-weeks">Future</div>
+    </div>
+    <div class="roadmap-content">
+      <div class="roadmap-title">The People Layer</div>
+      <div class="roadmap-items">Staff profiles · Employment contracts (reuses Contract model) · Leave tracking · Performance notes. Activates when first employee is hired.</div>
+    </div>
+  </div>
+  <div class="roadmap-row">
+    <div class="roadmap-sprint">
+      <div class="roadmap-num" style="background:var(--gray-50);color:var(--gray-800)">S7</div>
+      <div class="roadmap-weeks">Future</div>
+    </div>
+    <div class="roadmap-content">
+      <div class="roadmap-title">The Client Portal</div>
+      <div class="roadmap-items">Read-only portal for school contacts: view project status, download invoices, see payment history. ClientUser model + separate JWT flow. Builds institutional trust.</div>
+    </div>
+  </div>
+  <div class="roadmap-row">
+    <div class="roadmap-sprint">
+      <div class="roadmap-num" style="background:var(--gray-50);color:var(--gray-800)">S8</div>
+      <div class="roadmap-weeks">Future</div>
+    </div>
+    <div class="roadmap-content">
+      <div class="roadmap-title">Proactive Intelligence</div>
+      <div class="roadmap-items">AI shifts from reactive (answering questions) to proactive (surfacing insights). "Accra Academy pays 14 days late consistently." "Your effective hourly rate dropped 18% — here are the projects dragging it down." Requires historical data from Sprints 1–7.</div>
+    </div>
+  </div>
+</div>
+
+
+<!-- SECTION 8: DESIGN DECISIONS -->
+<div class="section-marker" id="s8">
+  <div class="section-num">08</div>
+  <h2>Critical Design Decisions</h2>
+</div>
+<p>These are the decisions that are painful to change after coding begins. Each one is flagged here so you make it consciously before writing a single migration.</p>
+
+<div class="decision-list">
+
+  <div class="decision">
+    <div class="decision-num">Decision 01</div>
+    <div class="decision-title">UUIDs everywhere, not integer IDs</div>
+    <p>Use <code>uuid.uuid4</code> as the default PK on every model. This is a public GitHub repo — sequential integer IDs leak your record counts to anyone who inspects an API response (<code>"id": 47</code> tells them you have 47 clients). UUIDs are opaque. The performance cost on Postgres at your data volumes is negligible. Set this once and never revisit it.</p>
+  </div>
+
+  <div class="decision">
+    <div class="decision-num">Decision 02</div>
+    <div class="decision-title">Organisation model from day one, not retrofitted</div>
+    <p>Add the <code>Organisation</code> model before any other model. Add <code>organisation (FK → Organisation)</code> to every model you build. In all your views, filter by <code>request.user.organisation</code>. This is one extra line per query in Sprint 1 and it's what makes the entire system multi-tenant in Sprint 4. Retrofitting this after 20 models and 50 views exist is a project of its own.</p>
+  </div>
+
+  <div class="decision">
+    <div class="decision-num">Decision 03</div>
+    <div class="decision-title">Custom User model before the first migration</div>
+    <p>Set <code>AUTH_USER_MODEL = 'accounts.User'</code> in settings before you run <code>manage.py migrate</code> for the first time. Django's built-in user model swap is catastrophic to do after migrations exist — it requires wiping and recreating your entire database. This is a five-minute step that saves a three-hour disaster.</p>
+  </div>
+
+  <div class="decision">
+    <div class="decision-num">Decision 04</div>
+    <div class="decision-title">JWT token storage — HttpOnly cookie, not localStorage</div>
+    <p>Do not store the access token in <code>localStorage</code> — it is vulnerable to XSS attacks. Store the access token in memory (React state or a module-level variable) and the refresh token in an <code>HttpOnly</code> cookie set by Django. Configure SimpleJWT to set the refresh cookie server-side. This is worth getting right in Sprint 1 because retrofitting it disrupts every authenticated flow.</p>
+  </div>
+
+  <div class="decision">
+    <div class="decision-num">Decision 05</div>
+    <div class="decision-title">Decimal, never Float, for all monetary values</div>
+    <p>Use <code>DecimalField(max_digits=12, decimal_places=2)</code> for every GHS amount in Django models. Use Python's <code>Decimal</code> type (not float literals) for any arithmetic. <code>float</code> arithmetic produces rounding errors — <code>0.1 + 0.2</code> returns <code>0.30000000000000004</code> in Python. On financial data this is unacceptable and will silently corrupt your totals.</p>
+  </div>
+
+  <div class="decision">
+    <div class="decision-num">Decision 06</div>
+    <div class="decision-title">Soft delete everywhere except draft records</div>
+    <p>Clients get an <code>is_archived</code> flag — never hard deleted, because hard-deleting a client cascades to proposals, invoices, and payments and destroys your financial history. Draft proposals and draft invoices can be hard-deleted (they haven't been sent, so no external record exists). Paid invoices must never be deletable — enforce this in the view layer, not only in the frontend.</p>
+  </div>
+
+  <div class="decision">
+    <div class="decision-num">Decision 07</div>
+    <div class="decision-title">Invoice number generation via Postgres sequence</div>
+    <p>Auto-generating <code>STERO-2025-001</code> requires an atomic counter. Do not use <code>MAX(invoice_number) + 1</code> — it has a race condition if you ever run multiple Celery workers or gunicorn processes simultaneously. Use a Postgres sequence (<code>CREATE SEQUENCE invoice_seq</code>) accessed via a raw query in the model's <code>save()</code>. It is atomic by design.</p>
+  </div>
+
+  <div class="decision">
+    <div class="decision-num">Decision 08</div>
+    <div class="decision-title">Proposal state machine in a service function</div>
+    <p>The allowed transitions are: <code>draft→sent</code>, <code>sent→negotiating</code>, <code>sent→won</code>, <code>sent→lost</code>, <code>negotiating→won</code>, <code>negotiating→lost</code>. Enforce these in a <code>transition_proposal(proposal, new_status)</code> service function — not directly in the view. A plain dictionary mapping of <code>{current_status: [allowed_next_statuses]}</code> is sufficient. When a status goes to <code>won</code> or <code>lost</code>, automatically set <code>decision_date = today</code>.</p>
+  </div>
+
+  <div class="decision">
+    <div class="decision-num">Decision 09</div>
+    <div class="decision-title">AuditLog wired from Sprint 1, UI built later</div>
+    <p>Wire a Django post-save and post-delete signal that writes to <code>AuditLog</code> on every model create, update, and delete. Store the before/after diff as JSON. Build no UI for it in Sprint 1. When something goes wrong in production six months from now — a payment accidentally deleted, a proposal status changed incorrectly — you will have a complete audit trail to diagnose it. The cost is minimal; the value when needed is enormous.</p>
+  </div>
+
+  <div class="decision">
+    <div class="decision-num">Decision 10</div>
+    <div class="decision-title">AI context injection — plan the boundaries now</div>
+    <p>When the AI assistant calls the Anthropic API in Sprint 3, a <code>build_ai_context()</code> function will inject a snapshot of CRM data as a system prompt. Plan now that this function returns a capped summary — last 3 months of activity, top 10 clients by revenue, open proposals, overdue invoices. If you let it grow unboundedly, you will hit token limits and the assistant will silently truncate context. The frontend never sends raw CRM data to Anthropic — all data access is mediated through your Django backend.</p>
+  </div>
+
+  <div class="decision">
+    <div class="decision-num">Decision 11</div>
+    <div class="decision-title">Celery + Beat as Docker services from start of Sprint 2</div>
+    <p>Add the Celery worker and Celery Beat scheduler as Docker Compose services at the very beginning of Sprint 2 — not as an afterthought when you need your first scheduled task. A missing or misconfigured <code>docker-compose.yml</code> entry will cost an hour of environment debugging when you're trying to test deadline reminders. Wire the services first, write the tasks second.</p>
+  </div>
+
+</div>
+
+<!-- FOOTER -->
+<div class="doc-footer">
+  <div>Stero Tech Inc. — Company OS Master Plan · v1.0</div>
+  <div>Prepared pre-Sprint 1 · Ghana · GHS</div>
+</div>
+
+</body>
+</html>
