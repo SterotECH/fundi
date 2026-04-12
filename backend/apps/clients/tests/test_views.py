@@ -4,6 +4,8 @@ from django.urls import reverse
 from apps.accounts.factories import OrganisationFactory
 from apps.clients.factories import ClientFactory, LeadFactory
 from apps.clients.models import Client, Lead
+from apps.projects.factories import ProjectFactory
+from apps.proposals.factories import ProposalFactory
 
 
 @pytest.mark.django_db
@@ -261,6 +263,85 @@ def test_delete_lead_method_is_not_allowed(authenticated_client, org):
     )
 
     assert response.status_code == 405
+
+
+@pytest.mark.django_db
+def test_client_proposals_endpoint_returns_client_scoped_proposals(
+    authenticated_client,
+    org,
+):
+    client = ClientFactory(organisation=org)
+    own_proposal = ProposalFactory(organisation=org, client=client)
+    ProposalFactory(organisation=org)
+    ProposalFactory(organisation=OrganisationFactory())
+
+    response = authenticated_client.get(
+        reverse("client-proposals", kwargs={"pk": client.id}),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload) == 1
+    assert payload[0]["id"] == str(own_proposal.id)
+    assert payload[0]["amount"] == "1000.00"
+
+
+@pytest.mark.django_db
+def test_client_proposals_endpoint_returns_404_for_wrong_organisation(
+    authenticated_client,
+):
+    other_client = ClientFactory(organisation=OrganisationFactory())
+
+    response = authenticated_client.get(
+        reverse("client-proposals", kwargs={"pk": other_client.id}),
+    )
+
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
+def test_client_projects_endpoint_returns_client_scoped_projects(
+    authenticated_client,
+    org,
+):
+    client = ClientFactory(organisation=org)
+    own_project = ProjectFactory(organisation=org, client=client)
+    ProjectFactory(organisation=org)
+    ProjectFactory(organisation=OrganisationFactory())
+
+    response = authenticated_client.get(
+        reverse("client-projects", kwargs={"pk": client.id}),
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert len(payload) == 1
+    assert payload[0]["id"] == str(own_project.id)
+    assert payload[0]["budget"] == "1000.00"
+
+
+@pytest.mark.django_db
+def test_client_projects_endpoint_returns_404_for_wrong_organisation(
+    authenticated_client,
+):
+    other_client = ClientFactory(organisation=OrganisationFactory())
+
+    response = authenticated_client.get(
+        reverse("client-projects", kwargs={"pk": other_client.id}),
+    )
+
+    assert response.status_code == 404
+
+
+@pytest.mark.django_db
+def test_client_invoices_endpoint_remains_sprint_2_stub(authenticated_client, org):
+    client = ClientFactory(organisation=org)
+
+    response = authenticated_client.get(
+        reverse("client-invoices", kwargs={"pk": client.id}),
+    )
+
+    assert response.status_code == 501
 
 
 @pytest.mark.django_db

@@ -9,6 +9,7 @@ from apps.accounts.factories import OrganisationFactory
 from apps.clients.factories import ClientFactory
 from apps.proposals.factories import ProposalFactory
 from apps.proposals.models import Proposal
+from apps.projects.models import Project
 
 
 @pytest.mark.django_db
@@ -296,3 +297,89 @@ def test_delete_proposal_hard_deletes_draft_and_rejects_non_draft(
 
     assert response.status_code == 400
     assert Proposal.objects.filter(id=sent.id).exists()
+
+
+@pytest.mark.django_db
+def test_convert_proposal_route_creates_project_from_won_proposal(
+    authenticated_client,
+    org,
+):
+    proposal = ProposalFactory(
+        organisation=org,
+        status=Proposal.ProposalStatus.WON,
+        title="Won Proposal",
+        description="Delivery scope.",
+        amount=Decimal("4500.00"),
+    )
+
+    response = authenticated_client.post(
+        reverse("proposal-convert-to-project", kwargs={"pk": proposal.id}),
+        {
+            "start_date": str(timezone.localdate()),
+            "due_date": str(timezone.localdate() + timedelta(days=30)),
+        },
+        format="json",
+    )
+
+    assert response.status_code == 201
+    payload = response.json()
+    project = Project.objects.get(id=payload["id"])
+    assert payload["title"] == "Won Proposal"
+    assert payload["budget"] == "4500.00"
+    assert project.organisation == org
+    assert project.client == proposal.client
+    assert project.proposal == proposal
+
+
+@pytest.mark.django_db
+def test_convert_proposal_route_rejects_non_won_duplicate_and_bad_dates(
+    authenticated_client,
+    org,
+):
+    sent = ProposalFactory(organisation=org, status=Proposal.ProposalStatus.SENT)
+
+    response = authenticated_client.post(
+        reverse("proposal-convert-to-project", kwargs={"pk": sent.id}),
+        {
+            "start_date": str(timezone.localdate()),
+            "due_date": str(timezone.localdate() + timedelta(days=30)),
+        },
+        format="json",
+    )
+
+    assert response.status_code == 400
+
+    won = ProposalFactory(organisation=org, status=Proposal.ProposalStatus.WON)
+    response = authenticated_client.post(
+        reverse("proposal-convert-to-project", kwargs={"pk": won.id}),
+        {
+            "start_date": str(timezone.localdate()),
+            "due_date": str(timezone.localdate() - timedelta(days=1)),
+        },
+        format="json",
+    )
+
+    assert response.status_code == 400
+    assert "due_date" in response.json()
+
+    response = authenticated_client.post(
+        reverse("proposal-convert-to-project", kwargs={"pk": won.id}),
+        {
+            "start_date": str(timezone.localdate()),
+            "due_date": str(timezone.localdate() + timedelta(days=30)),
+        },
+        format="json",
+    )
+    assert response.status_code == 201
+
+    response = authenticated_client.post(
+        reverse("proposal-convert-to-project", kwargs={"pk": won.id}),
+        {
+            "start_date": str(timezone.localdate()),
+            "due_date": str(timezone.localdate() + timedelta(days=30)),
+        },
+        format="json",
+    )
+
+    assert response.status_code == 400
+    assert Project.objects.filter(proposal=won).count() == 1

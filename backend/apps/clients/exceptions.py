@@ -1,8 +1,7 @@
-class LeadAlreadyConvertedError(Exception):
-    """
-    Raised when an already-converted lead is converted again.
+from rest_framework.exceptions import APIException
 
-    This belongs to the clients domain because it represents a lead conversion
-    business rule. The global exception handler is only responsible for
-    translating it into an HTTP response.
-    """
+
+class LeadAlreadyConvertedError(APIException):
+    status_code = 400
+    default_detail = "This lead has already been converted to a client."
+    default_code = "lead_already_converted"

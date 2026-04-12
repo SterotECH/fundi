@@ -8,11 +8,13 @@ from rest_framework.response import Response
 from apps.proposals import services
 from apps.proposals.models import Proposal
 from apps.proposals.serializers import (
+    ProposalConvertSerializer,
     ProposalDetailSerializer,
     ProposalListSerializer,
     ProposalStatusUpdateSerializer,
     ProposalWriteSerializer,
 )
+from apps.projects.serializers import ProjectDetailSerializer
 
 
 class ProposalViewSet(viewsets.ModelViewSet):
@@ -39,6 +41,8 @@ class ProposalViewSet(viewsets.ModelViewSet):
             return ProposalWriteSerializer
         elif self.action == "update_status":
             return ProposalStatusUpdateSerializer
+        elif self.action == "convert_to_project":
+            return ProposalConvertSerializer
         return super().get_serializer_class()
 
     def _get_proposal(self, pk: str) -> Proposal:
@@ -116,4 +120,18 @@ class ProposalViewSet(viewsets.ModelViewSet):
         return Response(
             ProposalDetailSerializer(proposal).data,
             status=status.HTTP_200_OK
+        )
+
+    @action(detail=True, methods=["post"], url_path="convert")
+    def convert_to_project(self, request, *args, **kwargs):
+        proposal = self._get_proposal(kwargs["pk"])
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        project = services.convert_proposal_to_project(
+            proposal=proposal,
+            data=serializer.validated_data,
+        )
+        return Response(
+            ProjectDetailSerializer(project).data,
+            status=status.HTTP_201_CREATED,
         )

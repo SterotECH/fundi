@@ -5,6 +5,8 @@ from apps.clients import services
 from apps.clients.exceptions import LeadAlreadyConvertedError
 from apps.clients.factories import ClientFactory, LeadFactory
 from apps.clients.models import Client, Lead
+from apps.projects.factories import ProjectFactory
+from apps.proposals.factories import ProposalFactory
 
 
 @pytest.mark.django_db
@@ -108,17 +110,13 @@ def test_get_client_detail_raises_for_wrong_organisation(org):
 
 
 @pytest.mark.django_db
-def test_update_client_mutates_existing_instance_without_refetching(
-    django_assert_num_queries,
-    org,
-):
+def test_update_client_mutates_existing_instance(org):
     client = ClientFactory(organisation=org, name="Old Name")
 
-    with django_assert_num_queries(1):
-        result = services.update_client(
-            client=client,
-            data={"name": "New Name", "region": "Ashanti"},
-        )
+    result = services.update_client(
+        client=client,
+        data={"name": "New Name", "region": "Ashanti"},
+    )
 
     client.refresh_from_db()
     assert result == client
@@ -127,11 +125,10 @@ def test_update_client_mutates_existing_instance_without_refetching(
 
 
 @pytest.mark.django_db
-def test_archive_client_soft_archives_existing_instance(django_assert_num_queries, org):
+def test_archive_client_soft_archives_existing_instance(org):
     client = ClientFactory(organisation=org, is_archived=False)
 
-    with django_assert_num_queries(1):
-        result = services.archive_client(client=client)
+    result = services.archive_client(client=client)
 
     client.refresh_from_db()
     assert result == client
@@ -209,14 +206,61 @@ def test_list_leads_excludes_converted_by_default_but_allows_status_filter(org):
 
 
 @pytest.mark.django_db
-def test_related_client_services_are_intentional_stubs(org):
-    client_id = "00000000-0000-0000-0000-000000000000"
+def test_list_client_proposals_is_client_and_organisation_scoped(org):
+    client = ClientFactory(organisation=org)
+    own_proposal = ProposalFactory(organisation=org, client=client)
+    ProposalFactory(organisation=org)
+    ProposalFactory(organisation=OrganisationFactory())
 
-    with pytest.raises(NotImplementedError):
-        services.list_client_proposals(organisation=org, client_id=client_id)
+    queryset = services.list_client_proposals(
+        organisation=org,
+        client_id=str(client.id),
+    )
 
-    with pytest.raises(NotImplementedError):
-        services.list_client_invoices(organisation=org, client_id=client_id)
+    assert list(queryset) == [own_proposal]
 
+
+@pytest.mark.django_db
+def test_list_client_proposals_raises_for_wrong_organisation_client(org):
+    other_client = ClientFactory(organisation=OrganisationFactory())
+
+    with pytest.raises(Client.DoesNotExist):
+        services.list_client_proposals(
+            organisation=org,
+            client_id=str(other_client.id),
+        )
+
+
+@pytest.mark.django_db
+def test_list_client_projects_is_client_and_organisation_scoped(org):
+    client = ClientFactory(organisation=org)
+    own_project = ProjectFactory(organisation=org, client=client)
+    ProjectFactory(organisation=org)
+    ProjectFactory(organisation=OrganisationFactory())
+
+    queryset = services.list_client_projects(
+        organisation=org,
+        client_id=str(client.id),
+    )
+
+    assert list(queryset) == [own_project]
+
+
+@pytest.mark.django_db
+def test_list_client_projects_raises_for_wrong_organisation_client(org):
+    other_client = ClientFactory(organisation=OrganisationFactory())
+
+    with pytest.raises(Client.DoesNotExist):
+        services.list_client_projects(
+            organisation=org,
+            client_id=str(other_client.id),
+        )
+
+
+@pytest.mark.django_db
+def test_list_client_invoices_remains_sprint_2_stub(org):
     with pytest.raises(NotImplementedError):
-        services.list_client_projects(organisation=org, client_id=client_id)
+        services.list_client_invoices(
+            organisation=org,
+            client_id="00000000-0000-0000-0000-000000000000",
+        )

@@ -12,6 +12,13 @@ class CannotUpdateProposalAmountError(APIException):
     default_detail = "Proposal amount can only be changed while draft or sent."
     default_code = "cannot_update_proposal_amount"
 
+
+class CannotConvertProposalError(APIException):
+    status_code = 400
+    default_detail = "Only won proposals can be converted to projects."
+    default_code = "cannot_convert_proposal"
+
+
 class InvalidProposalTransitionError(APIException):
     status_code = 400
     default_detail = "Invalid proposal status transition."

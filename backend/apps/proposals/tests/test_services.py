@@ -8,6 +8,7 @@ from apps.accounts.factories import OrganisationFactory
 from apps.clients.factories import ClientFactory
 from apps.proposals import services
 from apps.proposals.exceptions import (
+    CannotConvertProposalError,
     CannotDeleteProposalError,
     CannotUpdateProposalAmountError,
     InvalidProposalClientError,
@@ -15,6 +16,7 @@ from apps.proposals.exceptions import (
 )
 from apps.proposals.factories import ProposalFactory
 from apps.proposals.models import Proposal
+from apps.projects.models import Project
 
 
 @pytest.mark.django_db
@@ -207,3 +209,83 @@ def test_delete_proposal_hard_deletes_draft_and_rejects_non_draft(org):
     with pytest.raises(CannotDeleteProposalError):
         services.delete_proposal(proposal=sent)
     assert Proposal.objects.filter(id=sent.id).exists()
+
+
+@pytest.mark.django_db
+def test_convert_proposal_to_project_creates_minimal_project_from_won_proposal(org):
+    proposal = ProposalFactory(
+        organisation=org,
+        status=Proposal.ProposalStatus.WON,
+        title="Won Proposal",
+        description="Delivery scope.",
+        amount=Decimal("4500.00"),
+    )
+
+    project = services.convert_proposal_to_project(
+        proposal=proposal,
+        data={
+            "start_date": timezone.localdate(),
+            "due_date": timezone.localdate() + timedelta(days=30),
+        },
+    )
+
+    assert project.organisation == org
+    assert project.client == proposal.client
+    assert project.proposal == proposal
+    assert project.title == "Won Proposal"
+    assert project.description == "Delivery scope."
+    assert project.budget == Decimal("4500.00")
+
+
+@pytest.mark.django_db
+def test_convert_proposal_to_project_allows_title_override(org):
+    proposal = ProposalFactory(
+        organisation=org,
+        status=Proposal.ProposalStatus.WON,
+        title="Proposal Title",
+    )
+
+    project = services.convert_proposal_to_project(
+        proposal=proposal,
+        data={
+            "title": "Project Title",
+            "start_date": timezone.localdate(),
+            "due_date": timezone.localdate() + timedelta(days=30),
+        },
+    )
+
+    assert project.title == "Project Title"
+
+
+@pytest.mark.django_db
+def test_convert_proposal_to_project_rejects_non_won_or_duplicate_conversion(org):
+    sent = ProposalFactory(organisation=org, status=Proposal.ProposalStatus.SENT)
+
+    with pytest.raises(CannotConvertProposalError):
+        services.convert_proposal_to_project(
+            proposal=sent,
+            data={
+                "start_date": timezone.localdate(),
+                "due_date": timezone.localdate() + timedelta(days=30),
+            },
+        )
+
+    won = ProposalFactory(organisation=org, status=Proposal.ProposalStatus.WON)
+    services.convert_proposal_to_project(
+        proposal=won,
+        data={
+            "start_date": timezone.localdate(),
+            "due_date": timezone.localdate() + timedelta(days=30),
+        },
+    )
+
+    with pytest.raises(CannotConvertProposalError):
+        services.convert_proposal_to_project(
+            proposal=won,
+            data={
+                "start_date": timezone.localdate(),
+                "due_date": timezone.localdate() + timedelta(days=30),
+            },
+        )
+
+    assert Project.objects.filter(proposal=won).count() == 1

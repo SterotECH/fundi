@@ -41,15 +41,6 @@ class ClientViewSet(viewsets.ModelViewSet):
     http_method_names = ["get", "post", "patch", "delete", "head", "options"]
     lookup_value_converter = "uuid"
 
-    list_service = staticmethod(services.list_clients)
-    create_service = staticmethod(services.create_client)
-    detail_service = staticmethod(services.get_client_detail)
-    update_service = staticmethod(services.update_client)
-    archive_service = staticmethod(services.archive_client)
-    proposals_service = staticmethod(services.list_client_proposals)
-    invoices_service = staticmethod(services.list_client_invoices)
-    projects_service = staticmethod(services.list_client_projects)
-
     def get_queryset(self):
         """
         Return the organisation-scoped queryset used by list views and schema tools.
@@ -58,7 +49,7 @@ class ClientViewSet(viewsets.ModelViewSet):
         if organisation is None:
             return Client.objects.none()
 
-        return self.list_service(
+        return services.list_clients(
             organisation=organisation,
             filters=self.request.query_params,
         )
@@ -93,7 +84,7 @@ class ClientViewSet(viewsets.ModelViewSet):
         exception handler converts that into a 404, so the view does not need a
         local try/except block.
         """
-        return self.detail_service(
+        return services.get_client_detail(
             organisation=self.request.user.organisation,
             client_id=str(pk),
         )
@@ -120,7 +111,7 @@ class ClientViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         validated_data = cast(Mapping[str, Any], serializer.validated_data)
 
-        client = self.create_service(
+        client = services.create_client(
             organisation=request.user.organisation,
             data=validated_data,
         )
@@ -144,7 +135,7 @@ class ClientViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         validated_data = cast(Mapping[str, Any], serializer.validated_data)
 
-        client = self.update_service(
+        client = services.update_client(
             client=self._get_client(self.kwargs[self.lookup_field]),
             data=validated_data,
         )
@@ -156,7 +147,7 @@ class ClientViewSet(viewsets.ModelViewSet):
         """
         Soft-archive one organisation-scoped client.
         """
-        self.archive_service(
+        services.archive_client(
             client=self._get_client(self.kwargs[self.lookup_field]),
         )
 
@@ -165,17 +156,14 @@ class ClientViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["get"])
     def proposals(self, request, pk=None):
         """
-        Return proposals for this client once the proposals model is implemented.
+        Return proposals for this organisation-scoped client.
         """
-        return Response(
-            {
-                "detail": (
-                    "Stub only. This endpoint should return the proposals "
-                    "belonging to the specified client."
-                )
-            },
-            status=status.HTTP_501_NOT_IMPLEMENTED,
+        queryset = services.list_client_proposals(
+            organisation=request.user.organisation,
+            client_id=str(pk),
         )
+        serializer = ClientProposalListItemSerializer(queryset, many=True)
+        return Response(serializer.data)
 
     @action(detail=True, methods=["get"])
     def invoices(self, request, pk=None):
@@ -195,29 +183,20 @@ class ClientViewSet(viewsets.ModelViewSet):
     @action(detail=True, methods=["get"])
     def projects(self, request, pk=None):
         """
-        Return projects for this client once the projects model is implemented.
+        Return projects for this organisation-scoped client.
         """
-        return Response(
-            {
-                "detail": (
-                    "Stub only. This endpoint should return the projects "
-                    "belonging to the specified client."
-                )
-            },
-            status=status.HTTP_501_NOT_IMPLEMENTED,
+        queryset = services.list_client_projects(
+            organisation=request.user.organisation,
+            client_id=str(pk),
         )
+        serializer = ClientProjectListItemSerializer(queryset, many=True)
+        return Response(serializer.data)
 
 
 class LeadViewSet(viewsets.ModelViewSet):
     permission_classes = [IsAuthenticated]
     http_method_names = ["get", "post", "patch", "head", "options"]
     lookup_value_converter = "uuid"
-
-    list_service = staticmethod(services.list_leads)
-    create_service = staticmethod(services.create_lead)
-    detail_service = staticmethod(services.get_lead_detail)
-    update_service = staticmethod(services.update_lead)
-    mark_dead_service = staticmethod(services.mark_lead_dead)
 
     def get_queryset(self):
         """
@@ -227,7 +206,7 @@ class LeadViewSet(viewsets.ModelViewSet):
         if organisation is None:
             return Lead.objects.none()
 
-        return self.list_service(
+        return services.list_leads(
             organisation=organisation,
             filters=self.request.query_params,
         )
@@ -256,7 +235,7 @@ class LeadViewSet(viewsets.ModelViewSet):
         exception handler converts that into a 404, so the view does not need a
         local try/except block.
         """
-        return self.detail_service(
+        return services.get_lead_detail(
             organisation=self.request.user.organisation,
             lead_id=str(pk),
         )
@@ -283,7 +262,7 @@ class LeadViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         validated_data = cast(Mapping[str, Any], serializer.validated_data)
 
-        lead = self.create_service(
+        lead = services.create_lead(
             organisation=request.user.organisation,
             data=validated_data,
         )
@@ -299,7 +278,7 @@ class LeadViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         validated_data = cast(Mapping[str, Any], serializer.validated_data)
 
-        lead = self.update_service(
+        lead = services.update_lead(
             lead=self._get_lead(self.kwargs[self.lookup_field]),
             data=validated_data,
         )
@@ -313,7 +292,7 @@ class LeadViewSet(viewsets.ModelViewSet):
         Mark one organisation-scoped lead as dead.
         """
         lead = self._get_lead(self.kwargs[self.lookup_field])
-        updated_lead = self.mark_dead_service(lead=lead)
+        updated_lead = services.mark_lead_dead(lead=lead)
 
         response_serializer = LeadDetailSerializer(updated_lead)
 

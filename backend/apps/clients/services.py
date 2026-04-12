@@ -7,6 +7,8 @@ from django.db.models import Q, QuerySet
 from apps.accounts.models import Organisation
 from apps.clients.exceptions import LeadAlreadyConvertedError
 from apps.clients.models import Client, Lead
+from apps.projects.models import Project
+from apps.proposals.models import Proposal
 
 
 def _coerce_bool_filter(value: Any) -> bool | None:
@@ -144,17 +146,22 @@ def archive_client(*, client: Client) -> Client:
     return client
 
 
-def list_client_proposals(*, organisation: Organisation, client_id: str) -> Any:
+def list_client_proposals(
+    *, organisation: Organisation, client_id: str
+) -> QuerySet[Proposal]:
     """
     Return all proposals that belong to one client in one organisation.
 
-    What this method should do when you implement it:
-    - verify the client belongs to the current organisation
-    - query proposals through the client relationship
-    - add explicit ordering and related loading for predictable API responses
-    - return the queryset for serialization
+    The initial client lookup is intentional: it makes a cross-organisation
+    client id indistinguishable from a missing client id and lets the global
+    exception handler return the standard 404 response.
     """
-    raise NotImplementedError("Stub only. Implement client proposal listing here.")
+    get_client_detail(organisation=organisation, client_id=client_id)
+    return (
+        Proposal.objects.select_related("organisation", "client")
+        .filter(organisation=organisation, client_id=client_id)
+        .order_by("deadline", "-created_at")
+    )
 
 
 def list_client_invoices(*, organisation: Organisation, client_id: str) -> Any:
@@ -170,17 +177,21 @@ def list_client_invoices(*, organisation: Organisation, client_id: str) -> Any:
     raise NotImplementedError("Stub only. Implement client invoice listing here.")
 
 
-def list_client_projects(*, organisation: Organisation, client_id: str) -> Any:
+def list_client_projects(
+    *, organisation: Organisation, client_id: str
+) -> QuerySet[Project]:
     """
     Return all projects that belong to one client in one organisation.
 
-    What this method should do when you implement it:
-    - verify the client is organisation-scoped
-    - query linked projects with explicit related loading
-    - keep this small in Sprint 1 because project detail stays intentionally thin
-    - return the queryset for serialization
+    Keep this intentionally thin for Sprint 1: the full project-management
+    surface, milestones, and time logs are later work.
     """
-    raise NotImplementedError("Stub only. Implement client project listing here.")
+    get_client_detail(organisation=organisation, client_id=client_id)
+    return (
+        Project.objects.select_related("organisation", "client", "proposal")
+        .filter(organisation=organisation, client_id=client_id)
+        .order_by("due_date", "-created_at")
+    )
 
 
 def list_leads(

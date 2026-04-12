@@ -87,3 +87,16 @@ class ProposalStatusUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Proposal
         fields = ["status"]
+
+
+class ProposalConvertSerializer(serializers.Serializer):
+    title = serializers.CharField(max_length=255, required=False, allow_blank=True)
+    start_date = serializers.DateField()
+    due_date = serializers.DateField()
+
+    def validate(self, attrs):
+        if attrs["due_date"] < attrs["start_date"]:
+            raise serializers.ValidationError(
+                {"due_date": "Due date cannot be before start date."}
+            )
+        return attrs

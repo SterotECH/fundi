@@ -6,12 +6,15 @@ from django.utils import timezone
 
 from apps.accounts.models import Organisation
 from apps.proposals.exceptions import (
+    CannotConvertProposalError,
     CannotDeleteProposalError,
     CannotUpdateProposalAmountError,
     InvalidProposalClientError,
     InvalidProposalTransitionError,
 )
 from apps.proposals.models import Proposal
+from apps.projects.models import Project
+from apps.projects.services import create_project
 
 ALLOWED_STATUS_TRANSITIONS = {
     Proposal.ProposalStatus.DRAFT: [
@@ -150,3 +153,33 @@ def delete_proposal(*, proposal: Proposal) -> None:
         proposal.delete()
     else:
         raise CannotDeleteProposalError()
+
+
+def convert_proposal_to_project(
+    *, proposal: Proposal, data: Mapping[str, Any]
+) -> Project:
+    """
+    Convert one won proposal into the minimal Sprint 1 project record.
+
+    The conversion reuses the project service so the same budget/date and
+    tenant relationship checks apply to manual project creation and conversion.
+    """
+    if proposal.status != Proposal.ProposalStatus.WON:
+        raise CannotConvertProposalError()
+
+    if Project.objects.filter(proposal=proposal).exists():
+        raise CannotConvertProposalError("This proposal has already been converted.")
+
+    title = str(data.get("title", "")).strip() or proposal.title
+    return create_project(
+        organisation=proposal.organisation,
+        data={
+            "client": proposal.client,
+            "proposal": proposal,
+            "title": title,
+            "description": proposal.description,
+            "start_date": data["start_date"],
+            "due_date": data["due_date"],
+            "budget": proposal.amount,
+        },
+    )

@@ -10,6 +10,8 @@ the refactor yourself.
 from rest_framework import serializers
 
 from apps.clients.models import Client, Lead
+from apps.projects.models import Project
+from apps.proposals.models import Proposal
 
 
 class ClientWriteSerializer(serializers.ModelSerializer):
@@ -98,25 +100,21 @@ class ClientDetailSerializer(serializers.ModelSerializer):
         ]
 
 
-class ClientProposalListItemSerializer(serializers.Serializer):
+class ClientProposalListItemSerializer(serializers.ModelSerializer):
     """
-    Placeholder serializer for `GET /clients/{id}/proposals/`.
-
-    Use a dedicated serializer here because proposal fields are not client
-    fields. Once the `Proposal` model exists, replace this plain `Serializer`
-    with a `ModelSerializer` backed by that model.
-
-    Suggested shape to implement later:
-    - `id`
-    - `title`
-    - `status`
-    - `amount_ghs`
-    - `deadline`
-    - `created_at`
+    Minimal proposal row for the client detail proposal tab.
     """
 
-    # TODO: Add proposal read-only fields after the Proposal model exists.
-    pass
+    class Meta:
+        model = Proposal
+        fields = [
+            "id",
+            "title",
+            "status",
+            "amount",
+            "deadline",
+            "created_at",
+        ]
 
 
 class ClientInvoiceListItemSerializer(serializers.Serializer):
@@ -140,23 +138,23 @@ class ClientInvoiceListItemSerializer(serializers.Serializer):
     pass
 
 
-class ClientProjectListItemSerializer(serializers.Serializer):
+class ClientProjectListItemSerializer(serializers.ModelSerializer):
     """
     Placeholder serializer for `GET /clients/{id}/projects/`.
 
-    This should later serialize the minimal Sprint 1 project stub, not the full
-    Sprint 2/3 project management surface.
-
-    Suggested shape to implement later:
-    - `id`
-    - `title`
-    - `status`
-    - `start_date`
-    - `due_date`
+    Minimal project row for the client detail project tab.
     """
 
-    # TODO: Add project read-only fields after the Project model exists.
-    pass
+    class Meta:
+        model = Project
+        fields = [
+            "id",
+            "title",
+            "status",
+            "start_date",
+            "due_date",
+            "budget",
+        ]
 
 
 class LeadWriteSerializer(serializers.ModelSerializer):
