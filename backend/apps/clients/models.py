@@ -61,6 +61,7 @@ class Lead(BaseModel):
         choices=LeadSource.choices,
         default=LeadSource.REFERRAL,
     )
+    notes = models.TextField(blank=True)
     converted_to_client = models.ForeignKey(
         Client,
         on_delete=models.SET_NULL,

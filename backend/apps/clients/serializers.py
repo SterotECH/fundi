@@ -177,6 +177,7 @@ class LeadWriteSerializer(serializers.ModelSerializer):
             "phone",
             "source",
             "status",
+            "notes",
         ]
 
 
@@ -199,6 +200,7 @@ class LeadListSerializer(serializers.ModelSerializer):
             "phone",
             "source",
             "status",
+            "notes",
         ]
 
 
@@ -217,6 +219,7 @@ class LeadDetailSerializer(serializers.ModelSerializer):
             "phone",
             "source",
             "status",
+            "notes",
             "converted_to_client",
         ]
         read_only_fields = ["converted_to_client", "id"]

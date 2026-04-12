@@ -148,6 +148,7 @@ def test_create_lead_succeeds_with_valid_data(authenticated_client, org):
         "phone": "0241234567",
         "source": Lead.LeadSource.WEBSITE,
         "status": Lead.LeadStatus.NEW,
+        "notes": "Interested in a student portal next term.",
     }
 
     response = authenticated_client.post(
@@ -158,11 +159,13 @@ def test_create_lead_succeeds_with_valid_data(authenticated_client, org):
 
     assert response.status_code == 201
     assert response.json()["name"] == "Prospect School"
+    assert response.json()["notes"] == "Interested in a student portal next term."
     assert "organisation" not in response.json()
     assert Lead.objects.filter(
         organisation=org,
         name="Prospect School",
         email="prospect@example.com",
+        notes="Interested in a student portal next term.",
     ).exists()
 
 
@@ -184,13 +187,18 @@ def test_create_lead_rejects_invalid_status(authenticated_client):
 
 @pytest.mark.django_db
 def test_retrieve_lead_returns_detail_without_organisation(authenticated_client, org):
-    lead = LeadFactory(organisation=org, name="Detail Lead")
+    lead = LeadFactory(
+        organisation=org,
+        name="Detail Lead",
+        notes="Detail context.",
+    )
 
     response = authenticated_client.get(reverse("lead-detail", kwargs={"pk": lead.id}))
 
     assert response.status_code == 200
     assert response.json()["id"] == str(lead.id)
     assert response.json()["name"] == "Detail Lead"
+    assert response.json()["notes"] == "Detail context."
     assert "organisation" not in response.json()
 
 

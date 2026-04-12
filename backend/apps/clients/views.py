@@ -306,7 +306,7 @@ class LeadViewSet(viewsets.ModelViewSet):
         serializer = LeadDetailSerializer(lead)
         return Response(serializer.data)
 
-    @action(detail=True, methods=["post"])
+    @action(detail=True, methods=["post"], url_path="convert")
     def convert_to_client(self, request, *args, **kwargs) -> Response:
         """
         Convert a lead to a client.

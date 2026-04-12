@@ -56,4 +56,5 @@ class LeadFactory(factory.django.DjangoModelFactory):
     phone = "0240000000"
     source = Lead.LeadSource.REFERRAL
     status = Lead.LeadStatus.NEW
+    notes = ""
     converted_to_client = None
