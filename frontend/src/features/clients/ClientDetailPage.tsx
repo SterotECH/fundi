@@ -3,21 +3,24 @@ import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Archive,
   ArrowLeft,
+  Circle,
   Clock3,
   CreditCard,
   Mail,
   MapPin,
   Pencil,
   Phone,
-  Receipt,
   UserRound,
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router";
 
-import type { Project, Proposal } from "@/api/types";
+import { listInvoicePayments } from "@/api/invoices";
+import { getProjectTimeLogs } from "@/api/projects";
+import type { Invoice, Payment, Project, Proposal, TimeLog } from "@/api/types";
 import {
   archiveClient,
   getClient,
+  listClientInvoices,
   listClientProjects,
   listClientProposals,
 } from "@/api/clients";
@@ -29,10 +32,22 @@ import { StatusBadge } from "@/components/status/StatusBadge";
 import { AlertDialog } from "@/components/ui/AlertDialog";
 import { Button } from "@/components/ui/Button";
 import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
+import { InvoiceDrawer } from "@/features/invoices/InvoiceDrawer";
+import { TimeLogDrawer } from "@/features/projects/TimeLogDrawer";
 import { ProposalDrawer } from "@/features/proposals/ProposalDrawer";
 import { formatCurrencyValue } from "@/utils/currency";
 
 type ClientTab = "proposals" | "projects" | "invoices" | "payments" | "time";
+type ClientPaymentRow = Payment & {
+  invoice_id: string;
+  invoice_number: string | null;
+  invoice_total: string;
+  amount_remaining: string;
+  project_title?: string | null;
+};
+type ClientTimeRow = TimeLog & {
+  effective_rate: string;
+};
 
 const tabMeta: Array<{ id: ClientTab; label: string }> = [
   { id: "proposals", label: "Proposals" },
@@ -62,13 +77,28 @@ function SummaryMetric({
   );
 }
 
+function formatDate(value: string | null) {
+  if (!value) {
+    return "Not set";
+  }
+
+  return new Intl.DateTimeFormat("en-GH", {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  }).format(new Date(`${value}T00:00:00`));
+}
+
 export function ClientDetailPage() {
   const navigate = useNavigate();
   const { clientId = "" } = useParams();
   const [activeTab, setActiveTab] = useState<ClientTab>("proposals");
   const [isArchiveDialogOpen, setIsArchiveDialogOpen] = useState(false);
   const [isProposalDrawerOpen, setIsProposalDrawerOpen] = useState(false);
+  const [isInvoiceDrawerOpen, setIsInvoiceDrawerOpen] = useState(false);
+  const [isTimeLogDrawerOpen, setIsTimeLogDrawerOpen] = useState(false);
   const [selectedProposal, setSelectedProposal] = useState<Proposal | null>(null);
+  const [selectedTimeLog, setSelectedTimeLog] = useState<TimeLog | null>(null);
 
   const clientQuery = useQuery({
     queryKey: ["client", clientId],
@@ -84,6 +114,92 @@ export function ClientDetailPage() {
     queryKey: ["client", clientId, "projects"],
     queryFn: () => listClientProjects(clientId),
     enabled: Boolean(clientId),
+  });
+  const invoicesQuery = useQuery({
+    queryKey: ["client", clientId, "invoices"],
+    queryFn: () => listClientInvoices(clientId),
+    enabled: Boolean(clientId),
+  });
+  const paymentsQuery = useQuery({
+    queryKey: ["client", clientId, "payments", ...(invoicesQuery.data ?? []).map((invoice) => invoice.id)],
+    queryFn: async () => {
+      const invoices = invoicesQuery.data ?? [];
+      const paymentGroups = await Promise.all(
+        invoices.map(async (invoice) => {
+          const payments = await listInvoicePayments(invoice.id);
+          return payments.map<ClientPaymentRow>((payment) => ({
+            ...payment,
+            invoice_id: invoice.id,
+            invoice_number: invoice.invoice_number,
+            invoice_total: invoice.total,
+            amount_remaining: invoice.amount_remaining,
+            project_title: invoice.project_title,
+          }));
+        }),
+      );
+
+      return paymentGroups
+        .flat()
+        .sort((left, right) =>
+          `${right.payment_date}${right.created_at}`.localeCompare(
+            `${left.payment_date}${left.created_at}`,
+          ),
+        );
+    },
+    enabled: Boolean(clientId) && !invoicesQuery.isLoading,
+  });
+  const timeQuery = useQuery({
+    queryKey: ["client", clientId, "time", ...(projectsQuery.data ?? []).map((project) => project.id)],
+    queryFn: async () => {
+      const projects = projectsQuery.data ?? [];
+      const responses = await Promise.all(
+        projects.map(async (project) => ({
+          project,
+          payload: await getProjectTimeLogs(project.id),
+        })),
+      );
+
+      const logs = responses
+        .flatMap(({ payload }) =>
+          payload.results.map<ClientTimeRow>((log) => ({
+            ...log,
+            effective_rate: payload.effective_rate,
+          })),
+        )
+        .sort((left, right) =>
+          `${right.log_date}${right.created_at}`.localeCompare(
+            `${left.log_date}${left.created_at}`,
+          ),
+        );
+
+      const totalHours = responses.reduce(
+        (sum, item) => sum + Number.parseFloat(item.payload.total_hours || "0"),
+        0,
+      );
+      const billableHours = responses.reduce(
+        (sum, item) => sum + Number.parseFloat(item.payload.billable_hours || "0"),
+        0,
+      );
+      const nonBillableHours = responses.reduce(
+        (sum, item) => sum + Number.parseFloat(item.payload.non_billable_hours || "0"),
+        0,
+      );
+      const totalBudget = responses.reduce(
+        (sum, item) => sum + Number.parseFloat(item.project.budget || "0"),
+        0,
+      );
+      const effectiveRate = billableHours > 0 ? totalBudget / billableHours : 0;
+
+      return {
+        logs,
+        projectCount: responses.length,
+        totalHours,
+        billableHours,
+        nonBillableHours,
+        effectiveRate,
+      };
+    },
+    enabled: Boolean(clientId) && !projectsQuery.isLoading,
   });
   const archiveMutation = useMutation({
     mutationFn: () => archiveClient(clientId),
@@ -183,6 +299,196 @@ export function ClientDetailPage() {
     [],
   );
 
+  const invoiceColumns = useMemo<DataTableColumn<Invoice>[]>(
+    () => [
+      {
+        key: "invoice",
+        header: "Invoice",
+        width: "34%",
+        cell: (invoice) => (
+          <div>
+            <p className="font-mono text-sm font-semibold text-text-primary">
+              {invoice.invoice_number || "Draft"}
+            </p>
+            <p className="mt-1 text-sm text-text-secondary">
+              {invoice.project_title || "Unlinked"}
+            </p>
+          </div>
+        ),
+      },
+      {
+        key: "due_date",
+        header: "Due date",
+        width: "18%",
+        cell: (invoice) => (
+          <span className="text-sm text-text-secondary">
+            {formatDate(invoice.due_date)}
+          </span>
+        ),
+      },
+      {
+        key: "total",
+        header: "Total",
+        width: "16%",
+        cell: (invoice) => (
+          <span className="text-sm font-semibold text-text-primary">
+            {formatCurrencyValue(invoice.total)}
+          </span>
+        ),
+      },
+      {
+        key: "remaining",
+        header: "Remaining",
+        width: "16%",
+        cell: (invoice) => (
+          <span className="text-sm text-text-primary">
+            {formatCurrencyValue(invoice.amount_remaining)}
+          </span>
+        ),
+      },
+      {
+        key: "status",
+        header: "Status",
+        align: "right",
+        width: "16%",
+        className: "text-right",
+        cell: (invoice) => <StatusBadge status={invoice.status} />,
+      },
+    ],
+    [],
+  );
+  const paymentColumns = useMemo<DataTableColumn<ClientPaymentRow>[]>(
+    () => [
+      {
+        key: "payment",
+        header: "Payment",
+        width: "36%",
+        cell: (payment) => (
+          <div>
+            <p className="font-medium text-text-primary">
+              {payment.method_display || payment.method}
+            </p>
+            <p className="mt-1 font-mono text-xs text-text-tertiary">
+              {payment.provider_reference || "Cash payment"}
+            </p>
+          </div>
+        ),
+      },
+      {
+        key: "invoice",
+        header: "Invoice",
+        width: "24%",
+        cell: (payment) => (
+          <div>
+            <p className="font-mono text-sm font-semibold text-text-primary">
+              {payment.invoice_number || "Draft"}
+            </p>
+            <p className="mt-1 text-sm text-text-secondary">
+              {payment.project_title || "Unlinked"}
+            </p>
+          </div>
+        ),
+      },
+      {
+        key: "date",
+        header: "Date",
+        width: "14%",
+        cell: (payment) => (
+          <span className="text-sm text-text-secondary">
+            {formatDate(payment.payment_date)}
+          </span>
+        ),
+      },
+      {
+        key: "amount",
+        header: "Amount",
+        width: "14%",
+        cell: (payment) => (
+          <span className="text-sm font-semibold text-success-hover">
+            +{formatCurrencyValue(payment.amount)}
+          </span>
+        ),
+      },
+      {
+        key: "balance",
+        header: "Balance after",
+        align: "right",
+        width: "12%",
+        className: "text-right",
+        cell: (payment) => (
+          <span className="text-sm text-text-primary">
+            {formatCurrencyValue(payment.running_balance)}
+          </span>
+        ),
+      },
+    ],
+    [],
+  );
+  const timeColumns = useMemo<DataTableColumn<ClientTimeRow>[]>(
+    () => [
+      {
+        key: "entry",
+        header: "Entry",
+        width: "48%",
+        cell: (timeLog) => (
+          <div className="flex items-start gap-3">
+            <span
+              className={cn(
+                "mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full",
+                timeLog.billable ? "bg-success" : "bg-muted",
+              )}
+            />
+            <div>
+              <p className="font-medium text-text-primary">{timeLog.description}</p>
+              <p className="mt-1 text-sm text-text-secondary">{timeLog.project_title}</p>
+            </div>
+          </div>
+        ),
+      },
+      {
+        key: "date",
+        header: "Date",
+        width: "16%",
+        cell: (timeLog) => (
+          <span className="text-sm text-text-secondary">
+            {formatDate(timeLog.log_date)}
+          </span>
+        ),
+      },
+      {
+        key: "hours",
+        header: "Hours",
+        width: "12%",
+        cell: (timeLog) => (
+          <span className="text-sm font-semibold text-primary-dark">
+            {timeLog.hours}h
+          </span>
+        ),
+      },
+      {
+        key: "rate",
+        header: "Rate",
+        width: "12%",
+        cell: (timeLog) => (
+          <span className="text-sm text-text-secondary">
+            {formatCurrencyValue(timeLog.effective_rate)}
+          </span>
+        ),
+      },
+      {
+        key: "billable",
+        header: "Billable",
+        align: "right",
+        width: "12%",
+        className: "text-right",
+        cell: (timeLog) => (
+          <StatusBadge status={timeLog.billable ? "paid" : "draft"} />
+        ),
+      },
+    ],
+    [],
+  );
+
   if (clientQuery.isLoading) {
     return <LoadingState label="Loading client..." />;
   }
@@ -200,29 +506,54 @@ export function ClientDetailPage() {
   const client = clientQuery.data;
   const proposals = proposalsQuery.data ?? [];
   const projects = projectsQuery.data ?? [];
+  const invoices = invoicesQuery.data ?? [];
+  const payments = paymentsQuery.data ?? [];
+  const timeSummary = timeQuery.data ?? {
+    logs: [],
+    projectCount: 0,
+    totalHours: 0,
+    billableHours: 0,
+    nonBillableHours: 0,
+    effectiveRate: 0,
+  };
   const openProposalCount = proposals.filter(
     (proposal) => !["won", "lost"].includes(proposal.status),
   ).length;
   const activeProjectCount = projects.filter((project) => project.status !== "done").length;
+  const invoiceTotals = invoices.reduce(
+    (summary, invoice) => ({
+      collected: summary.collected + Number.parseFloat(invoice.amount_paid || "0"),
+      outstanding:
+        summary.outstanding + Number.parseFloat(invoice.amount_remaining || "0"),
+      total: summary.total + Number.parseFloat(invoice.total || "0"),
+    }),
+    { collected: 0, outstanding: 0, total: 0 },
+  );
 
   const tabCounts: Record<ClientTab, number> = {
     proposals: proposals.length,
     projects: projects.length,
-    invoices: 0,
-    payments: 0,
-    time: 0,
+    invoices: invoices.length,
+    payments: payments.length,
+    time: timeSummary.logs.length,
   };
 
   const currentTabLabel =
     tabMeta.find((tab) => tab.id === activeTab)?.label ?? "Proposals";
 
   const summaryMetrics = [
-    { label: "Total Invoiced", value: "—", meta: "Starts in Sprint 2" },
-    { label: "Total Collected", value: "—", meta: "Starts in Sprint 2" },
-    { label: "Outstanding", value: "—", meta: "Starts in Sprint 2" },
+    { label: "Total Invoiced", value: formatCurrencyValue(invoiceTotals.total) },
+    { label: "Total Collected", value: formatCurrencyValue(invoiceTotals.collected) },
+    { label: "Outstanding", value: formatCurrencyValue(invoiceTotals.outstanding) },
     { label: "Open Proposals", value: String(openProposalCount) },
     { label: "Active Projects", value: String(activeProjectCount) },
-    { label: "Total Hours", value: "—", meta: "Starts in Sprint 2" },
+    {
+      label: "Total Hours",
+      value: `${timeSummary.totalHours.toFixed(1)}h`,
+      meta: timeSummary.projectCount
+        ? `${timeSummary.projectCount} tracked project${timeSummary.projectCount === 1 ? "" : "s"}`
+        : "No time logged yet",
+    },
   ];
 
   const handleArchive = () => {
@@ -243,6 +574,22 @@ export function ClientDetailPage() {
         }}
         open={isProposalDrawerOpen}
         proposal={selectedProposal}
+      />
+      <InvoiceDrawer
+        initialClientId={client.id}
+        key={`${client.id}-invoice-${isInvoiceDrawerOpen ? "open" : "closed"}`}
+        onClose={() => setIsInvoiceDrawerOpen(false)}
+        open={isInvoiceDrawerOpen}
+      />
+      <TimeLogDrawer
+        clientId={client.id}
+        onClose={() => {
+          setIsTimeLogDrawerOpen(false);
+          setSelectedTimeLog(null);
+        }}
+        open={isTimeLogDrawerOpen}
+        projects={projects}
+        timeLog={selectedTimeLog}
       />
 
       <AlertDialog
@@ -387,6 +734,22 @@ export function ClientDetailPage() {
                   New Proposal
                 </Button>
               ) : null}
+              {activeTab === "invoices" ? (
+                <Button onClick={() => setIsInvoiceDrawerOpen(true)}>
+                  New Invoice
+                </Button>
+              ) : null}
+              {activeTab === "time" ? (
+                <Button
+                  disabled={!projects.length}
+                  onClick={() => {
+                    setSelectedTimeLog(null);
+                    setIsTimeLogDrawerOpen(true);
+                  }}
+                >
+                  Log Time
+                </Button>
+              ) : null}
             </div>
 
             {activeTab === "proposals" ? (
@@ -497,18 +860,228 @@ export function ClientDetailPage() {
               />
             ) : null}
 
-            {["invoices", "payments", "time"].includes(activeTab) ? (
-              <EmptyState
-                title={`${currentTabLabel} start in Sprint 2`}
-                description={`This client view already reserves the ${currentTabLabel.toLowerCase()} tab, but the API and records for it are not part of Sprint 1.`}
-                icon={
-                  activeTab === "invoices"
-                    ? Receipt
-                    : activeTab === "payments"
-                      ? CreditCard
-                      : Clock3
+            {activeTab === "invoices" ? (
+              <DataTable
+                columns={invoiceColumns}
+                emptyState={
+                  invoicesQuery.isError ? (
+                    <EmptyState
+                      tone="error"
+                      title="Invoices could not load"
+                      description="The request failed. Refresh the page or sign in again."
+                    />
+                  ) : (
+                    <EmptyState
+                      action={
+                        <Button onClick={() => setIsInvoiceDrawerOpen(true)}>
+                          New Invoice
+                        </Button>
+                      }
+                      title="No invoices yet"
+                      description="Create a draft invoice for this client when billing starts."
+                    />
+                  )
                 }
+                getRowHref={(invoice) => `/invoices/${invoice.id}`}
+                loading={invoicesQuery.isLoading}
+                mobileCard={(invoice) => (
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-mono text-sm font-semibold text-text-primary">
+                          {invoice.invoice_number || "Draft"}
+                        </p>
+                        <p className="mt-1 text-sm text-text-secondary">
+                          {formatCurrencyValue(invoice.total)}
+                        </p>
+                      </div>
+                      <StatusBadge status={invoice.status} />
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <p className="data-table-mobile-label">Due date</p>
+                        <p className="mt-1 text-sm text-text-primary">
+                          {formatDate(invoice.due_date)}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="data-table-mobile-label">Remaining</p>
+                        <p className="mt-1 text-sm text-text-primary">
+                          {formatCurrencyValue(invoice.amount_remaining)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                rowKey={(invoice) => invoice.id}
+                rows={invoices}
               />
+            ) : null}
+
+            {activeTab === "payments" ? (
+              <DataTable
+                columns={paymentColumns}
+                emptyState={
+                  paymentsQuery.isError ? (
+                    <EmptyState
+                      tone="error"
+                      title="Payments could not load"
+                      description="The request failed. Refresh the page or sign in again."
+                    />
+                  ) : (
+                    <EmptyState
+                      icon={CreditCard}
+                      title="No payments yet"
+                      description="Payments appear here after money is recorded against this client's invoices."
+                    />
+                  )
+                }
+                getRowHref={(payment) => `/invoices/${payment.invoice_id}`}
+                loading={paymentsQuery.isLoading || invoicesQuery.isLoading}
+                mobileCard={(payment) => (
+                  <div className="space-y-4">
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <p className="font-medium text-text-primary">
+                          {payment.method_display || payment.method}
+                        </p>
+                        <p className="mt-1 font-mono text-xs text-text-tertiary">
+                          {payment.provider_reference || "Cash payment"}
+                        </p>
+                      </div>
+                      <p className="text-sm font-semibold text-success-hover">
+                        +{formatCurrencyValue(payment.amount)}
+                      </p>
+                    </div>
+                    <div className="grid gap-3 sm:grid-cols-2">
+                      <div>
+                        <p className="data-table-mobile-label">Invoice</p>
+                        <p className="mt-1 font-mono text-sm text-text-primary">
+                          {payment.invoice_number || "Draft"}
+                        </p>
+                      </div>
+                      <div>
+                        <p className="data-table-mobile-label">Date</p>
+                        <p className="mt-1 text-sm text-text-primary">
+                          {formatDate(payment.payment_date)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                rowKey={(payment) => payment.id}
+                rows={payments}
+              />
+            ) : null}
+
+            {activeTab === "time" ? (
+              <div className="space-y-4">
+                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                  <SummaryMetric
+                    label="Total Hours"
+                    meta="Across this client"
+                    value={`${timeSummary.totalHours.toFixed(1)}h`}
+                  />
+                  <SummaryMetric
+                    label="Billable Hours"
+                    meta={
+                      timeSummary.totalHours > 0
+                        ? `${Math.round((timeSummary.billableHours / timeSummary.totalHours) * 100)}% billable`
+                        : "No billable time yet"
+                    }
+                    value={`${timeSummary.billableHours.toFixed(1)}h`}
+                  />
+                  <SummaryMetric
+                    label="Effective Rate"
+                    meta="Per billable hour"
+                    value={formatCurrencyValue(timeSummary.effectiveRate.toFixed(2))}
+                  />
+                  <SummaryMetric
+                    label="Non-Billable"
+                    meta="Internal time"
+                    value={`${timeSummary.nonBillableHours.toFixed(1)}h`}
+                  />
+                </div>
+
+                <DataTable
+                  columns={timeColumns}
+                  emptyState={
+                    timeQuery.isError ? (
+                      <EmptyState
+                        tone="error"
+                        title="Time logs could not load"
+                        description="The request failed. Refresh the page or sign in again."
+                      />
+                    ) : projects.length ? (
+                      <EmptyState
+                        action={
+                          <Button
+                            onClick={() => {
+                              setSelectedTimeLog(null);
+                              setIsTimeLogDrawerOpen(true);
+                            }}
+                          >
+                            Log Time
+                          </Button>
+                        }
+                        icon={Clock3}
+                        title="No time logs yet"
+                        description="Log delivery work against one of this client's projects."
+                      />
+                    ) : (
+                      <EmptyState
+                        icon={Clock3}
+                        title="No projects available"
+                        description="A project needs to exist before time can be logged for this client."
+                      />
+                    )
+                  }
+                  loading={timeQuery.isLoading || projectsQuery.isLoading}
+                  mobileCard={(timeLog) => (
+                    <div className="space-y-4">
+                      <div className="flex items-start justify-between gap-3">
+                        <div className="flex items-start gap-3">
+                          <Circle
+                            className={cn(
+                              "mt-1 h-3 w-3 shrink-0",
+                              timeLog.billable ? "fill-success text-success" : "fill-muted text-muted",
+                            )}
+                          />
+                          <div>
+                            <p className="font-medium text-text-primary">
+                              {timeLog.description}
+                            </p>
+                            <p className="mt-1 text-sm text-text-secondary">
+                              {timeLog.project_title}
+                            </p>
+                          </div>
+                        </div>
+                        <StatusBadge status={timeLog.billable ? "paid" : "draft"} />
+                      </div>
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        <div>
+                          <p className="data-table-mobile-label">Date</p>
+                          <p className="mt-1 text-sm text-text-primary">
+                            {formatDate(timeLog.log_date)}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="data-table-mobile-label">Hours</p>
+                          <p className="mt-1 text-sm font-semibold text-text-primary">
+                            {timeLog.hours}h
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  onRowClick={(timeLog) => {
+                    setSelectedTimeLog(timeLog);
+                    setIsTimeLogDrawerOpen(true);
+                  }}
+                  rowKey={(timeLog) => timeLog.id}
+                  rows={timeSummary.logs}
+                />
+              </div>
             ) : null}
           </section>
         </div>
@@ -522,13 +1095,26 @@ export function ClientDetailPage() {
               </div>
               <Button
                 className="shrink-0"
-                onClick={() => {
-                  setSelectedProposal(null);
-                  setIsProposalDrawerOpen(true);
-                }}
+                onClick={
+                  activeTab === "invoices"
+                    ? () => setIsInvoiceDrawerOpen(true)
+                    : activeTab === "time"
+                      ? () => {
+                          setSelectedTimeLog(null);
+                          setIsTimeLogDrawerOpen(true);
+                        }
+                      : () => {
+                        setSelectedProposal(null);
+                        setIsProposalDrawerOpen(true);
+                      }
+                }
                 variant="secondary"
               >
-                New Proposal
+                {activeTab === "invoices"
+                  ? "New Invoice"
+                  : activeTab === "time"
+                    ? "Log Time"
+                    : "New Proposal"}
               </Button>
             </div>
 

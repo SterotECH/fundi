@@ -1,5 +1,5 @@
 import { apiRequest, type PaginatedResponse, unwrapResults } from "@/api/client";
-import type { Client, Project, Proposal } from "@/api/types";
+import type { Client, Invoice, Project, Proposal } from "@/api/types";
 
 export type ClientPayload = {
   type: string;
@@ -68,4 +68,8 @@ export function listClientProposals(clientId: string) {
 
 export function listClientProjects(clientId: string) {
   return apiRequest<Project[]>(`/clients/${clientId}/projects/`);
+}
+
+export function listClientInvoices(clientId: string) {
+  return apiRequest<Invoice[]>(`/clients/${clientId}/invoices/`);
 }

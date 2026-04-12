@@ -1,35 +1,45 @@
 import { createBrowserRouter, Navigate } from "react-router";
 
+import {
+  ClientCreateRouteElement,
+  ClientDetailRouteElement,
+  ClientEditRouteElement,
+  ClientsRouteElement,
+  DashboardRouteElement,
+  InvoiceDetailRouteElement,
+  InvoicesRouteElement,
+  LeadsRouteElement,
+  LoginRouteElement,
+  ProposalsRouteElement,
+} from "@/app/LazyRouteElements";
+import { RouteErrorPage } from "@/app/RouteErrorPage";
 import { AppLayout } from "@/components/layout/AppLayout";
 import { ProtectedRoute } from "@/features/auth/ProtectedRoute";
-import { ClientCreatePage } from "@/features/clients/ClientCreatePage";
-import { ClientDetailPage } from "@/features/clients/ClientDetailPage";
-import { ClientEditPage } from "@/features/clients/ClientEditPage";
-import { ClientsPage } from "@/features/clients/ClientsPage";
-import { DashboardPage } from "@/features/dashboard/DashboardPage";
-import { LeadsPage } from "@/features/leads/LeadsPage";
-import { LoginPage } from "@/features/auth/LoginPage";
-import { ProposalsPage } from "@/features/proposals/ProposalsPage";
 
 export const router = createBrowserRouter([
   {
     path: "/login",
-    element: <LoginPage />,
+    element: <LoginRouteElement />,
+    errorElement: <RouteErrorPage />,
   },
   {
     element: <ProtectedRoute />,
+    errorElement: <RouteErrorPage />,
     children: [
       {
         element: <AppLayout />,
+        errorElement: <RouteErrorPage />,
         children: [
           { index: true, element: <Navigate to="/dashboard" replace /> },
-          { path: "/dashboard", element: <DashboardPage /> },
-          { path: "/clients", element: <ClientsPage /> },
-          { path: "/clients/new", element: <ClientCreatePage /> },
-          { path: "/clients/:clientId/edit", element: <ClientEditPage /> },
-          { path: "/clients/:clientId", element: <ClientDetailPage /> },
-          { path: "/leads", element: <LeadsPage /> },
-          { path: "/proposals", element: <ProposalsPage /> },
+          { path: "/dashboard", element: <DashboardRouteElement /> },
+          { path: "/clients", element: <ClientsRouteElement /> },
+          { path: "/clients/new", element: <ClientCreateRouteElement /> },
+          { path: "/clients/:clientId/edit", element: <ClientEditRouteElement /> },
+          { path: "/clients/:clientId", element: <ClientDetailRouteElement /> },
+          { path: "/leads", element: <LeadsRouteElement /> },
+          { path: "/proposals", element: <ProposalsRouteElement /> },
+          { path: "/invoices", element: <InvoicesRouteElement /> },
+          { path: "/invoices/:invoiceId", element: <InvoiceDetailRouteElement /> },
         ],
       },
     ],
@@ -37,5 +47,6 @@ export const router = createBrowserRouter([
   {
     path: "*",
     element: <Navigate to="/dashboard" replace />,
+    errorElement: <RouteErrorPage />,
   },
 ]);

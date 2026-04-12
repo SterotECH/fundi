@@ -19,6 +19,7 @@ import {
   UserRound,
   Users,
   X,
+  ReceiptText,
 } from "lucide-react";
 import { NavLink, Outlet } from "react-router";
 
@@ -32,11 +33,11 @@ const navItems = [
   { label: "Clients", to: "/clients", icon: Users },
   { label: "Leads", to: "/leads", icon: BriefcaseBusiness },
   { label: "Proposals", to: "/proposals", icon: FolderKanban },
+  { label: "Invoices", to: "/invoices", icon: ReceiptText },
 ];
 
 const upcomingNavItems = [
   { label: "Projects", icon: FolderKanban },
-  { label: "Invoices", icon: BriefcaseBusiness },
   { label: "Analytics", icon: MonitorCog },
 ];
 
@@ -95,6 +96,8 @@ export function AppLayout() {
     }
     return `Good evening, ${fullName}`;
   }, [user?.full_name]);
+
+  const organisationName = user?.organisation_name?.trim() || "Organisation";
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent) {
@@ -175,7 +178,7 @@ export function AppLayout() {
               </div>
               <div>
                 <p className="text-sm font-semibold text-text-primary">
-                  Stero Tech Inc.
+                  {organisationName}
                 </p>
                 <p className="text-xs text-text-secondary">Company OS</p>
               </div>
@@ -453,7 +456,7 @@ export function AppLayout() {
       <div className="lg:flex">
         <aside
           className={cn(
-            "hidden border-r border-border bg-card/90 backdrop-blur-lg transition-[width] duration-200 lg:block lg:shrink-0",
+            "app-sidebar hidden border-r border-border bg-card/90 backdrop-blur-lg transition-[width] duration-200 lg:block lg:shrink-0",
             isSidebarExpanded ? "lg:w-64" : "lg:w-20",
           )}
         >
@@ -568,7 +571,7 @@ export function AppLayout() {
            />
 
            <aside
-             className="absolute inset-y-0 left-0 flex w-[min(20rem,88vw)] flex-col border-r border-border bg-card/90 backdrop-blur-lg p-6 shadow-xl"
+             className="app-sidebar absolute inset-y-0 left-0 flex w-[min(20rem,88vw)] flex-col border-r border-border bg-card/90 backdrop-blur-lg p-6 shadow-xl"
              id="app-drawer"
            >
              <div className="flex items-center justify-between gap-4">

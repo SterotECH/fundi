@@ -16,6 +16,9 @@ const statusStyles: Record<string, string> = {
   shs: "bg-muted-background text-muted-foreground",
   uni: "bg-muted-background text-muted-foreground",
   other: "bg-muted-background text-muted-foreground",
+  overdue: "bg-error-light text-error-hover",
+  paid: "bg-success-light text-secondary-dark",
+  partial: "bg-warning-light text-warning-hover",
   won: "bg-success-light text-secondary-dark",
 };
 

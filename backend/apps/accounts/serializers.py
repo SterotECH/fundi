@@ -9,9 +9,18 @@ class LoginSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
+    organisation_name = serializers.CharField(source="organisation.name", read_only=True)
+
     class Meta:
         model = User
-        fields = ["id", "email", "full_name", "role", "created_at"]
+        fields = [
+            "id",
+            "email",
+            "full_name",
+            "role",
+            "created_at",
+            "organisation_name",
+        ]
         read_only_fields = ["id", "created_at"]
 
 

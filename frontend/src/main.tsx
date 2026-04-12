@@ -14,14 +14,17 @@ import "@fontsource/work-sans/latin-600.css";
 import { AuthProvider } from "@/features/auth/AuthProvider";
 import { queryClient } from "@/app/queryClient";
 import { router } from "@/app/router";
+import { AppErrorBoundary } from "@/components/error/AppErrorBoundary";
 import "./index.css";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <RouterProvider router={router} />
-      </AuthProvider>
-    </QueryClientProvider>
+    <AppErrorBoundary fallbackDescription="The application failed before the router could load. Reload and try again.">
+      <QueryClientProvider client={queryClient}>
+        <AuthProvider>
+          <RouterProvider router={router} />
+        </AuthProvider>
+      </QueryClientProvider>
+    </AppErrorBoundary>
   </StrictMode>,
 );
