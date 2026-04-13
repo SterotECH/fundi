@@ -104,6 +104,46 @@ def test_create_project_accepts_client_id_and_optional_proposal_id(
 
 
 @pytest.mark.django_db
+def test_create_project_accepts_nested_milestones(authenticated_client, org):
+    client = ClientFactory(organisation=org)
+
+    response = authenticated_client.post(
+        reverse("project-list"),
+        {
+            "client_id": str(client.id),
+            "title": "New Project",
+            "description": "Project created with milestones.",
+            "start_date": str(timezone.localdate()),
+            "due_date": str(timezone.localdate() + timedelta(days=14)),
+            "budget": "2500.00",
+            "milestones": [
+                {
+                    "title": "Kickoff",
+                    "description": "Initial workshop.",
+                    "due_date": str(timezone.localdate() + timedelta(days=2)),
+                    "order": 0,
+                },
+                {
+                    "title": "Handover",
+                    "description": "",
+                    "due_date": str(timezone.localdate() + timedelta(days=14)),
+                    "completed": True,
+                    "order": 1,
+                },
+            ],
+        },
+        format="json",
+    )
+
+    assert response.status_code == 201
+    payload = response.json()
+    assert [item["title"] for item in payload["milestones"]] == ["Kickoff", "Handover"]
+    assert payload["milestones"][0]["completed"] is False
+    assert payload["milestones"][1]["completed"] is True
+    assert Milestone.objects.filter(project_id=payload["id"]).count() == 2
+
+
+@pytest.mark.django_db
 def test_create_project_rejects_wrong_organisation_client(authenticated_client):
     other_client = ClientFactory(organisation=OrganisationFactory())
 

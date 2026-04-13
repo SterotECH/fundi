@@ -2,6 +2,7 @@ from collections.abc import Mapping
 from decimal import ROUND_HALF_UP, Decimal
 from typing import Any
 
+from django.db import transaction
 from django.db.models import QuerySet, Sum
 from django.utils import timezone
 
@@ -106,7 +107,31 @@ def create_project(*, organisation: Organisation, data: Mapping[str, Any]) -> Pr
     _validate_project_relationships(organisation=organisation, data=data)
     _validate_project_values(data=data)
 
-    return Project.objects.create(organisation=organisation, **data)
+    milestone_rows = list(data.get("milestones", []))
+    project_data = {key: value for key, value in data.items() if key != "milestones"}
+
+    with transaction.atomic():
+        project = Project.objects.create(organisation=organisation, **project_data)
+
+        if milestone_rows:
+            Milestone.objects.bulk_create(
+                [
+                    Milestone(
+                        project=project,
+                        title=milestone["title"],
+                        description=milestone.get("description", ""),
+                        due_date=milestone["due_date"],
+                        is_completed=milestone.get("completed", False),
+                        completed_at=timezone.now()
+                        if milestone.get("completed", False)
+                        else None,
+                        order=milestone["order"],
+                    )
+                    for milestone in milestone_rows
+                ]
+            )
+
+    return project
 
 
 def get_project_detail(*, organisation: Organisation, project_id: str) -> Project:

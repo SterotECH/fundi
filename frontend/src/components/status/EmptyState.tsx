@@ -15,6 +15,7 @@ type EmptyStateProps = {
   actionHref?: string;
   animated?: boolean;
   color?: "primary" | "secondary" | "success" | "warning" | "error" | "info";
+  framed?: boolean;
   icon?: LucideIcon;
   size?: "sm" | "default" | "lg";
   tone?: "neutral" | "error";
@@ -28,6 +29,7 @@ export function EmptyState({
   animated = true,
   color,
   description,
+  framed = true,
   icon,
   size = "default",
   title,
@@ -99,7 +101,8 @@ export function EmptyState({
   return (
     <div
       className={cn(
-        "flex flex-col items-center justify-center rounded-lg border border-border bg-card px-6 text-center",
+        "flex flex-col items-center justify-center px-6 text-center",
+        framed && "rounded-lg border border-border bg-card",
         sizeClasses.container,
         animated && "transition-all duration-300 ease-out",
       )}

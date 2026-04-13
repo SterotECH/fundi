@@ -33,13 +33,17 @@ def get_dashboard_summary(*, organisation: Organisation) -> dict[str, Any]:
     deadline_limit = today + timedelta(days=14)
 
     proposal_counts = {status: 0 for status, _label in Proposal.ProposalStatus.choices}
-    counts = (
+    proposal_amounts = {
+        status: ZERO_MONEY for status, _label in Proposal.ProposalStatus.choices
+    }
+    proposal_totals = (
         Proposal.objects.filter(organisation=organisation)
         .values("status")
-        .annotate(total=Count("id"))
+        .annotate(total=Count("id"), amount=Sum("amount"))
     )
-    for row in counts:
+    for row in proposal_totals:
         proposal_counts[row["status"]] = row["total"]
+        proposal_amounts[row["status"]] = row["amount"] or ZERO_MONEY
 
     upcoming_deadlines = (
         Proposal.objects.select_related("client")
@@ -98,6 +102,9 @@ def get_dashboard_summary(*, organisation: Organisation) -> dict[str, Any]:
 
     return {
         "proposal_counts": proposal_counts,
+        "proposal_amounts": {
+            status: f"{amount:.2f}" for status, amount in proposal_amounts.items()
+        },
         "upcoming_proposal_deadlines": [
             {
                 "id": str(proposal.id),

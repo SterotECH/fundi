@@ -66,7 +66,17 @@ class ProjectDetailSerializer(ProjectListSerializer):
             "updated_at",
         ]
 
+
+class ProjectCreateMilestoneSerializer(serializers.Serializer):
+    title = serializers.CharField()
+    description = serializers.CharField(required=False, allow_blank=True)
+    due_date = serializers.DateField()
+    completed = serializers.BooleanField(required=False, default=False)
+    order = serializers.IntegerField(min_value=0)
+
+
 class ProjectWriteSerializer(serializers.ModelSerializer):
+    milestones = ProjectCreateMilestoneSerializer(many=True, required=False, write_only=True)
     client_id = serializers.PrimaryKeyRelatedField(
         queryset=Client.objects.all(),
         source="client",
@@ -117,6 +127,12 @@ class ProjectWriteSerializer(serializers.ModelSerializer):
                 {"due_date": "Due date cannot be before start date."}
             )
 
+        milestones = attrs.get("milestones", [])
+        if milestones and self.instance is not None:
+            raise serializers.ValidationError(
+                {"milestones": "Milestones can only be supplied when creating a project."}
+            )
+
         return attrs
 
     class Meta:
@@ -130,6 +146,7 @@ class ProjectWriteSerializer(serializers.ModelSerializer):
             "budget",
             "client_id",
             "proposal_id",
+            "milestones",
         ]
 
 

@@ -57,6 +57,21 @@ export type Project = {
   client: string;
   client_name?: string;
   proposal?: string | null;
+  proposal_title?: string | null;
+};
+
+export type Milestone = {
+  id: string;
+  project: string;
+  project_title: string;
+  title: string;
+  description?: string;
+  due_date: string;
+  completed: boolean;
+  completed_at: string | null;
+  order: number;
+  created_at?: string;
+  updated_at?: string;
 };
 
 export type Invoice = {
@@ -123,6 +138,35 @@ export type ProjectTimeLogsResponse = {
   results: TimeLog[];
 };
 
+export type ProjectDetail = Project & {
+  milestones: Milestone[];
+  time_summary: {
+    total_hours: string;
+    billable_hours: string;
+    non_billable_hours: string;
+    effective_rate: string;
+  };
+  created_at: string;
+  updated_at: string;
+};
+
+export type Notification = {
+  id: string;
+  type: string;
+  type_display: string;
+  message: string;
+  entity_type: string | null;
+  entity_id: string | null;
+  is_read: boolean;
+  created_at: string;
+};
+
+export type NotificationListResponse = {
+  count: number;
+  unread_count: number;
+  results: Notification[];
+};
+
 export type InvoiceDetail = Invoice & {
   line_items: InvoiceLineItem[];
   payments: Payment[];
@@ -131,6 +175,7 @@ export type InvoiceDetail = Invoice & {
 
 export type DashboardSummary = {
   proposal_counts: Record<string, number>;
+  proposal_amounts: Record<string, string>;
   upcoming_proposal_deadlines: Array<{
     id: string;
     title: string;

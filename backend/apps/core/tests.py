@@ -158,6 +158,13 @@ def test_dashboard_api_returns_sprint_2_summary_data(
     assert payload["proposal_counts"][Proposal.ProposalStatus.SENT] == 1
     assert payload["proposal_counts"][Proposal.ProposalStatus.DRAFT] == 1
     assert payload["proposal_counts"][Proposal.ProposalStatus.WON] == 1
+    assert payload["proposal_amounts"] == {
+        Proposal.ProposalStatus.DRAFT: "500.00",
+        Proposal.ProposalStatus.SENT: "1000.00",
+        Proposal.ProposalStatus.NEGOTIATING: "0.00",
+        Proposal.ProposalStatus.WON: "1500.00",
+        Proposal.ProposalStatus.LOST: "0.00",
+    }
     assert payload["upcoming_proposal_deadlines"] == [
         {
             "id": str(upcoming.id),

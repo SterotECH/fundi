@@ -102,6 +102,50 @@ def test_create_project_attaches_organisation_and_accepts_matching_proposal(org)
 
 
 @pytest.mark.django_db
+def test_create_project_creates_nested_milestones(org):
+    client = ClientFactory(organisation=org)
+    due_date = timezone.localdate() + timedelta(days=14)
+
+    project = services.create_project(
+        organisation=org,
+        data={
+            "client": client,
+            "title": "Delivery project",
+            "description": "Has milestones at creation.",
+            "start_date": timezone.localdate(),
+            "due_date": due_date,
+            "budget": Decimal("2500.00"),
+            "milestones": [
+                {
+                    "title": "Kickoff",
+                    "description": "Initial workshop.",
+                    "due_date": timezone.localdate() + timedelta(days=2),
+                    "completed": False,
+                    "order": 0,
+                },
+                {
+                    "title": "Delivery",
+                    "description": "",
+                    "due_date": due_date,
+                    "completed": True,
+                    "order": 1,
+                },
+            ],
+        },
+    )
+
+    milestones = list(project.milestones.order_by("order"))
+    assert len(milestones) == 2
+    assert milestones[0].title == "Kickoff"
+    assert milestones[0].description == "Initial workshop."
+    assert milestones[0].is_completed is False
+    assert milestones[0].completed_at is None
+    assert milestones[1].title == "Delivery"
+    assert milestones[1].is_completed is True
+    assert milestones[1].completed_at is not None
+
+
+@pytest.mark.django_db
 def test_create_project_rejects_wrong_client_and_invalid_proposal_links(org):
     client = ClientFactory(organisation=org)
     other_client = ClientFactory(organisation=OrganisationFactory())
