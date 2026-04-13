@@ -130,9 +130,7 @@ def transition_proposal(*, proposal: Proposal, new_status: str) -> Proposal:
     }:
         proposal.decision_date = today
 
-    proposal.save(
-        update_fields=["status", "sent_date", "decision_date"]
-    )
+    proposal.save(update_fields=["status", "sent_date", "decision_date"])
     return proposal
 
 

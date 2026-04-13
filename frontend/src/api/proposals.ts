@@ -41,6 +41,10 @@ export async function listProposals(filters: ProposalListFilters = {}) {
   return unwrapResults(payload);
 }
 
+export function getProposal(proposalId: string) {
+  return apiRequest<Proposal>(`/proposals/${proposalId}/`);
+}
+
 export function createProposal(data: ProposalPayload) {
   return apiRequest<Proposal>("/proposals/", {
     method: "POST",
@@ -75,5 +79,11 @@ export function convertProposalToProject(
   return apiRequest<Project>(`/proposals/${proposalId}/convert/`, {
     method: "POST",
     body: data,
+  });
+}
+
+export function deleteProposal(proposalId: string) {
+  return apiRequest<void>(`/proposals/${proposalId}/`, {
+    method: "DELETE",
   });
 }

@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Projects — Fundi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --p50:#EEEDFE;--p100:#CECBF6;--p200:#AFA9EC;--p600:#534AB7;--p800:#3C3489;
+  --t50:#E1F5EE;--t100:#9FE1CB;--t400:#1D9E75;--t600:#0F6E56;--t800:#085041;
+  --a50:#FAEEDA;--a400:#BA7517;--a600:#854F0B;
+  --r50:#FCEBEB;--r400:#E24B4A;--r800:#791F1F;
+  --b50:#E6F1FB;--b400:#378ADD;--b800:#0C447C;
+  --g50:#F1EFE8;--g100:#D3D1C7;--g400:#888780;--g600:#5F5E5A;--g800:#444441;
+  --page:#F4F3FC;
+  --glass:rgba(255,255,255,0.78);
+  --glass-b:rgba(255,255,255,0.55);
+  --ink:var(--color-text-primary, #1a1720);
+  --ink2:var(--color-text-secondary, #5a5580);
+  --ink3:var(--color-text-tertiary, #9390b0);
+  --bdr:var(--color-border-tertiary, rgba(180,176,220,0.3));
+  --bg:var(--color-background-primary, #ffffff);
+  --bg2:var(--color-background-secondary, #F8F7FF);
+  --bg3:var(--color-background-tertiary, #F4F3FC);
+}
+
+body{
+  background:var(--page);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  color:var(--ink);
+  font-size:14px;
+  line-height:1.5;
+}
+
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 10%, rgba(83,74,183,.06) 0%, transparent 70%),
+    radial-gradient(ellipse 50% 50% at 85% 85%, rgba(29,158,117,.04) 0%, transparent 70%);
+  pointer-events:none;
+  z-index:0;
+}
+
+.wrap{
+  position:relative;
+  z-index:1;
+  padding:24px 24px 48px;
+  max-width:1040px;
+  margin:0 auto;
+}
+
+/* ── Page header ── */
+.page-header{
+  display:flex;
+  align-items:flex-start;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:20px;
+  flex-wrap:wrap;
+}
+.page-title-block{}
+.page-title{
+  font-size:22px;
+  font-weight:500;
+  color:var(--ink);
+  margin-bottom:3px;
+}
+.page-sub{
+  font-size:12px;
+  color:var(--ink3);
+}
+.btn{
+  font-size:12px;
+  font-weight:500;
+  padding:7px 16px;
+  border-radius:8px;
+  border:0.5px solid var(--bdr);
+  background:var(--bg);
+  color:var(--ink);
+  cursor:pointer;
+  transition:all .15s;
+  white-space:nowrap;
+}
+.btn:hover{background:var(--bg2)}
+.btn-primary{
+  background:var(--p600);
+  color:#fff;
+  border-color:var(--p800);
+}
+.btn-primary:hover{background:var(--p800)}
+
+/* ── Stat strip ── */
+.stat-strip{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin-bottom:16px;
+}
+.stat-tile{
+  background:var(--glass);
+  border:0.5px solid var(--glass-b);
+  border-radius:12px;
+  padding:12px 16px;
+  backdrop-filter:blur(10px);
+}
+.st-label{
+  font-size:10px;
+  font-weight:500;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  color:var(--ink3);
+  margin-bottom:4px;
+}
+.st-val{
+  font-size:20px;
+  font-weight:500;
+  color:var(--ink);
+  line-height:1;
+}
+.st-sub{font-size:11px;color:var(--ink3);margin-top:3px}
+.st-sub.good{color:var(--t600)}
+.st-sub.warn{color:var(--a600)}
+.st-sub.bad{color:var(--r400)}
+
+/* ── Toolbar ── */
+.toolbar{
+  display:flex;
+  align-items:center;
+  gap:10px;
+  margin-bottom:12px;
+  flex-wrap:wrap;
+}
+.search-wrap{
+  position:relative;
+  flex:1;
+  min-width:200px;
+  max-width:320px;
+}
+.search-wrap svg{
+  position:absolute;
+  left:10px;
+  top:50%;
+  transform:translateY(-50%);
+  width:14px;
+  height:14px;
+  stroke:var(--ink3);
+  fill:none;
+  stroke-width:1.5;
+  pointer-events:none;
+}
+.search-input{
+  width:100%;
+  font-size:13px;
+  padding:7px 12px 7px 32px;
+  border-radius:8px;
+  border:0.5px solid var(--bdr);
+  background:var(--glass);
+  color:var(--ink);
+  outline:none;
+  backdrop-filter:blur(8px);
+  transition:border-color .15s;
+}
+.search-input::placeholder{color:var(--ink3)}
+.search-input:focus{border-color:var(--p200)}
+
+.filter-group{display:flex;gap:6px;flex-wrap:wrap}
+.filter-select{
+  font-size:12px;
+  font-weight:500;
+  padding:6px 12px;
+  border-radius:8px;
+  border:0.5px solid var(--bdr);
+  background:var(--glass);
+  color:var(--ink2);
+  cursor:pointer;
+  outline:none;
+  backdrop-filter:blur(8px);
+  appearance:none;
+  -webkit-appearance:none;
+  padding-right:28px;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%239390b0' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 8px center;
+  transition:border-color .15s;
+}
+.filter-select:focus{border-color:var(--p200)}
+
+.filter-chip{
+  font-size:11px;
+  font-weight:500;
+  padding:5px 12px;
+  border-radius:20px;
+  border:0.5px solid var(--bdr);
+  background:var(--glass);
+  color:var(--ink2);
+  cursor:pointer;
+  backdrop-filter:blur(6px);
+  transition:all .15s;
+  white-space:nowrap;
+}
+.filter-chip.active{background:var(--p600);color:#fff;border-color:var(--p800)}
+.filter-chip:hover:not(.active){background:var(--p50);color:var(--p800);border-color:var(--p100)}
+
+/* ── Project table panel ── */
+.panel{
+  background:var(--glass);
+  border:0.5px solid var(--glass-b);
+  border-radius:16px;
+  backdrop-filter:blur(12px);
+  overflow:hidden;
+}
+.panel-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:13px 18px;
+  border-bottom:0.5px solid var(--bdr);
+}
+.panel-count{
+  font-size:12px;
+  color:var(--ink3);
+}
+.panel-sort{
+  display:flex;
+  align-items:center;
+  gap:6px;
+  font-size:12px;
+  color:var(--ink3);
+  cursor:pointer;
+}
+.panel-sort svg{
+  width:13px;height:13px;
+  stroke:currentColor;fill:none;stroke-width:1.5;
+}
+
+/* ── Table ── */
+.project-table{width:100%;border-collapse:collapse}
+.project-table thead tr{
+  background:rgba(83,74,183,.03);
+}
+.project-table th{
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.07em;
+  text-transform:uppercase;
+  color:var(--ink3);
+  padding:9px 18px;
+  text-align:left;
+  border-bottom:0.5px solid var(--bdr);
+  white-space:nowrap;
+}
+.project-table th:last-child{text-align:right}
+.project-table td{
+  padding:12px 18px;
+  border-bottom:0.5px solid rgba(180,176,220,.12);
+  vertical-align:middle;
+}
+.project-table tbody tr{
+  cursor:pointer;
+  transition:background .12s;
+}
+.project-table tbody tr:last-child td{border-bottom:none}
+.project-table tbody tr:hover td{background:rgba(83,74,183,.03)}
+
+/* ── Cell: title ── */
+.project-title-cell{}
+.project-name{
+  font-size:13px;
+  font-weight:500;
+  color:var(--ink);
+  margin-bottom:2px;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+  max-width:220px;
+}
+.project-proposal-ref{
+  font-size:11px;
+  color:var(--ink3);
+  display:flex;
+  align-items:center;
+  gap:4px;
+}
+.project-proposal-ref svg{
+  width:10px;height:10px;
+  stroke:currentColor;fill:none;stroke-width:1.5;flex-shrink:0;
+}
+
+/* ── Cell: client ── */
+.client-cell{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.client-avatar{
+  width:26px;height:26px;
+  border-radius:7px;
+  background:var(--p50);
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:700;color:var(--p800);
+  flex-shrink:0;
+  letter-spacing:-.3px;
+}
+.client-name{font-size:13px;color:var(--ink);white-space:nowrap}
+
+/* ── Status chips ── */
+.chip{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:10px;font-weight:500;padding:3px 9px;
+  border-radius:20px;white-space:nowrap;
+}
+.chip-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+.chip-active{background:var(--t50);color:var(--t800)}
+.chip-active .chip-dot{background:var(--t400)}
+.chip-planning{background:var(--b50);color:var(--b800)}
+.chip-planning .chip-dot{background:var(--b400)}
+.chip-hold{background:var(--a50);color:var(--a600)}
+.chip-hold .chip-dot{background:var(--a400)}
+.chip-done{background:var(--g50);color:var(--g600)}
+.chip-done .chip-dot{background:var(--g400)}
+
+/* ── Cell: due date ── */
+.due-date{font-size:12px;color:var(--ink2);white-space:nowrap}
+.due-date.overdue{color:var(--r400)}
+.due-date.soon{color:var(--a600)}
+
+/* ── Cell: budget ── */
+.budget-cell{}
+.budget-val{font-size:13px;font-weight:500;color:var(--ink)}
+.burn-wrap{margin-top:4px;display:flex;align-items:center;gap:6px}
+.burn-track{width:72px;height:4px;background:rgba(180,176,220,.25);border-radius:2px;overflow:hidden;flex-shrink:0}
+.burn-fill{height:100%;border-radius:2px}
+.burn-ok{background:var(--t400)}
+.burn-warn{background:var(--a400)}
+.burn-over{background:var(--r400)}
+.burn-pct{font-size:10px;color:var(--ink3)}
+
+/* ── Cell: hours ── */
+.hours-cell{text-align:right}
+.hours-val{font-size:13px;font-weight:500;color:var(--p600)}
+.hours-sub{font-size:10px;color:var(--ink3);margin-top:2px}
+
+/* ── Empty state ── */
+.empty-state{
+  padding:48px 24px;
+  text-align:center;
+}
+.empty-icon{
+  width:44px;height:44px;
+  border-radius:12px;
+  background:var(--p50);
+  display:flex;align-items:center;justify-content:center;
+  margin:0 auto 14px;
+}
+.empty-icon svg{width:20px;height:20px;stroke:var(--p600);fill:none;stroke-width:1.5}
+.empty-title{font-size:14px;font-weight:500;color:var(--ink);margin-bottom:5px}
+.empty-sub{font-size:12px;color:var(--ink3);margin-bottom:16px}
+
+/* ── Pagination ── */
+.pagination{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px 18px;
+  border-top:0.5px solid var(--bdr);
+}
+.page-info{font-size:12px;color:var(--ink3)}
+.page-btns{display:flex;gap:5px}
+.page-btn{
+  font-size:12px;
+  font-weight:500;
+  padding:5px 12px;
+  border-radius:7px;
+  border:0.5px solid var(--bdr);
+  background:var(--glass);
+  color:var(--ink2);
+  cursor:pointer;
+  backdrop-filter:blur(6px);
+  transition:all .15s;
+}
+.page-btn:hover{background:var(--p50);color:var(--p800);border-color:var(--p100)}
+.page-btn.active{background:var(--p600);color:#fff;border-color:var(--p800)}
+.page-btn:disabled{opacity:.4;cursor:not-allowed}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div class="page-title-block">
+      <div class="page-title">Projects</div>
+      <div class="page-sub">All client projects — active, planning, on hold, and completed</div>
+    </div>
+    <button class="btn btn-primary">+ New project</button>
+  </div>
+
+  <!-- Stat strip -->
+  <div class="stat-strip">
+    <div class="stat-tile">
+      <div class="st-label">Total projects</div>
+      <div class="st-val">7</div>
+      <div class="st-sub">across 5 clients</div>
+    </div>
+    <div class="stat-tile">
+      <div class="st-label">Active</div>
+      <div class="st-val">3</div>
+      <div class="st-sub good">2 due this month</div>
+    </div>
+    <div class="stat-tile">
+      <div class="st-label">Total budget</div>
+      <div class="st-val">GHS 68k</div>
+      <div class="st-sub">across active projects</div>
+    </div>
+    <div class="stat-tile">
+      <div class="st-label">Hours logged</div>
+      <div class="st-val">147h</div>
+      <div class="st-sub warn">89% billable</div>
+    </div>
+  </div>
+
+  <!-- Toolbar -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search-input" type="text" placeholder="Search projects…">
+    </div>
+
+    <div class="filter-group">
+      <!-- Status filter chips -->
+      <span class="filter-chip active">All</span>
+      <span class="filter-chip">Active</span>
+      <span class="filter-chip">Planning</span>
+      <span class="filter-chip">On hold</span>
+      <span class="filter-chip">Done</span>
+    </div>
+
+    <!-- Client dropdown filter -->
+    <select class="filter-select">
+      <option value="">All clients</option>
+      <option>Accra Academy SHS</option>
+      <option>GIS International</option>
+      <option>Tema SHS</option>
+      <option>Ridge International</option>
+      <option>Achimota School</option>
+    </select>
+  </div>
+
+  <!-- Project table -->
+  <div class="panel">
+    <div class="panel-header">
+      <span class="panel-count">7 projects</span>
+      <div class="panel-sort">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><polyline points="19 12 12 19 5 12"/></svg>
+        Sort by due date
+      </div>
+    </div>
+
+    <table class="project-table">
+      <thead>
+        <tr>
+          <th>Project</th>
+          <th>Client</th>
+          <th>Status</th>
+          <th>Due date</th>
+          <th>Budget</th>
+          <th>Hours</th>
+        </tr>
+      </thead>
+      <tbody>
+
+        <!-- Active -->
+        <tr onclick="window.location='fundi_project_detail.html'">
+          <td class="project-title-cell">
+            <div class="project-name">School management system v2</div>
+            <div class="project-proposal-ref">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              From proposal · GHS 15,000
+            </div>
+          </td>
+          <td>
+            <div class="client-cell">
+              <div class="client-avatar">AA</div>
+              <span class="client-name">Accra Academy SHS</span>
+            </div>
+          </td>
+          <td><span class="chip chip-active"><span class="chip-dot"></span>Active</span></td>
+          <td><span class="due-date overdue">30 Apr 2025</span></td>
+          <td>
+            <div class="budget-val">GHS 11,800</div>
+            <div class="burn-wrap">
+              <div class="burn-track"><div class="burn-fill burn-warn" style="width:71%"></div></div>
+              <span class="burn-pct">71% burned</span>
+            </div>
+          </td>
+          <td class="hours-cell">
+            <div class="hours-val">42.5h</div>
+            <div class="hours-sub">38h billable</div>
+          </td>
+        </tr>
+
+        <!-- Active -->
+        <tr onclick="window.location='fundi_project_detail.html'">
+          <td class="project-title-cell">
+            <div class="project-name">Student portal v2</div>
+            <div class="project-proposal-ref">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              From proposal · GHS 8,400
+            </div>
+          </td>
+          <td>
+            <div class="client-cell">
+              <div class="client-avatar" style="background:var(--b50);color:var(--b800)">GI</div>
+              <span class="client-name">GIS International</span>
+            </div>
+          </td>
+          <td><span class="chip chip-active"><span class="chip-dot"></span>Active</span></td>
+          <td><span class="due-date soon">15 May 2025</span></td>
+          <td>
+            <div class="budget-val">GHS 8,400</div>
+            <div class="burn-wrap">
+              <div class="burn-track"><div class="burn-fill burn-ok" style="width:30%"></div></div>
+              <span class="burn-pct">30% burned</span>
+            </div>
+          </td>
+          <td class="hours-cell">
+            <div class="hours-val">18h</div>
+            <div class="hours-sub">18h billable</div>
+          </td>
+        </tr>
+
+        <!-- Planning -->
+        <tr onclick="window.location='fundi_project_detail.html'">
+          <td class="project-title-cell">
+            <div class="project-name">Library management system</div>
+            <div class="project-proposal-ref">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              From proposal · GHS 6,200
+            </div>
+          </td>
+          <td>
+            <div class="client-cell">
+              <div class="client-avatar" style="background:var(--t50);color:var(--t800)">RI</div>
+              <span class="client-name">Ridge International</span>
+            </div>
+          </td>
+          <td><span class="chip chip-planning"><span class="chip-dot"></span>Planning</span></td>
+          <td><span class="due-date">20 Jun 2025</span></td>
+          <td>
+            <div class="budget-val">GHS 6,200</div>
+            <div class="burn-wrap">
+              <div class="burn-track"><div class="burn-fill burn-ok" style="width:5%"></div></div>
+              <span class="burn-pct">5% burned</span>
+            </div>
+          </td>
+          <td class="hours-cell">
+            <div class="hours-val">2h</div>
+            <div class="hours-sub">0h billable</div>
+          </td>
+        </tr>
+
+        <!-- Planning -->
+        <tr onclick="window.location='fundi_project_detail.html'">
+          <td class="project-title-cell">
+            <div class="project-name">Payroll integration module</div>
+            <div class="project-proposal-ref">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              From proposal · GHS 9,500
+            </div>
+          </td>
+          <td>
+            <div class="client-cell">
+              <div class="client-avatar" style="background:var(--a50);color:var(--a600)">AS</div>
+              <span class="client-name">Achimota School</span>
+            </div>
+          </td>
+          <td><span class="chip chip-planning"><span class="chip-dot"></span>Planning</span></td>
+          <td><span class="due-date">1 Jul 2025</span></td>
+          <td>
+            <div class="budget-val">GHS 9,500</div>
+            <div class="burn-wrap">
+              <div class="burn-track"><div class="burn-fill burn-ok" style="width:0%"></div></div>
+              <span class="burn-pct">0% burned</span>
+            </div>
+          </td>
+          <td class="hours-cell">
+            <div class="hours-val">0h</div>
+            <div class="hours-sub">not started</div>
+          </td>
+        </tr>
+
+        <!-- On hold -->
+        <tr onclick="window.location='fundi_project_detail.html'">
+          <td class="project-title-cell">
+            <div class="project-name">Fee collection module</div>
+            <div class="project-proposal-ref">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              From proposal · GHS 7,800
+            </div>
+          </td>
+          <td>
+            <div class="client-cell">
+              <div class="client-avatar" style="background:var(--r50);color:var(--r800)">TS</div>
+              <span class="client-name">Tema SHS</span>
+            </div>
+          </td>
+          <td><span class="chip chip-hold"><span class="chip-dot"></span>On hold</span></td>
+          <td><span class="due-date soon">1 Jun 2025</span></td>
+          <td>
+            <div class="budget-val">GHS 7,800</div>
+            <div class="burn-wrap">
+              <div class="burn-track"><div class="burn-fill burn-warn" style="width:15%"></div></div>
+              <span class="burn-pct">15% burned</span>
+            </div>
+          </td>
+          <td class="hours-cell">
+            <div class="hours-val">8h</div>
+            <div class="hours-sub">8h billable</div>
+          </td>
+        </tr>
+
+        <!-- Done -->
+        <tr onclick="window.location='fundi_project_detail.html'">
+          <td class="project-title-cell">
+            <div class="project-name">School management system v1</div>
+            <div class="project-proposal-ref">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              From proposal · GHS 12,000
+            </div>
+          </td>
+          <td>
+            <div class="client-cell">
+              <div class="client-avatar">AA</div>
+              <span class="client-name">Accra Academy SHS</span>
+            </div>
+          </td>
+          <td><span class="chip chip-done"><span class="chip-dot"></span>Done</span></td>
+          <td><span class="due-date" style="color:var(--ink3)">Dec 2024</span></td>
+          <td>
+            <div class="budget-val">GHS 12,000</div>
+            <div class="burn-wrap">
+              <div class="burn-track"><div class="burn-fill burn-ok" style="width:88%"></div></div>
+              <span class="burn-pct">88% burned</span>
+            </div>
+          </td>
+          <td class="hours-cell">
+            <div class="hours-val">61h</div>
+            <div class="hours-sub">58h billable</div>
+          </td>
+        </tr>
+
+        <!-- Done -->
+        <tr onclick="window.location='fundi_project_detail.html'">
+          <td class="project-title-cell">
+            <div class="project-name">Results management portal</div>
+            <div class="project-proposal-ref">
+              <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+              From proposal · GHS 5,400
+            </div>
+          </td>
+          <td>
+            <div class="client-cell">
+              <div class="client-avatar" style="background:var(--t50);color:var(--t800)">RI</div>
+              <span class="client-name">Ridge International</span>
+            </div>
+          </td>
+          <td><span class="chip chip-done"><span class="chip-dot"></span>Done</span></td>
+          <td><span class="due-date" style="color:var(--ink3)">Oct 2024</span></td>
+          <td>
+            <div class="budget-val">GHS 5,400</div>
+            <div class="burn-wrap">
+              <div class="burn-track"><div class="burn-fill burn-ok" style="width:94%"></div></div>
+              <span class="burn-pct">94% burned</span>
+            </div>
+          </td>
+          <td class="hours-cell">
+            <div class="hours-val">16h</div>
+            <div class="hours-sub">15h billable</div>
+          </td>
+        </tr>
+
+      </tbody>
+    </table>
+
+    <!-- Pagination -->
+    <div class="pagination">
+      <span class="page-info">Showing 7 of 7 projects</span>
+      <div class="page-btns">
+        <button class="page-btn" disabled>← Prev</button>
+        <button class="page-btn active">1</button>
+        <button class="page-btn" disabled>Next →</button>
+      </div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

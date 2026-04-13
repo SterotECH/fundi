@@ -1,0 +1,315 @@
+
+<style>
+:root{
+  --p50:#EEEDFE;--p100:#CECBF6;--p200:#AFA9EC;--p400:#7F77DD;--p600:#534AB7;--p800:#3C3489;
+  --t50:#E1F5EE;--t400:#1D9E75;--t600:#0F6E56;--t800:#085041;
+  --a50:#FAEEDA;--a400:#BA7517;--a600:#854F0B;
+  --r50:#FCEBEB;--r400:#E24B4A;--r800:#791F1F;
+  --b50:#E6F1FB;--b400:#378ADD;--b800:#0C447C;
+  --g50:#F1EFE8;--g100:#D3D1C7;--g400:#888780;--g600:#5F5E5A;
+  --glass:rgba(255,255,255,0.78);
+  --glass-b:rgba(255,255,255,0.6);
+  --page:#F4F3FC;
+  --ink:#1a1720;--ink2:#5a5580;--ink3:#9390b0;
+  --bdr:rgba(180,176,220,0.3);
+  --bdr-focus:rgba(83,74,183,0.45);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--page);color:var(--ink);font-size:14px;line-height:1.5;min-height:680px}
+
+.layout{display:flex;height:100%;min-height:680px;position:relative}
+.backdrop{flex:1;padding:24px;opacity:.4;pointer-events:none;overflow:hidden}
+.ghost-row{height:48px;background:var(--glass);border:1px solid var(--glass-b);border-radius:12px;margin-bottom:8px;backdrop-filter:blur(4px)}
+
+.drawer{width:420px;flex-shrink:0;background:var(--glass);border-left:1px solid var(--glass-b);backdrop-filter:blur(20px);display:flex;flex-direction:column;min-height:680px}
+
+.drawer-header{padding:20px 24px 0;border-bottom:1px solid var(--bdr);padding-bottom:18px;flex-shrink:0}
+.drawer-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:4px}
+.drawer-title{font-size:17px;font-weight:700;letter-spacing:-.01em;color:var(--ink)}
+.close-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--bdr);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink3);transition:all .13s}
+.close-btn:hover{background:var(--r50);border-color:rgba(226,75,74,.2);color:var(--r800)}
+.drawer-sub{font-size:12px;color:var(--ink3)}
+
+.drawer-body{flex:1;overflow-y:auto;padding:20px 24px}
+.drawer-body::-webkit-scrollbar{width:4px}
+.drawer-body::-webkit-scrollbar-track{background:transparent}
+.drawer-body::-webkit-scrollbar-thumb{background:var(--bdr);border-radius:2px}
+
+.drawer-footer{padding:16px 24px;border-top:1px solid var(--bdr);flex-shrink:0;display:flex;gap:8px;align-items:center}
+
+.field{margin-bottom:18px}
+.field:last-child{margin-bottom:0}
+.label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.required{color:var(--p400);font-size:13px;line-height:1}
+.optional{font-size:10px;font-weight:500;color:var(--ink3);letter-spacing:.04em;background:var(--g50);padding:1px 6px;border-radius:4px;text-transform:none}
+
+.input{width:100%;background:rgba(255,255,255,0.85);border:1px solid var(--bdr);border-radius:10px;padding:9px 12px;font-size:13px;color:var(--ink);outline:none;transition:border-color .15s,box-shadow .15s;font-family:inherit}
+.input:focus{border-color:var(--bdr-focus);box-shadow:0 0 0 3px rgba(83,74,183,.08)}
+.input::placeholder{color:var(--ink3)}
+.input.error{border-color:rgba(226,75,74,.4);background:rgba(252,235,235,.3)}
+.input.error:focus{border-color:var(--r400);box-shadow:0 0 0 3px rgba(226,75,74,.08)}
+
+.input-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+
+.error-msg{font-size:11px;color:var(--r800);margin-top:5px;display:flex;align-items:center;gap:4px}
+.error-msg svg{width:11px;height:11px;flex-shrink:0}
+
+.pill-group{display:flex;flex-wrap:wrap;gap:6px}
+.pill-opt{padding:6px 13px;border-radius:20px;border:1px solid var(--bdr);background:rgba(255,255,255,.7);font-size:12px;font-weight:600;color:var(--ink2);cursor:pointer;transition:all .14s;user-select:none}
+.pill-opt:hover{background:var(--p50);border-color:var(--p100);color:var(--p800)}
+.pill-opt.selected{background:var(--p50);border-color:var(--p200);color:var(--p800)}
+
+.pill-opt.src-referral.selected{background:var(--a50);border-color:rgba(186,117,23,.3);color:var(--a600)}
+.pill-opt.src-cold.selected{background:var(--b50);border-color:rgba(55,138,221,.3);color:var(--b800)}
+.pill-opt.src-conference.selected{background:var(--p50);border-color:var(--p100);color:var(--p800)}
+.pill-opt.src-partnership.selected{background:var(--t50);border-color:rgba(29,158,117,.3);color:var(--t800)}
+
+.status-group{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.status-opt{padding:8px 10px;border-radius:10px;border:1px solid var(--bdr);background:rgba(255,255,255,.7);font-size:12px;font-weight:600;color:var(--ink2);cursor:pointer;transition:all .14s;text-align:center;user-select:none}
+.status-opt:hover{border-color:rgba(83,74,183,.2)}
+.status-opt.sel-new{background:var(--b50);border-color:rgba(55,138,221,.35);color:var(--b800)}
+.status-opt.sel-contacted{background:var(--p50);border-color:var(--p100);color:var(--p800)}
+.status-opt.sel-qualified{background:var(--t50);border-color:rgba(29,158,117,.3);color:var(--t800)}
+.status-opt.sel-dead{background:var(--g50);border-color:rgba(136,135,128,.3);color:var(--g600)}
+
+textarea.input{resize:vertical;min-height:72px;line-height:1.6}
+
+.divider{height:1px;background:var(--bdr);margin:20px 0}
+.section-label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.section-label::after{content:'';flex:1;height:1px;background:var(--bdr)}
+
+.btn-cancel{flex:1;background:transparent;border:1px solid var(--bdr);border-radius:10px;padding:9px 16px;font-size:13px;font-weight:600;color:var(--ink2);cursor:pointer;transition:all .14s}
+.btn-cancel:hover{background:rgba(0,0,0,.04)}
+.btn-save{flex:2;background:var(--p600);border:none;border-radius:10px;padding:9px 16px;font-size:13px;font-weight:700;color:#fff;cursor:pointer;transition:background .14s;display:flex;align-items:center;justify-content:center;gap:6px}
+.btn-save:hover{background:var(--p800)}
+.btn-save:disabled{background:var(--p200);cursor:not-allowed}
+.btn-save svg{width:14px;height:14px}
+
+.hint{font-size:11px;color:var(--ink3);margin-top:5px;line-height:1.5}
+
+.success-banner{background:var(--t50);border:1px solid rgba(29,158,117,.25);border-radius:10px;padding:10px 14px;font-size:13px;color:var(--t800);display:flex;align-items:center;gap:8px;margin-bottom:16px}
+.success-banner svg{width:15px;height:15px;flex-shrink:0;color:var(--t600)}
+
+.char-count{font-size:10px;color:var(--ink3);text-align:right;margin-top:3px}
+</style>
+
+<h2 class="sr-only">New lead drawer form for Fundi CRM — fields for school name, contact, source, status, and notes</h2>
+
+<div class="layout">
+  <div class="backdrop">
+    <div class="ghost-row" style="width:100%"></div>
+    <div class="ghost-row" style="width:90%"></div>
+    <div class="ghost-row" style="width:95%"></div>
+    <div class="ghost-row" style="width:85%;opacity:.6"></div>
+    <div class="ghost-row" style="width:92%;opacity:.4"></div>
+    <div class="ghost-row" style="width:88%;opacity:.2"></div>
+  </div>
+
+  <div class="drawer">
+    <div class="drawer-header">
+      <div class="drawer-top">
+        <span class="drawer-title">New lead</span>
+        <button class="close-btn" onclick="sendPrompt('Close the new lead drawer and go back to the leads list')">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+        </button>
+      </div>
+      <div class="drawer-sub">Add a prospect school to the pipeline</div>
+    </div>
+
+    <div class="drawer-body" id="drawer-body">
+      <div id="success-msg" style="display:none" class="success-banner">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+        Lead saved — redirecting to lead detail…
+      </div>
+
+      <div class="section-label">School details</div>
+
+      <div class="field">
+        <div class="label">School name <span class="required">*</span></div>
+        <input class="input" id="name" placeholder="e.g. Prempeh College" oninput="clearErr('name');updateChar('name',60)" maxlength="60">
+        <div class="char-count"><span id="name-chars">0</span> / 60</div>
+        <div class="error-msg" id="name-err" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          School name is required
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="label">School type <span class="optional">optional</span></div>
+        <div class="pill-group" id="type-group">
+          <div class="pill-opt" onclick="togglePill(this,'type-group','single')">SHS</div>
+          <div class="pill-opt" onclick="togglePill(this,'type-group','single')">JHS</div>
+          <div class="pill-opt" onclick="togglePill(this,'type-group','single')">International</div>
+          <div class="pill-opt" onclick="togglePill(this,'type-group','single')">University</div>
+          <div class="pill-opt" onclick="togglePill(this,'type-group','single')">Polytechnic</div>
+          <div class="pill-opt" onclick="togglePill(this,'type-group','single')">Other</div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="section-label">Contact person</div>
+
+      <div class="field">
+        <div class="label">Full name <span class="required">*</span></div>
+        <input class="input" id="contact" placeholder="e.g. Mrs. Abena Mensah" oninput="clearErr('contact')">
+        <div class="error-msg" id="contact-err" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Contact name is required
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="input-row">
+          <div>
+            <div class="label">Phone</div>
+            <input class="input" id="phone" placeholder="+233 20 …" oninput="clearErr('phone')">
+            <div class="error-msg" id="phone-err" style="display:none">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              Phone or email required
+            </div>
+          </div>
+          <div>
+            <div class="label">Email <span class="optional">optional</span></div>
+            <input class="input" id="email" placeholder="contact@school.edu.gh" oninput="clearErr('phone')">
+          </div>
+        </div>
+        <div class="hint">At least one contact method required — phone or email.</div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="section-label">Pipeline</div>
+
+      <div class="field">
+        <div class="label">How did you find them? <span class="required">*</span></div>
+        <div class="pill-group" id="source-group">
+          <div class="pill-opt src-referral" onclick="togglePill(this,'source-group','single');clearErr('source')">Referral</div>
+          <div class="pill-opt src-cold" onclick="togglePill(this,'source-group','single');clearErr('source')">Cold outreach</div>
+          <div class="pill-opt src-conference" onclick="togglePill(this,'source-group','single');clearErr('source')">Conference / event</div>
+          <div class="pill-opt src-partnership" onclick="togglePill(this,'source-group','single');clearErr('source')">Partnership</div>
+          <div class="pill-opt src-cold" onclick="togglePill(this,'source-group','single');clearErr('source')">Social media</div>
+          <div class="pill-opt src-cold" onclick="togglePill(this,'source-group','single');clearErr('source')">Walk-in / direct</div>
+        </div>
+        <div class="error-msg" id="source-err" style="display:none">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+          Select a source
+        </div>
+      </div>
+
+      <div class="field">
+        <div class="label">Initial status</div>
+        <div class="status-group" id="status-group">
+          <div class="pill-opt status-opt sel-new selected" data-val="new" onclick="selectStatus(this)">
+            <div style="font-size:11px;margin-bottom:1px">New</div>
+            <div style="font-size:10px;font-weight:400;opacity:.7">Just discovered</div>
+          </div>
+          <div class="pill-opt status-opt" data-val="contacted" onclick="selectStatus(this)">
+            <div style="font-size:11px;margin-bottom:1px">Contacted</div>
+            <div style="font-size:10px;font-weight:400;opacity:.7">Already reached out</div>
+          </div>
+          <div class="pill-opt status-opt" data-val="qualified" onclick="selectStatus(this)">
+            <div style="font-size:11px;margin-bottom:1px">Qualified</div>
+            <div style="font-size:10px;font-weight:400;opacity:.7">Budget confirmed</div>
+          </div>
+          <div class="pill-opt status-opt" data-val="dead" onclick="selectStatus(this)">
+            <div style="font-size:11px;margin-bottom:1px">Dead</div>
+            <div style="font-size:10px;font-weight:400;opacity:.7">Not a fit</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+      <div class="section-label">Notes <span class="optional" style="margin-left:4px">optional</span></div>
+
+      <div class="field">
+        <textarea class="input" id="notes" placeholder="Context about this lead — e.g. who referred them, what they're interested in, budget signals…" maxlength="500" oninput="updateChar('notes',500)"></textarea>
+        <div class="char-count"><span id="notes-chars">0</span> / 500</div>
+      </div>
+
+    </div>
+
+    <div class="drawer-footer">
+      <button class="btn-cancel" onclick="sendPrompt('Discard the new lead form and go back to the leads list')">Cancel</button>
+      <button class="btn-save" id="save-btn" onclick="saveLead()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+        Save lead
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+function togglePill(el, groupId, mode){
+  const group=document.getElementById(groupId);
+  if(mode==='single'){
+    group.querySelectorAll('.pill-opt').forEach(p=>p.classList.remove('selected'));
+    el.classList.add('selected');
+  } else {
+    el.classList.toggle('selected');
+  }
+}
+
+function selectStatus(el){
+  document.querySelectorAll('#status-group .status-opt').forEach(o=>{
+    o.className='pill-opt status-opt';
+  });
+  const val=el.dataset.val;
+  const cls={new:'sel-new',contacted:'sel-contacted',qualified:'sel-qualified',dead:'sel-dead'};
+  el.classList.add('selected',cls[val]||'');
+}
+
+function clearErr(id){
+  const el=document.getElementById(id+'-err');
+  const inp=document.getElementById(id);
+  if(el) el.style.display='none';
+  if(inp) inp.classList.remove('error');
+}
+
+function showErr(id, msg){
+  const el=document.getElementById(id+'-err');
+  const inp=document.getElementById(id);
+  if(el){ el.style.display='flex'; if(msg) el.querySelector('svg').nextSibling.textContent=' '+msg; }
+  if(inp) inp.classList.add('error');
+}
+
+function updateChar(id, max){
+  const val=document.getElementById(id).value.length;
+  const counter=document.getElementById(id+'-chars');
+  if(counter) counter.textContent=val;
+  if(val>max*0.85) counter.style.color='var(--a600)';
+  else counter.style.color='var(--ink3)';
+}
+
+function validate(){
+  let ok=true;
+  const name=document.getElementById('name').value.trim();
+  const contact=document.getElementById('contact').value.trim();
+  const phone=document.getElementById('phone').value.trim();
+  const email=document.getElementById('email').value.trim();
+  const srcSel=document.querySelector('#source-group .selected');
+
+  if(!name){ showErr('name'); ok=false; }
+  if(!contact){ showErr('contact'); ok=false; }
+  if(!phone&&!email){ showErr('phone'); ok=false; }
+  if(!srcSel){ showErr('source'); ok=false; }
+  return ok;
+}
+
+function saveLead(){
+  if(!validate()) return;
+  const btn=document.getElementById('save-btn');
+  btn.disabled=true;
+  btn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14" style="animation:spin .7s linear infinite"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"/></svg> Saving…`;
+  const style=document.createElement('style');
+  style.textContent='@keyframes spin{to{transform:rotate(360deg)}}';
+  document.head.appendChild(style);
+  setTimeout(()=>{
+    const msg=document.getElementById('success-msg');
+    msg.style.display='flex';
+    document.getElementById('drawer-body').scrollTop=0;
+    btn.innerHTML=`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><polyline points="20 6 9 17 4 12"/></svg> Saved`;
+    btn.style.background='var(--t600)';
+    const name=document.getElementById('name').value.trim();
+    setTimeout(()=>{ sendPrompt(`Lead "${name}" was just saved — what happens next in the Fundi convert-to-client flow?`); },1200);
+  },900);
+}
+</script>

@@ -34,6 +34,18 @@ def test_login_returns_access_token(client, user):
 
 
 @pytest.mark.django_db
+def test_login_accepts_case_insensitive_email(client, user):
+    response = client.post(
+        reverse("auth-login"),
+        {"email": user.email.upper(), "password": "testpassword"},
+        content_type="application/json",
+    )
+
+    assert response.status_code == 200
+    assert "access" in response.json()
+
+
+@pytest.mark.django_db
 def test_refresh_requires_refresh_cookie(client):
     response = client.post(reverse("auth-refresh"))
 

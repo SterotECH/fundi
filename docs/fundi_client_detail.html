@@ -1,0 +1,522 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --p50:#EEEDFE;--p100:#CECBF6;--p600:#534AB7;--p800:#3C3489;
+  --t50:#E1F5EE;--t100:#9FE1CB;--t400:#1D9E75;--t600:#0F6E56;--t800:#085041;
+  --a50:#FAEEDA;--a100:#FAC775;--a400:#BA7517;--a600:#854F0B;
+  --r50:#FCEBEB;--r400:#E24B4A;--r800:#791F1F;
+  --b50:#E6F1FB;--b400:#378ADD;--b800:#0C447C;
+  --g50:#F1EFE8;--g100:#D3D1C7;--g400:#888780;--g600:#5F5E5A;
+}
+body{background:var(--color-background-tertiary);font-family:var(--font-sans);color:var(--color-text-primary);font-size:14px;line-height:1.5}
+.wrap{padding:20px 20px 48px;max-width:980px;margin:0 auto}
+
+.back{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--color-text-tertiary);margin-bottom:14px;cursor:pointer}
+.back svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5}
+
+.client-header{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:16px;padding:20px 24px;margin-bottom:12px;display:flex;align-items:flex-start;gap:18px}
+.client-avatar{width:52px;height:52px;border-radius:12px;background:#EEEDFE;display:flex;align-items:center;justify-content:center;font-size:17px;font-weight:500;color:#3C3489;flex-shrink:0;letter-spacing:-.5px}
+.ch-body{flex:1;min-width:0}
+.ch-name{font-size:20px;font-weight:500;color:var(--color-text-primary);margin-bottom:3px;line-height:1.2}
+.ch-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.ch-meta-item{display:flex;align-items:center;gap:5px;font-size:12px;color:var(--color-text-secondary)}
+.ch-meta-item svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.5;flex-shrink:0}
+.type-chip{font-size:10px;font-weight:500;padding:2px 9px;border-radius:20px}
+.chip-shs{background:#EEEDFE;color:#3C3489}
+.chip-intl{background:#E6F1FB;color:#0C447C}
+.chip-uni{background:#E1F5EE;color:#085041}
+.chip-jhs{background:#FAEEDA;color:#854F0B}
+.status-chip{font-size:10px;font-weight:500;padding:2px 9px;border-radius:20px}
+.chip-active{background:#E1F5EE;color:#085041}
+.chip-hold{background:#FAEEDA;color:#854F0B}
+.chip-won{background:#E1F5EE;color:#085041}
+.chip-sent{background:#E6F1FB;color:#0C447C}
+.chip-neg{background:#FAEEDA;color:#854F0B}
+.chip-lost{background:#FCEBEB;color:#791F1F}
+.chip-draft{background:#F1EFE8;color:#5F5E5A}
+.chip-partial{background:#FAEEDA;color:#854F0B}
+.chip-paid{background:#E1F5EE;color:#085041}
+.chip-overdue{background:#FCEBEB;color:#791F1F}
+.chip-planning{background:#E6F1FB;color:#0C447C}
+.chip-done{background:#F1EFE8;color:#5F5E5A}
+.ch-actions{display:flex;gap:7px;flex-shrink:0;align-self:flex-start}
+.btn{font-size:12px;font-weight:500;padding:6px 14px;border-radius:8px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);cursor:pointer}
+.btn:hover{background:var(--color-background-secondary)}
+.btn-primary{background:#534AB7;color:#fff;border-color:#3C3489}
+.btn-primary:hover{background:#3C3489}
+.btn-danger{color:#791F1F;border-color:#F09595}
+.btn-danger:hover{background:#FCEBEB}
+
+.stat-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:12px}
+.stat-tile{background:var(--color-background-secondary);border-radius:10px;padding:11px 14px}
+.st-label{font-size:10px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:3px}
+.st-val{font-size:18px;font-weight:500;color:var(--color-text-primary);line-height:1}
+.st-sub{font-size:11px;color:var(--color-text-tertiary);margin-top:2px}
+.st-sub.good{color:#0F6E56}
+.st-sub.warn{color:#854F0B}
+.st-sub.bad{color:#A32D2D}
+
+.layout{display:grid;grid-template-columns:1fr 304px;gap:12px;align-items:start}
+.main-col{display:flex;flex-direction:column;gap:12px}
+.side-col{display:flex;flex-direction:column;gap:12px}
+
+.tab-bar{display:flex;gap:2px;padding:0 0 0 0;margin-bottom:0;border-bottom:0.5px solid var(--color-border-tertiary)}
+.tab{font-size:13px;font-weight:400;padding:9px 14px;color:var(--color-text-secondary);cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-0.5px;transition:all .15s;display:flex;align-items:center;gap:5px}
+.tab.active{color:#534AB7;border-bottom-color:#534AB7;font-weight:500}
+.tab:hover:not(.active){color:var(--color-text-primary)}
+.tab-count{font-size:10px;background:var(--color-background-secondary);color:var(--color-text-tertiary);padding:1px 6px;border-radius:10px}
+.tab.active .tab-count{background:#EEEDFE;color:#534AB7}
+
+.panel{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:14px;overflow:hidden}
+.panel-top{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.panel-title{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+.panel-cta{font-size:11px;color:#534AB7;cursor:pointer;font-weight:500}
+.panel-body{padding:14px 16px}
+
+.tab-panel{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:0 0 14px 14px;border-top:none}
+.tab-panel-head{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:14px 14px 0 0;border-bottom:none}
+
+.row{display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:0.5px solid var(--color-border-tertiary);cursor:pointer}
+.row:last-child{border-bottom:none}
+.row:hover{background:var(--color-background-secondary)}
+
+.proposal-row{display:flex;align-items:flex-start;gap:10px;padding:10px 16px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.proposal-row:last-child{border-bottom:none}
+.pr-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;margin-top:4px}
+.pr-body{flex:1;min-width:0}
+.pr-title{font-size:13px;color:var(--color-text-primary);font-weight:500;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pr-meta{font-size:11px;color:var(--color-text-tertiary);display:flex;gap:8px;flex-wrap:wrap}
+.pr-right{text-align:right;flex-shrink:0}
+.pr-amt{font-size:13px;font-weight:500;color:var(--color-text-primary)}
+.pr-date{font-size:11px;color:var(--color-text-tertiary);margin-top:2px}
+.pr-date.urgent{color:#E24B4A}
+
+.project-row{display:flex;align-items:flex-start;gap:10px;padding:10px 16px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.project-row:last-child{border-bottom:none}
+.proj-icon{width:30px;height:30px;border-radius:8px;background:#EEEDFE;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.proj-icon svg{width:14px;height:14px;stroke:#534AB7;fill:none;stroke-width:1.5}
+.proj-body{flex:1;min-width:0}
+.proj-name{font-size:13px;font-weight:500;color:var(--color-text-primary);margin-bottom:2px}
+.proj-meta{font-size:11px;color:var(--color-text-tertiary)}
+.proj-progress{height:4px;background:var(--color-background-secondary);border-radius:2px;margin-top:6px;overflow:hidden;max-width:200px}
+.proj-fill{height:100%;border-radius:2px;background:#1D9E75}
+.proj-right{text-align:right;flex-shrink:0}
+
+.inv-row{display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.inv-row:last-child{border-bottom:none}
+.inv-num{font-size:11px;font-family:var(--font-mono);color:var(--color-text-tertiary);width:96px;flex-shrink:0}
+.inv-desc{font-size:13px;color:var(--color-text-primary);flex:1}
+.inv-amt{font-size:13px;font-weight:500;color:var(--color-text-primary);flex-shrink:0}
+
+.pay-row{display:flex;align-items:center;gap:10px;padding:9px 16px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.pay-row:last-child{border-bottom:none}
+.pay-method-badge{font-size:10px;font-weight:500;padding:2px 8px;border-radius:6px;flex-shrink:0;min-width:76px;text-align:center}
+.momo{background:#FAEEDA;color:#854F0B}
+.bank{background:#E6F1FB;color:#0C447C}
+.cash{background:#F1EFE8;color:#5F5E5A}
+.pay-ref{font-size:11px;font-family:var(--font-mono);color:var(--color-text-tertiary);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pay-date{font-size:11px;color:var(--color-text-tertiary);flex-shrink:0;width:60px;text-align:right}
+.pay-amt{font-size:13px;font-weight:500;color:#0F6E56;flex-shrink:0;width:80px;text-align:right}
+
+.tl-row{display:flex;align-items:center;gap:10px;padding:8px 16px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.tl-row:last-child{border-bottom:none}
+.tl-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.tl-date{font-size:11px;color:var(--color-text-tertiary);width:52px;flex-shrink:0;font-family:var(--font-mono)}
+.tl-proj{font-size:11px;color:#534AB7;width:110px;flex-shrink:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.tl-desc{font-size:13px;color:var(--color-text-primary);flex:1}
+.tl-hrs{font-size:13px;font-weight:500;color:#534AB7;flex-shrink:0}
+.tl-badge{font-size:9px;font-weight:500;padding:1px 6px;border-radius:10px;flex-shrink:0}
+.bill{background:#E1F5EE;color:#085041}
+.nobill{background:#F1EFE8;color:#5F5E5A}
+
+.side-info-block{background:var(--color-background-secondary);border-radius:10px;padding:11px 13px;margin-bottom:8px}
+.sib-label{font-size:10px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-tertiary);margin-bottom:3px}
+.sib-val{font-size:13px;color:var(--color-text-primary)}
+.sib-val.link{color:#534AB7;cursor:pointer}
+
+.notes-block{background:var(--color-background-secondary);border-radius:10px;padding:11px 13px;font-size:12px;color:var(--color-text-secondary);line-height:1.6}
+
+.ai-card{background:#EEEDFE;border-radius:12px;padding:12px 14px;display:flex;gap:10px;align-items:flex-start}
+.ai-icon{width:28px;height:28px;border-radius:7px;background:#534AB7;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ai-icon svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:1.5}
+.ai-body{flex:1}
+.ai-msg{font-size:12px;color:#3C3489;line-height:1.5}
+.ai-actions{display:flex;flex-direction:column;gap:5px;margin-top:8px}
+.ai-btn{font-size:11px;font-weight:500;color:#534AB7;cursor:pointer;text-decoration:none;display:flex;align-items:center;gap:3px}
+
+.quick-actions{display:flex;flex-direction:column;gap:5px}
+.qa{width:100%;text-align:left;font-size:12px;font-weight:500;padding:8px 11px;border-radius:8px;border:0.5px solid var(--color-border-tertiary);background:var(--color-background-primary);color:var(--color-text-primary);cursor:pointer;display:flex;align-items:center;gap:7px}
+.qa:hover{background:var(--color-background-secondary)}
+.qa svg{width:14px;height:14px;stroke:var(--color-text-tertiary);fill:none;stroke-width:1.5;flex-shrink:0}
+.qa-arr{margin-left:auto;color:var(--color-text-tertiary);font-size:11px}
+
+.empty-state{padding:24px 16px;text-align:center;color:var(--color-text-tertiary);font-size:13px}
+
+.section-divider{height:0.5px;background:var(--color-border-tertiary);margin:0 16px}
+</style>
+
+<div class="wrap">
+<h2 class="sr-only">Fundi client detail page for Accra Academy Senior High School showing proposals, projects, invoices, payments, and time logs</h2>
+
+<div class="back">
+  <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+  Clients
+</div>
+
+<div class="client-header">
+  <div class="client-avatar">AA</div>
+  <div class="ch-body">
+    <div class="ch-name">Accra Academy Senior High School</div>
+    <div class="ch-meta">
+      <span class="type-chip chip-shs">Senior High School</span>
+      <div class="ch-meta-item">
+        <svg viewBox="0 0 24 24"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        Mrs. Abena Mensah
+      </div>
+      <div class="ch-meta-item">
+        <svg viewBox="0 0 24 24"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07A19.5 19.5 0 0 1 4.99 12a19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 3.9 1.27h3a2 2 0 0 1 2 1.72c.127.96.361 1.903.7 2.81a2 2 0 0 1-.45 2.11L8.09 9a16 16 0 0 0 6.91 6.91l1.27-1.27a2 2 0 0 1 2.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+        +233 30 277 1234
+      </div>
+      <div class="ch-meta-item">
+        <svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+        finance@accraacademy.edu.gh
+      </div>
+      <div class="ch-meta-item">
+        <svg viewBox="0 0 24 24"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"/><circle cx="12" cy="10" r="3"/></svg>
+        Accra, Greater Accra
+      </div>
+    </div>
+    <div style="font-size:12px;color:var(--color-text-tertiary)">Client since Feb 2024 · Finance Office contact</div>
+  </div>
+  <div class="ch-actions">
+    <button class="btn btn-danger">Archive</button>
+    <button class="btn">Edit</button>
+    <button class="btn btn-primary">+ New proposal</button>
+  </div>
+</div>
+
+<div class="stat-strip">
+  <div class="stat-tile">
+    <div class="st-label">Total invoiced</div>
+    <div class="st-val">GHS 15k</div>
+    <div class="st-sub">1 invoice</div>
+  </div>
+  <div class="stat-tile">
+    <div class="st-label">Collected</div>
+    <div class="st-val">GHS 5k</div>
+    <div class="st-sub warn">33% paid</div>
+  </div>
+  <div class="stat-tile">
+    <div class="st-label">Outstanding</div>
+    <div class="st-val">GHS 10k</div>
+    <div class="st-sub bad">1 partial invoice</div>
+  </div>
+  <div class="stat-tile">
+    <div class="st-label">Hours logged</div>
+    <div class="st-val">42.5h</div>
+    <div class="st-sub good">38h billable</div>
+  </div>
+  <div class="stat-tile">
+    <div class="st-label">Win rate</div>
+    <div class="st-val">100%</div>
+    <div class="st-sub good">1 of 1 won</div>
+  </div>
+</div>
+
+<div class="layout">
+  <div class="main-col">
+
+    <div>
+      <div class="tab-panel-head">
+        <div class="tab-bar" style="padding:0 8px">
+          <div class="tab active">Proposals <span class="tab-count">3</span></div>
+          <div class="tab">Projects <span class="tab-count">1</span></div>
+          <div class="tab">Invoices <span class="tab-count">1</span></div>
+          <div class="tab">Payments <span class="tab-count">2</span></div>
+          <div class="tab">Time <span class="tab-count">28</span></div>
+        </div>
+      </div>
+      <div class="tab-panel">
+
+        <div class="panel-top" style="border-top:none">
+          <div class="panel-title" style="font-size:12px;color:var(--color-text-tertiary)">3 proposals · 1 won · 0 lost · 2 earlier</div>
+          <span class="panel-cta" onclick="sendPrompt('Create a new proposal for Accra Academy Senior High School')">+ New proposal ↗</span>
+        </div>
+
+        <div class="proposal-row">
+          <div class="pr-dot" style="background:#1D9E75"></div>
+          <div class="pr-body">
+            <div class="pr-title">School management system v2</div>
+            <div class="pr-meta">
+              <span>GHS 15,000</span>
+              <span>Won 28 Jan 2025</span>
+              <span>→ converted to project</span>
+            </div>
+          </div>
+          <div class="pr-right">
+            <div class="pr-amt">GHS 15,000</div>
+            <span class="status-chip chip-won" style="font-size:10px">Won</span>
+          </div>
+        </div>
+
+        <div class="proposal-row">
+          <div class="pr-dot" style="background:#378ADD"></div>
+          <div class="pr-body">
+            <div class="pr-title">Staff payroll automation module — standalone</div>
+            <div class="pr-meta">
+              <span>GHS 4,500</span>
+              <span>Sent 2 Apr 2025</span>
+            </div>
+          </div>
+          <div class="pr-right">
+            <div class="pr-amt">GHS 4,500</div>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px;margin-top:3px">
+              <span class="status-chip chip-sent" style="font-size:10px">Sent</span>
+              <span class="pr-date urgent">Due 15 May</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="proposal-row">
+          <div class="pr-dot" style="background:#D3D1C7"></div>
+          <div class="pr-body">
+            <div class="pr-title">Student portal v1 — initial scoping</div>
+            <div class="pr-meta">
+              <span>GHS 3,200</span>
+              <span>Jan 2024</span>
+              <span>Superseded by v2</span>
+            </div>
+          </div>
+          <div class="pr-right">
+            <div class="pr-amt">GHS 3,200</div>
+            <span class="status-chip chip-lost" style="font-size:10px">Lost</span>
+          </div>
+        </div>
+
+        <div style="padding:10px 16px;border-top:0.5px solid var(--color-border-tertiary)">
+          <div style="display:flex;align-items:center;gap:10px">
+            <div style="flex:1;height:5px;background:var(--color-background-secondary);border-radius:3px;overflow:hidden">
+              <div style="width:100%;height:100%;background:#1D9E75;border-radius:3px"></div>
+            </div>
+            <span style="font-size:11px;color:var(--color-text-tertiary)">Pipeline: GHS 4,500 open · GHS 15,000 won lifetime</span>
+          </div>
+        </div>
+
+        <div style="padding:14px 16px 10px;border-top:0.5px solid var(--color-border-tertiary)">
+          <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:10px">Active project</div>
+          <div class="project-row" style="padding:0;border:none">
+            <div class="proj-icon"><svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg></div>
+            <div class="proj-body">
+              <div class="proj-name">School management system v2</div>
+              <div class="proj-meta">Active · 42.5h logged · Due 30 Apr 2025</div>
+              <div class="proj-progress"><div class="proj-fill" style="width:65%"></div></div>
+            </div>
+            <div class="proj-right">
+              <span class="status-chip chip-active" style="font-size:10px">Active</span>
+              <div style="font-size:11px;color:var(--color-text-tertiary);margin-top:3px">65% complete</div>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding:14px 16px 10px;border-top:0.5px solid var(--color-border-tertiary)">
+          <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:10px">Invoices</div>
+          <div class="inv-row" style="padding:8px 0;border:none;display:flex;align-items:center;gap:10px">
+            <span class="inv-num">STERO-2025-0007</span>
+            <span class="inv-desc">School management system — full scope</span>
+            <span class="inv-amt">GHS 15,000</span>
+            <div style="display:flex;flex-direction:column;align-items:flex-end;gap:2px">
+              <span class="status-chip chip-partial" style="font-size:10px">Partial</span>
+              <span style="font-size:11px;color:var(--color-text-tertiary)">GHS 5k paid</span>
+            </div>
+          </div>
+        </div>
+
+        <div style="padding:14px 16px;border-top:0.5px solid var(--color-border-tertiary)">
+          <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:10px">Payment history</div>
+          <div class="pay-row" style="padding:6px 0;border:none">
+            <span class="pay-method-badge momo">MTN MoMo</span>
+            <span class="pay-ref">GH-MOMO-2025041500423</span>
+            <span class="pay-date">15 Apr</span>
+            <span class="pay-amt">+GHS 3,000</span>
+          </div>
+          <div class="pay-row" style="padding:6px 0;border:none">
+            <span class="pay-method-badge bank">Bank · GCB</span>
+            <span class="pay-ref">GCB-TXN-88234912</span>
+            <span class="pay-date">22 Apr</span>
+            <span class="pay-amt">+GHS 2,000</span>
+          </div>
+          <div style="margin-top:10px;background:var(--color-background-secondary);border-radius:8px;padding:8px 12px;display:flex;align-items:center;gap:10px">
+            <div style="flex:1;height:5px;background:var(--color-border-tertiary);border-radius:3px;overflow:hidden">
+              <div style="width:33%;height:100%;background:#1D9E75;border-radius:3px"></div>
+            </div>
+            <span style="font-size:11px;color:var(--color-text-tertiary)">GHS 5,000 of 15,000 · GHS 10,000 remaining</span>
+          </div>
+        </div>
+
+        <div style="padding:14px 16px;border-top:0.5px solid var(--color-border-tertiary)">
+          <div style="font-size:12px;font-weight:500;color:var(--color-text-secondary);margin-bottom:10px">Time logs — recent</div>
+          <div class="tl-row" style="padding:6px 0;border:none">
+            <div class="tl-dot" style="background:#1D9E75"></div>
+            <span class="tl-date">29 Apr</span>
+            <span class="tl-proj">SMS v2</span>
+            <span class="tl-desc">Fee payment module — MoMo webhook</span>
+            <span class="tl-hrs">3.5h</span>
+            <span class="tl-badge bill">billable</span>
+          </div>
+          <div class="tl-row" style="padding:6px 0;border:none">
+            <div class="tl-dot" style="background:#1D9E75"></div>
+            <span class="tl-date">28 Apr</span>
+            <span class="tl-proj">SMS v2</span>
+            <span class="tl-desc">Student dashboard — responsive layout</span>
+            <span class="tl-hrs">5h</span>
+            <span class="tl-badge bill">billable</span>
+          </div>
+          <div class="tl-row" style="padding:6px 0;border:none">
+            <div class="tl-dot" style="background:#D3D1C7"></div>
+            <span class="tl-date">27 Apr</span>
+            <span class="tl-proj">SMS v2</span>
+            <span class="tl-desc">Requirements call with Mrs. Mensah</span>
+            <span class="tl-hrs">1h</span>
+            <span class="tl-badge nobill">non-billable</span>
+          </div>
+          <div style="margin-top:10px;text-align:center">
+            <button class="btn" style="font-size:11px">View all 28 time entries</button>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <div class="side-col">
+
+    <div class="panel">
+      <div class="panel-top">
+        <div class="panel-title">Contact details</div>
+        <span class="panel-cta">Edit</span>
+      </div>
+      <div class="panel-body" style="padding:12px 14px">
+        <div class="side-info-block">
+          <div class="sib-label">Contact person</div>
+          <div class="sib-val" style="font-weight:500">Mrs. Abena Mensah</div>
+          <div class="sib-val" style="font-size:12px;color:var(--color-text-tertiary);margin-top:1px">Finance Office</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-bottom:8px">
+          <div class="side-info-block" style="margin-bottom:0">
+            <div class="sib-label">Phone</div>
+            <div class="sib-val" style="font-size:12px">+233 30 277 1234</div>
+          </div>
+          <div class="side-info-block" style="margin-bottom:0">
+            <div class="sib-label">Type</div>
+            <div style="margin-top:2px"><span class="type-chip chip-shs">Senior High</span></div>
+          </div>
+        </div>
+        <div class="side-info-block">
+          <div class="sib-label">Email</div>
+          <div class="sib-val link" style="font-size:12px">finance@accraacademy.edu.gh</div>
+        </div>
+        <div class="side-info-block">
+          <div class="sib-label">Address</div>
+          <div class="sib-val" style="font-size:12px;line-height:1.5">Accra Academy Road<br>Accra, Greater Accra Region</div>
+        </div>
+        <div class="side-info-block" style="margin-bottom:0">
+          <div class="sib-label">Notes</div>
+          <div class="notes-block" style="background:none;padding:0;margin-top:3px">Prefers WhatsApp for quick updates. Payments usually come in 2 tranches — 30% upfront, balance on delivery. Useful to cc the headmaster for large invoices.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-top">
+        <div class="panel-title">Fundi insight</div>
+      </div>
+      <div style="padding:12px 14px">
+        <div class="ai-card">
+          <div class="ai-icon"><svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg></div>
+          <div class="ai-body">
+            <div class="ai-msg">GHS 10,000 outstanding on STERO-2025-0007. Invoice has been partial for 7 days — typical for this client who pays in tranches.</div>
+            <div class="ai-actions">
+              <span class="ai-btn" onclick="sendPrompt('Draft a polite payment follow-up message for Mrs. Abena Mensah at Accra Academy regarding invoice STERO-2025-0007, GHS 10,000 outstanding')">Draft payment reminder ↗</span>
+              <span class="ai-btn" onclick="sendPrompt('Summarise the full relationship with Accra Academy SHS — total revenue, proposals, active projects, and outstanding balances')">Summarise this client ↗</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-top">
+        <div class="panel-title">Quick actions</div>
+      </div>
+      <div style="padding:10px 12px;display:flex;flex-direction:column;gap:5px">
+        <button class="qa" onclick="sendPrompt('Create a new proposal for Accra Academy Senior High School')">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          New proposal ↗
+          <span class="qa-arr">→</span>
+        </button>
+        <button class="qa" onclick="sendPrompt('Create a new invoice for Accra Academy Senior High School')">
+          <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+          New invoice ↗
+          <span class="qa-arr">→</span>
+        </button>
+        <button class="qa" onclick="sendPrompt('Record a payment for invoice STERO-2025-0007 for Accra Academy SHS')">
+          <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          Record payment ↗
+          <span class="qa-arr">→</span>
+        </button>
+        <button class="qa" onclick="sendPrompt('Log time to the School Management System v2 project for Accra Academy SHS')">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Log time ↗
+          <span class="qa-arr">→</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-top">
+        <div class="panel-title">Financial summary</div>
+      </div>
+      <div style="padding:12px 14px">
+        <div style="display:flex;flex-direction:column;gap:6px">
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <span style="color:var(--color-text-secondary)">Total invoiced</span>
+            <span style="font-weight:500">GHS 15,000</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <span style="color:var(--color-text-secondary)">Collected</span>
+            <span style="color:#0F6E56;font-weight:500">GHS 5,000</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <span style="color:var(--color-text-secondary)">Outstanding</span>
+            <span style="color:#854F0B;font-weight:500">GHS 10,000</span>
+          </div>
+          <div style="height:0.5px;background:var(--color-border-tertiary);margin:3px 0"></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <span style="color:var(--color-text-secondary)">Billable hours</span>
+            <span style="font-weight:500">38h</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <span style="color:var(--color-text-secondary)">Effective rate</span>
+            <span style="color:#0F6E56;font-weight:500">GHS 197 / hr</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <span style="color:var(--color-text-secondary)">Open proposals</span>
+            <span style="font-weight:500">GHS 4,500</span>
+          </div>
+        </div>
+        <div style="margin-top:10px">
+          <div style="font-size:11px;color:var(--color-text-tertiary);margin-bottom:4px;display:flex;justify-content:space-between">
+            <span>Collection rate</span><span>33%</span>
+          </div>
+          <div style="height:5px;background:var(--color-background-secondary);border-radius:3px;overflow:hidden">
+            <div style="width:33%;height:100%;background:#1D9E75;border-radius:3px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>

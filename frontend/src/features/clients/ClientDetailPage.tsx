@@ -1,22 +1,28 @@
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import {
   Archive,
   ArrowLeft,
+  ArrowUpRight,
   Circle,
   Clock3,
   CreditCard,
+  FileText,
+  FolderKanban,
   Mail,
   MapPin,
   Pencil,
   Phone,
+  ReceiptText,
+  Sparkles,
   UserRound,
 } from "lucide-react";
 import { Link, useNavigate, useParams } from "react-router";
 
+import { getClientProfitability } from "@/api/analytics";
 import { listInvoicePayments } from "@/api/invoices";
 import { getProjectTimeLogs } from "@/api/projects";
-import type { Invoice, Payment, Project, Proposal, TimeLog } from "@/api/types";
+import type { Payment, Project, Proposal, TimeLog } from "@/api/types";
 import {
   archiveClient,
   getClient,
@@ -31,7 +37,7 @@ import { LoadingState } from "@/components/status/LoadingState";
 import { StatusBadge } from "@/components/status/StatusBadge";
 import { AlertDialog } from "@/components/ui/AlertDialog";
 import { Button } from "@/components/ui/Button";
-import { DataTable, type DataTableColumn } from "@/components/ui/DataTable";
+import { StatCard } from "@/components/ui/StatCard";
 import { InvoiceDrawer } from "@/features/invoices/InvoiceDrawer";
 import { TimeLogDrawer } from "@/features/projects/TimeLogDrawer";
 import { ProposalDrawer } from "@/features/proposals/ProposalDrawer";
@@ -57,26 +63,6 @@ const tabMeta: Array<{ id: ClientTab; label: string }> = [
   { id: "time", label: "Time" },
 ];
 
-function SummaryMetric({
-  label,
-  value,
-  meta,
-}: {
-  label: string;
-  value: string;
-  meta?: string;
-}) {
-  return (
-    <div className="rounded-lg border border-border bg-card px-4 py-3">
-      <p className="text-xs font-semibold uppercase tracking-normal text-text-tertiary">
-        {label}
-      </p>
-      <p className="mt-2 text-xl font-semibold leading-tight text-text-primary">{value}</p>
-      {meta ? <p className="mt-1 text-xs text-text-secondary">{meta}</p> : null}
-    </div>
-  );
-}
-
 function formatDate(value: string | null) {
   if (!value) {
     return "Not set";
@@ -87,6 +73,73 @@ function formatDate(value: string | null) {
     day: "numeric",
     year: "numeric",
   }).format(new Date(`${value}T00:00:00`));
+}
+
+function formatShortDate(value: string | null) {
+  if (!value) {
+    return "No date";
+  }
+
+  return new Intl.DateTimeFormat("en-GH", {
+    month: "short",
+    day: "numeric",
+  }).format(new Date(`${value}T00:00:00`));
+}
+
+function formatClientTypeLabel(value: string) {
+  return value
+    .split(/[_-]/g)
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function getInitials(name: string) {
+  const parts = name.trim().split(/\s+/).filter(Boolean);
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  return `${parts[0]?.[0] ?? ""}${parts[1]?.[0] ?? ""}`.toUpperCase();
+}
+
+function getProposalDot(status: string) {
+  if (status === "won") return "bg-success";
+  if (status === "sent") return "bg-info";
+  if (status === "negotiating") return "bg-warning";
+  if (status === "lost") return "bg-error";
+  return "bg-muted";
+}
+
+function getProjectProgress(project: Project) {
+  if (project.status === "done") return 100;
+  if (project.status === "active") return 65;
+  if (project.status === "hold") return 35;
+  return 15;
+}
+
+function getPaymentMethodTone(method: string) {
+  if (method === "momo") return "bg-warning-light text-warning-hover";
+  if (method === "bank_transfer") return "bg-info-light text-info-hover";
+  return "bg-muted-background text-muted-foreground";
+}
+
+function SectionShell({
+  title,
+  action,
+  children,
+}: {
+  title: string;
+  action?: React.ReactNode;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="overflow-hidden rounded-2xl border border-border bg-card">
+      <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+        <h3 className="text-sm font-medium text-text-primary">{title}</h3>
+        {action}
+      </div>
+      <div>{children}</div>
+    </section>
+  );
 }
 
 export function ClientDetailPage() {
@@ -201,6 +254,11 @@ export function ClientDetailPage() {
     },
     enabled: Boolean(clientId) && !projectsQuery.isLoading,
   });
+  const profitabilityQuery = useQuery({
+    queryKey: ["analytics", "clients", "revenue"],
+    queryFn: () => getClientProfitability("revenue"),
+    enabled: Boolean(clientId),
+  });
   const archiveMutation = useMutation({
     mutationFn: () => archiveClient(clientId),
     onSuccess: async () => {
@@ -210,284 +268,6 @@ export function ClientDetailPage() {
       navigate("/clients");
     },
   });
-
-  const proposalColumns = useMemo<DataTableColumn<Proposal>[]>(
-    () => [
-      {
-        key: "proposal",
-        header: "Proposal",
-        width: "42%",
-        cell: (proposal) => (
-          <div>
-            <p className="font-medium text-text-primary">{proposal.title}</p>
-            <p className="mt-1 text-sm text-text-secondary">
-              {proposal.client_name || proposal.client}
-            </p>
-          </div>
-        ),
-      },
-      {
-        key: "amount",
-        header: "Amount",
-        width: "20%",
-        cell: (proposal) => (
-          <span className="text-sm text-text-primary">
-            {formatCurrencyValue(proposal.amount)}
-          </span>
-        ),
-      },
-      {
-        key: "deadline",
-        header: "Deadline",
-        width: "20%",
-        cell: (proposal) => (
-          <span className="text-sm text-text-secondary">{proposal.deadline}</span>
-        ),
-      },
-      {
-        key: "status",
-        header: "Status",
-        align: "right",
-        width: "18%",
-        className: "text-right",
-        cell: (proposal) => <StatusBadge status={proposal.status} />,
-      },
-    ],
-    [],
-  );
-
-  const projectColumns = useMemo<DataTableColumn<Project>[]>(
-    () => [
-      {
-        key: "project",
-        header: "Project",
-        width: "46%",
-        cell: (project) => (
-          <div>
-            <p className="font-medium text-text-primary">{project.title}</p>
-            <p className="mt-1 text-sm text-text-secondary">{project.client_name}</p>
-          </div>
-        ),
-      },
-      {
-        key: "budget",
-        header: "Budget",
-        width: "18%",
-        cell: (project) => (
-          <span className="text-sm text-text-primary">
-            {formatCurrencyValue(project.budget)}
-          </span>
-        ),
-      },
-      {
-        key: "due_date",
-        header: "Due date",
-        width: "18%",
-        cell: (project) => (
-          <span className="text-sm text-text-secondary">{project.due_date}</span>
-        ),
-      },
-      {
-        key: "status",
-        header: "Status",
-        align: "right",
-        width: "18%",
-        className: "text-right",
-        cell: (project) => <StatusBadge status={project.status} />,
-      },
-    ],
-    [],
-  );
-
-  const invoiceColumns = useMemo<DataTableColumn<Invoice>[]>(
-    () => [
-      {
-        key: "invoice",
-        header: "Invoice",
-        width: "34%",
-        cell: (invoice) => (
-          <div>
-            <p className="font-mono text-sm font-semibold text-text-primary">
-              {invoice.invoice_number || "Draft"}
-            </p>
-            <p className="mt-1 text-sm text-text-secondary">
-              {invoice.project_title || "Unlinked"}
-            </p>
-          </div>
-        ),
-      },
-      {
-        key: "due_date",
-        header: "Due date",
-        width: "18%",
-        cell: (invoice) => (
-          <span className="text-sm text-text-secondary">
-            {formatDate(invoice.due_date)}
-          </span>
-        ),
-      },
-      {
-        key: "total",
-        header: "Total",
-        width: "16%",
-        cell: (invoice) => (
-          <span className="text-sm font-semibold text-text-primary">
-            {formatCurrencyValue(invoice.total)}
-          </span>
-        ),
-      },
-      {
-        key: "remaining",
-        header: "Remaining",
-        width: "16%",
-        cell: (invoice) => (
-          <span className="text-sm text-text-primary">
-            {formatCurrencyValue(invoice.amount_remaining)}
-          </span>
-        ),
-      },
-      {
-        key: "status",
-        header: "Status",
-        align: "right",
-        width: "16%",
-        className: "text-right",
-        cell: (invoice) => <StatusBadge status={invoice.status} />,
-      },
-    ],
-    [],
-  );
-  const paymentColumns = useMemo<DataTableColumn<ClientPaymentRow>[]>(
-    () => [
-      {
-        key: "payment",
-        header: "Payment",
-        width: "36%",
-        cell: (payment) => (
-          <div>
-            <p className="font-medium text-text-primary">
-              {payment.method_display || payment.method}
-            </p>
-            <p className="mt-1 font-mono text-xs text-text-tertiary">
-              {payment.provider_reference || "Cash payment"}
-            </p>
-          </div>
-        ),
-      },
-      {
-        key: "invoice",
-        header: "Invoice",
-        width: "24%",
-        cell: (payment) => (
-          <div>
-            <p className="font-mono text-sm font-semibold text-text-primary">
-              {payment.invoice_number || "Draft"}
-            </p>
-            <p className="mt-1 text-sm text-text-secondary">
-              {payment.project_title || "Unlinked"}
-            </p>
-          </div>
-        ),
-      },
-      {
-        key: "date",
-        header: "Date",
-        width: "14%",
-        cell: (payment) => (
-          <span className="text-sm text-text-secondary">
-            {formatDate(payment.payment_date)}
-          </span>
-        ),
-      },
-      {
-        key: "amount",
-        header: "Amount",
-        width: "14%",
-        cell: (payment) => (
-          <span className="text-sm font-semibold text-success-hover">
-            +{formatCurrencyValue(payment.amount)}
-          </span>
-        ),
-      },
-      {
-        key: "balance",
-        header: "Balance after",
-        align: "right",
-        width: "12%",
-        className: "text-right",
-        cell: (payment) => (
-          <span className="text-sm text-text-primary">
-            {formatCurrencyValue(payment.running_balance)}
-          </span>
-        ),
-      },
-    ],
-    [],
-  );
-  const timeColumns = useMemo<DataTableColumn<ClientTimeRow>[]>(
-    () => [
-      {
-        key: "entry",
-        header: "Entry",
-        width: "48%",
-        cell: (timeLog) => (
-          <div className="flex items-start gap-3">
-            <span
-              className={cn(
-                "mt-1.5 h-2.5 w-2.5 shrink-0 rounded-full",
-                timeLog.billable ? "bg-success" : "bg-muted",
-              )}
-            />
-            <div>
-              <p className="font-medium text-text-primary">{timeLog.description}</p>
-              <p className="mt-1 text-sm text-text-secondary">{timeLog.project_title}</p>
-            </div>
-          </div>
-        ),
-      },
-      {
-        key: "date",
-        header: "Date",
-        width: "16%",
-        cell: (timeLog) => (
-          <span className="text-sm text-text-secondary">
-            {formatDate(timeLog.log_date)}
-          </span>
-        ),
-      },
-      {
-        key: "hours",
-        header: "Hours",
-        width: "12%",
-        cell: (timeLog) => (
-          <span className="text-sm font-semibold text-primary-dark">
-            {timeLog.hours}h
-          </span>
-        ),
-      },
-      {
-        key: "rate",
-        header: "Rate",
-        width: "12%",
-        cell: (timeLog) => (
-          <span className="text-sm text-text-secondary">
-            {formatCurrencyValue(timeLog.effective_rate)}
-          </span>
-        ),
-      },
-      {
-        key: "billable",
-        header: "Billable",
-        align: "right",
-        width: "12%",
-        className: "text-right",
-        cell: (timeLog) => (
-          <StatusBadge status={timeLog.billable ? "paid" : "draft"} />
-        ),
-      },
-    ],
-    [],
-  );
 
   if (clientQuery.isLoading) {
     return <LoadingState label="Loading client..." />;
@@ -516,20 +296,36 @@ export function ClientDetailPage() {
     nonBillableHours: 0,
     effectiveRate: 0,
   };
-  const openProposalCount = proposals.filter(
-    (proposal) => !["won", "lost"].includes(proposal.status),
-  ).length;
-  const activeProjectCount = projects.filter((project) => project.status !== "done").length;
+  const wonProposals = proposals.filter((proposal) => proposal.status === "won");
+  const lostProposals = proposals.filter((proposal) => proposal.status === "lost");
+  const decidedProposalCount = wonProposals.length + lostProposals.length;
+  const winRate = decidedProposalCount ? Math.round((wonProposals.length / decidedProposalCount) * 100) : 0;
+  const activeProject = projects.find((project) => project.status !== "done") ?? projects[0] ?? null;
   const invoiceTotals = invoices.reduce(
     (summary, invoice) => ({
       collected: summary.collected + Number.parseFloat(invoice.amount_paid || "0"),
-      outstanding:
-        summary.outstanding + Number.parseFloat(invoice.amount_remaining || "0"),
+      outstanding: summary.outstanding + Number.parseFloat(invoice.amount_remaining || "0"),
       total: summary.total + Number.parseFloat(invoice.total || "0"),
     }),
     { collected: 0, outstanding: 0, total: 0 },
   );
-
+  const profitabilityRow =
+    (profitabilityQuery.data ?? []).find(
+      (row) => String(row.client_id) === String(client.id),
+    ) ?? null;
+  const clientCollected = profitabilityRow
+    ? Number.parseFloat(profitabilityRow.collected_ghs || "0")
+    : invoiceTotals.collected;
+  const clientOutstanding = profitabilityRow
+    ? Number.parseFloat(profitabilityRow.outstanding_ghs || "0")
+    : invoiceTotals.outstanding;
+  const clientEffectiveRate = profitabilityRow
+    ? Number.parseFloat(profitabilityRow.effective_rate_ghs || "0")
+    : timeSummary.effectiveRate;
+  const clientOpenProposals = profitabilityRow ? profitabilityRow.open_proposals : proposals.filter((proposal) => !["won", "lost"].includes(proposal.status)).length;
+  const clientBillableHours = profitabilityRow
+    ? profitabilityRow.billable_hours
+    : timeSummary.billableHours;
   const tabCounts: Record<ClientTab, number> = {
     proposals: proposals.length,
     projects: projects.length,
@@ -537,34 +333,41 @@ export function ClientDetailPage() {
     payments: payments.length,
     time: timeSummary.logs.length,
   };
-
-  const currentTabLabel =
-    tabMeta.find((tab) => tab.id === activeTab)?.label ?? "Proposals";
-
-  const summaryMetrics = [
-    { label: "Total Invoiced", value: formatCurrencyValue(invoiceTotals.total) },
-    { label: "Total Collected", value: formatCurrencyValue(invoiceTotals.collected) },
-    { label: "Outstanding", value: formatCurrencyValue(invoiceTotals.outstanding) },
-    { label: "Open Proposals", value: String(openProposalCount) },
-    { label: "Active Projects", value: String(activeProjectCount) },
-    {
-      label: "Total Hours",
-      value: `${timeSummary.totalHours.toFixed(1)}h`,
-      meta: timeSummary.projectCount
-        ? `${timeSummary.projectCount} tracked project${timeSummary.projectCount === 1 ? "" : "s"}`
-        : "No time logged yet",
-    },
-  ];
-
-  const handleArchive = () => {
-    if (client.is_archived || archiveMutation.isPending) {
-      return;
-    }
-    setIsArchiveDialogOpen(true);
-  };
+  const headerActions = (
+    <div className="flex flex-wrap gap-2">
+      <Button
+        className="text-error-hover"
+        leadingIcon={<Archive className="h-4 w-4" />}
+        loading={archiveMutation.isPending}
+        onClick={() => setIsArchiveDialogOpen(true)}
+        type="button"
+        variant="secondary"
+      >
+        {client.is_archived ? "Archived" : "Archive"}
+      </Button>
+      <Button
+        leadingIcon={<Pencil className="h-4 w-4" />}
+        onClick={() => navigate(`/clients/${client.id}/edit`)}
+        type="button"
+        variant="secondary"
+      >
+        Edit
+      </Button>
+      <Button
+        leadingIcon={<FileText className="h-4 w-4" />}
+        onClick={() => {
+          setSelectedProposal(null);
+          setIsProposalDrawerOpen(true);
+        }}
+        type="button"
+      >
+        New Proposal
+      </Button>
+    </div>
+  );
 
   return (
-    <section>
+    <section className="space-y-4">
       <ProposalDrawer
         initialClientId={client.id}
         key={`${selectedProposal?.id ?? client.id}-proposal-${isProposalDrawerOpen ? "open" : "closed"}`}
@@ -608,164 +411,281 @@ export function ClientDetailPage() {
       />
 
       <Link
-        className="inline-flex items-center gap-2 text-sm font-medium text-primary transition-colors hover:text-primary-hover"
+        className="inline-flex items-center gap-2 text-xs font-medium text-text-tertiary transition-colors hover:text-text-primary"
         to="/clients"
       >
         <ArrowLeft className="h-4 w-4" />
-        Back to clients
+        Clients
       </Link>
 
-      <header className="mt-4 rounded-lg border border-border bg-card px-5 py-5 md:px-6">
-        <div className="flex flex-col justify-between gap-5 xl:flex-row xl:items-start">
-          <div className="space-y-5">
-            <div className="flex flex-wrap items-center gap-3">
-              <h1 className="page-title">{client.name}</h1>
-              <StatusBadge status={client.type} />
-              {client.is_archived ? <StatusBadge status="archived" /> : null}
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-              <div className="inline-flex items-center gap-2 text-sm text-text-secondary">
-                <UserRound className="h-4 w-4 text-icon-active" />
-                <span>{client.contact_person}</span>
-              </div>
-              <div className="inline-flex items-center gap-2 text-sm text-text-secondary">
-                <Phone className="h-4 w-4 text-icon-active" />
-                <span>{client.phone}</span>
-              </div>
-              <div className="inline-flex items-center gap-2 text-sm text-text-secondary">
-                <Mail className="h-4 w-4 text-icon-active" />
-                <span>{client.email}</span>
-              </div>
-              <div className="inline-flex items-center gap-2 text-sm text-text-secondary">
-                <MapPin className="h-4 w-4 text-icon-active" />
-                <span>{client.region}</span>
-              </div>
-            </div>
-
-            {client.notes ? (
-              <p className="max-w-3xl text-sm leading-6 text-text-secondary">
-                {client.notes}
-              </p>
-            ) : null}
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            <Button
-              leadingIcon={<Pencil className="h-4 w-4" />}
-              onClick={() => navigate(`/clients/${client.id}/edit`)}
-              variant="secondary"
-            >
-              Edit
-            </Button>
-            <Button
-              className="text-error-hover"
-              leadingIcon={<Archive className="h-4 w-4" />}
-              loading={archiveMutation.isPending}
-              onClick={handleArchive}
-              variant="secondary"
-            >
-              {client.is_archived ? "Archived" : "Archive"}
-            </Button>
-          </div>
+      <header className="flex flex-wrap items-start gap-4 rounded-2xl border border-border bg-card px-6 py-5">
+        <div className="grid h-14 w-14 place-items-center rounded-xl bg-primary-light text-lg font-semibold text-primary">
+          {getInitials(client.name)}
         </div>
+        <div className="min-w-0 flex-1">
+          <h1 className="text-2xl font-semibold leading-tight text-text-primary">{client.name}</h1>
+          <div className="mt-2 flex flex-wrap items-center gap-2 text-sm text-text-secondary">
+            <StatusBadge status={client.type} />
+            {client.is_archived ? <StatusBadge status="archived" /> : null}
+            <span className="inline-flex items-center gap-1.5">
+              <UserRound className="h-4 w-4" />
+              {client.contact_person}
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Phone className="h-4 w-4" />
+              {client.phone}
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <Mail className="h-4 w-4" />
+              {client.email}
+            </span>
+            <span className="inline-flex items-center gap-1.5">
+              <MapPin className="h-4 w-4" />
+              {client.region}
+            </span>
+          </div>
+          <p className="mt-3 text-sm text-text-tertiary">
+            {formatClientTypeLabel(client.type)} client
+            {client.address ? ` · ${client.address}` : ""}
+          </p>
+        </div>
+        {headerActions}
       </header>
 
-      <div className="mt-4 grid gap-3 xl:hidden">
-        <div className="grid grid-cols-2 gap-3 sm:grid-cols-3">
-          {summaryMetrics.map((metric) => (
-            <SummaryMetric
-              key={metric.label}
-              label={metric.label}
-              meta={metric.meta}
-              value={metric.value}
-            />
-          ))}
-        </div>
+      <div className="grid gap-3 md:grid-cols-5">
+        <StatCard
+          color="primary"
+          description={`${invoices.length} invoice${invoices.length === 1 ? "" : "s"}`}
+          icon={ReceiptText}
+          label="Total invoiced"
+          size="sm"
+          value={formatCurrencyValue(invoiceTotals.total.toFixed(2))}
+        />
+        <StatCard
+          color="success"
+          description={invoiceTotals.total > 0 ? `${Math.round((invoiceTotals.collected / invoiceTotals.total) * 100)}% paid` : "No payments yet"}
+          icon={CreditCard}
+          label="Collected"
+          size="sm"
+          value={formatCurrencyValue(invoiceTotals.collected.toFixed(2))}
+        />
+        <StatCard
+          color={invoiceTotals.outstanding > 0 ? "warning" : "neutral"}
+          description={invoiceTotals.outstanding > 0 ? `${invoices.filter((invoice) => Number.parseFloat(invoice.amount_remaining || "0") > 0).length} open invoice${invoices.filter((invoice) => Number.parseFloat(invoice.amount_remaining || "0") > 0).length === 1 ? "" : "s"}` : "Fully settled"}
+          icon={ReceiptText}
+          label="Outstanding"
+          size="sm"
+          value={formatCurrencyValue(invoiceTotals.outstanding.toFixed(2))}
+        />
+        <StatCard
+          color="info"
+          description={`${timeSummary.billableHours.toFixed(1)}h billable`}
+          icon={Clock3}
+          label="Hours logged"
+          size="sm"
+          value={`${timeSummary.totalHours.toFixed(1)}h`}
+        />
+        <StatCard
+          color={winRate > 0 ? "success" : "neutral"}
+          description={`${wonProposals.length} of ${decidedProposalCount || proposals.length || 1} won`}
+          icon={Sparkles}
+          label="Win rate"
+          size="sm"
+          value={`${winRate}%`}
+        />
       </div>
 
-      <div className="mt-6 grid gap-6 xl:grid-cols-[minmax(0,1fr)_320px]">
+      <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_304px]">
         <div className="space-y-4">
-          <div className="no-scrollbar flex gap-2 overflow-x-auto border-b border-divider pb-1">
-            {tabMeta.map((tab) => {
-              const isActive = activeTab === tab.id;
-
-              return (
-                <button
-                  className={cn(
-                    "inline-flex shrink-0 items-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-colors",
-                    isActive
-                      ? "border-primary bg-primary-light text-primary-dark"
-                      : "border-transparent bg-background-secondary text-text-secondary hover:border-border hover:bg-card hover:text-text-primary",
-                  )}
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  type="button"
-                >
-                  <span>{tab.label}</span>
-                  <span
-                    className={cn(
-                      "rounded px-2 py-0.5 text-xs font-semibold",
-                      isActive
-                        ? "bg-card text-primary-dark"
-                        : "bg-card text-text-secondary",
-                    )}
-                  >
-                    {tabCounts[tab.id]}
-                  </span>
-                </button>
-              );
-            })}
-          </div>
-
-          <section className="space-y-4">
-            <div className="flex flex-col justify-between gap-3 md:flex-row md:items-end">
-              <div>
-                <p className="page-eyebrow">Relationship View</p>
-                <h2 className="mt-2 section-title">{currentTabLabel}</h2>
+          <section className="overflow-hidden rounded-2xl border border-border bg-card">
+            <div className="border-b border-border px-2">
+              <div className="flex flex-wrap gap-1">
+                {tabMeta.map((tab) => {
+                  const isActive = activeTab === tab.id;
+                  return (
+                    <button
+                      className={cn(
+                        "inline-flex items-center gap-2 border-b-2 px-4 py-3 text-sm transition-colors",
+                        isActive
+                          ? "border-primary text-primary"
+                          : "border-transparent text-text-secondary hover:text-text-primary",
+                      )}
+                      key={tab.id}
+                      onClick={() => setActiveTab(tab.id)}
+                      type="button"
+                    >
+                      <span>{tab.label}</span>
+                      <span
+                        className={cn(
+                          "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                          isActive ? "bg-primary-light text-primary" : "bg-background-secondary text-text-tertiary",
+                        )}
+                      >
+                        {tabCounts[tab.id]}
+                      </span>
+                    </button>
+                  );
+                })}
               </div>
-              {activeTab === "proposals" ? (
-                <Button
-                  onClick={() => {
-                    setSelectedProposal(null);
-                    setIsProposalDrawerOpen(true);
-                  }}
-                >
-                  New Proposal
-                </Button>
-              ) : null}
-              {activeTab === "invoices" ? (
-                <Button onClick={() => setIsInvoiceDrawerOpen(true)}>
-                  New Invoice
-                </Button>
-              ) : null}
-              {activeTab === "time" ? (
-                <Button
-                  disabled={!projects.length}
-                  onClick={() => {
-                    setSelectedTimeLog(null);
-                    setIsTimeLogDrawerOpen(true);
-                  }}
-                >
-                  Log Time
-                </Button>
-              ) : null}
             </div>
 
             {activeTab === "proposals" ? (
-              <DataTable
-                columns={proposalColumns}
-                emptyState={
-                  proposalsQuery.isError ? (
+              <>
+                <div className="flex items-center justify-between gap-3 border-b border-border px-4 py-3">
+                  <p className="text-xs text-text-tertiary">
+                    {proposals.length} proposals · {wonProposals.length} won · {lostProposals.length} lost
+                  </p>
+                  <button
+                    className="text-xs font-medium text-primary transition-colors hover:text-primary-hover"
+                    onClick={() => {
+                      setSelectedProposal(null);
+                      setIsProposalDrawerOpen(true);
+                    }}
+                    type="button"
+                  >
+                    + New proposal
+                  </button>
+                </div>
+
+                {proposals.length ? (
+                  <div>
+                    {proposals.map((proposal) => (
+                      <button
+                        className="flex w-full items-start gap-3 border-b border-border px-4 py-3 text-left last:border-b-0 hover:bg-background-secondary"
+                        key={proposal.id}
+                        onClick={() => {
+                          setSelectedProposal(proposal);
+                          setIsProposalDrawerOpen(true);
+                        }}
+                        type="button"
+                      >
+                        <span className={cn("mt-1 h-2 w-2 shrink-0 rounded-full", getProposalDot(proposal.status))} />
+                        <div className="min-w-0 flex-1">
+                          <p className="truncate text-sm font-medium text-text-primary">{proposal.title}</p>
+                          <div className="mt-1 flex flex-wrap gap-2 text-xs text-text-tertiary">
+                            <span>{formatCurrencyValue(proposal.amount)}</span>
+                            {proposal.decision_date ? <span>{formatDate(proposal.decision_date)}</span> : null}
+                            {proposal.sent_date ? <span>Sent {formatDate(proposal.sent_date)}</span> : null}
+                            {proposal.status === "won" ? <span>converted to project</span> : null}
+                          </div>
+                        </div>
+                        <div className="shrink-0 text-right">
+                          <p className="text-sm font-medium text-text-primary">{formatCurrencyValue(proposal.amount)}</p>
+                          <div className="mt-1 flex justify-end">
+                            <StatusBadge status={proposal.status} />
+                          </div>
+                        </div>
+                      </button>
+                    ))}
+
+                    <div className="px-4 py-3">
+                      <div className="flex items-center gap-3">
+                        <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted-background">
+                          <div
+                            className="h-full rounded-full bg-success"
+                            style={{ width: `${proposals.length ? Math.round((wonProposals.length / proposals.length) * 100) : 0}%` }}
+                          />
+                        </div>
+                        <span className="text-xs text-text-tertiary">
+                          Pipeline: {formatCurrencyValue(
+                            proposals
+                              .filter((proposal) => !["won", "lost"].includes(proposal.status))
+                              .reduce((sum, proposal) => sum + Number.parseFloat(proposal.amount || "0"), 0)
+                              .toFixed(2),
+                          )} open · {formatCurrencyValue(
+                            wonProposals.reduce((sum, proposal) => sum + Number.parseFloat(proposal.amount || "0"), 0).toFixed(2),
+                          )} won lifetime
+                        </span>
+                      </div>
+                    </div>
+
+                    {activeProject ? (
+                      <>
+                        <div className="border-t border-border px-4 py-3">
+                          <p className="mb-3 text-xs font-medium text-text-secondary">Active project</p>
+                          <Link className="flex items-start gap-3" to={`/projects/${activeProject.id}`}>
+                            <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary-light text-primary">
+                              <FolderKanban className="h-4 w-4" />
+                            </span>
+                            <div className="min-w-0 flex-1">
+                              <p className="text-sm font-medium text-text-primary">{activeProject.title}</p>
+                              <p className="mt-1 text-xs text-text-tertiary">
+                                {activeProject.status} · Due {formatDate(activeProject.due_date)}
+                              </p>
+                              <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted-background">
+                                <div
+                                  className="h-full rounded-full bg-success"
+                                  style={{ width: `${getProjectProgress(activeProject)}%` }}
+                                />
+                              </div>
+                            </div>
+                            <div className="shrink-0 text-right">
+                              <StatusBadge status={activeProject.status} />
+                              <p className="mt-1 text-xs text-text-tertiary">{getProjectProgress(activeProject)}% complete</p>
+                            </div>
+                          </Link>
+                        </div>
+                      </>
+                    ) : null}
+
+                    {invoices.length ? (
+                      <>
+                        <div className="border-t border-border px-4 py-3">
+                          <p className="mb-3 text-xs font-medium text-text-secondary">Invoices</p>
+                          {invoices.slice(0, 1).map((invoice) => (
+                            <Link className="flex items-center gap-3" key={invoice.id} to={`/invoices/${invoice.id}`}>
+                              <span className="w-28 shrink-0 font-mono text-[11px] text-text-tertiary">
+                                {invoice.invoice_number || "Draft"}
+                              </span>
+                              <span className="min-w-0 flex-1 truncate text-sm text-text-primary">
+                                {invoice.notes || invoice.project_title || "Invoice"}
+                              </span>
+                              <span className="shrink-0 text-sm font-medium text-text-primary">
+                                {formatCurrencyValue(invoice.total)}
+                              </span>
+                              <div className="shrink-0 text-right">
+                                <StatusBadge status={invoice.status} />
+                                <p className="mt-1 text-[11px] text-text-tertiary">
+                                  {formatCurrencyValue(invoice.amount_paid)} paid
+                                </p>
+                              </div>
+                            </Link>
+                          ))}
+                        </div>
+                      </>
+                    ) : null}
+
+                    {payments.length ? (
+                      <div className="border-t border-border px-4 py-3">
+                        <p className="mb-3 text-xs font-medium text-text-secondary">Payment history</p>
+                        <div className="space-y-2">
+                          {payments.slice(0, 3).map((payment) => (
+                            <Link
+                              className="flex items-center gap-3"
+                              key={payment.id}
+                              to={`/invoices/${payment.invoice_id}`}
+                            >
+                              <span className={cn("rounded-md px-2 py-1 text-[10px] font-semibold", getPaymentMethodTone(payment.method))}>
+                                {payment.method_display || payment.method}
+                              </span>
+                              <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-text-tertiary">
+                                {payment.provider_reference || "Cash payment"}
+                              </span>
+                              <span className="w-14 shrink-0 text-right text-[11px] text-text-tertiary">
+                                {formatShortDate(payment.payment_date)}
+                              </span>
+                              <span className="w-20 shrink-0 text-right text-sm font-medium text-success-hover">
+                                +{formatCurrencyValue(payment.amount)}
+                              </span>
+                            </Link>
+                          ))}
+                        </div>
+                      </div>
+                    ) : null}
+                  </div>
+                ) : (
+                  <div className="p-6">
                     <EmptyState
-                      tone="error"
-                      title="Proposals could not load"
-                      description="The request failed. Refresh the page or sign in again."
-                    />
-                  ) : (
-                    <EmptyState
-                      title="No proposals yet"
-                      description="Create the first proposal to start the client pipeline."
                       action={
                         <Button
                           onClick={() => {
@@ -776,245 +696,213 @@ export function ClientDetailPage() {
                           New Proposal
                         </Button>
                       }
+                      title="No proposals yet"
+                      description="Create the first proposal to start the client pipeline."
                     />
-                  )
-                }
-                loading={proposalsQuery.isLoading}
-                mobileCard={(proposal) => (
-                  <div className="space-y-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-medium text-text-primary">{proposal.title}</p>
-                        <p className="mt-1 text-sm text-text-secondary">
-                          {formatCurrencyValue(proposal.amount)}
-                        </p>
-                      </div>
-                      <StatusBadge status={proposal.status} />
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div>
-                        <p className="data-table-mobile-label">Deadline</p>
-                        <p className="mt-1 text-sm text-text-primary">{proposal.deadline}</p>
-                      </div>
-                      <div>
-                        <p className="data-table-mobile-label">Decision</p>
-                        <p className="mt-1 text-sm text-text-primary">
-                          {proposal.decision_date || "Pending"}
-                        </p>
-                      </div>
-                    </div>
                   </div>
                 )}
-                onRowClick={(proposal) => {
-                  setSelectedProposal(proposal);
-                  setIsProposalDrawerOpen(true);
-                }}
-                rowKey={(proposal) => proposal.id}
-                rows={proposals}
-              />
+              </>
             ) : null}
 
             {activeTab === "projects" ? (
-              <DataTable
-                columns={projectColumns}
-                emptyState={
-                  projectsQuery.isError ? (
-                    <EmptyState
-                      tone="error"
-                      title="Projects could not load"
-                      description="The request failed. Refresh the page or sign in again."
-                    />
-                  ) : (
-                    <EmptyState
-                      title="No projects yet"
-                      description="A project appears here after a proposal is converted and delivery starts."
-                    />
-                  )
-                }
-                loading={projectsQuery.isLoading}
-                mobileCard={(project) => (
-                  <div className="space-y-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-medium text-text-primary">{project.title}</p>
-                        <p className="mt-1 text-sm text-text-secondary">
-                          {formatCurrencyValue(project.budget)}
+              projects.length ? (
+                <div>
+                  {projects.map((project) => (
+                    <Link
+                      className="flex items-start gap-3 border-b border-border px-4 py-3 last:border-b-0 hover:bg-background-secondary"
+                      key={project.id}
+                      to={`/projects/${project.id}`}
+                    >
+                      <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary-light text-primary">
+                        <FolderKanban className="h-4 w-4" />
+                      </span>
+                      <div className="min-w-0 flex-1">
+                        <p className="text-sm font-medium text-text-primary">{project.title}</p>
+                        <p className="mt-1 text-xs text-text-tertiary">
+                          {project.status} · Due {formatDate(project.due_date)}
                         </p>
+                        <div className="mt-2 h-1 overflow-hidden rounded-full bg-muted-background max-w-[200px]">
+                          <div
+                            className="h-full rounded-full bg-success"
+                            style={{ width: `${getProjectProgress(project)}%` }}
+                          />
+                        </div>
                       </div>
-                      <StatusBadge status={project.status} />
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div>
-                        <p className="data-table-mobile-label">Start date</p>
-                        <p className="mt-1 text-sm text-text-primary">{project.start_date}</p>
+                      <div className="shrink-0 text-right">
+                        <StatusBadge status={project.status} />
+                        <p className="mt-1 text-xs text-text-tertiary">{getProjectProgress(project)}% complete</p>
                       </div>
-                      <div>
-                        <p className="data-table-mobile-label">Due date</p>
-                        <p className="mt-1 text-sm text-text-primary">{project.due_date}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                rowKey={(project) => project.id}
-                rows={projects}
-              />
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-6">
+                  <EmptyState
+                    title="No projects yet"
+                    description="A project appears here after a proposal is converted and delivery starts."
+                  />
+                </div>
+              )
             ) : null}
 
             {activeTab === "invoices" ? (
-              <DataTable
-                columns={invoiceColumns}
-                emptyState={
-                  invoicesQuery.isError ? (
-                    <EmptyState
-                      tone="error"
-                      title="Invoices could not load"
-                      description="The request failed. Refresh the page or sign in again."
-                    />
-                  ) : (
-                    <EmptyState
-                      action={
-                        <Button onClick={() => setIsInvoiceDrawerOpen(true)}>
-                          New Invoice
-                        </Button>
-                      }
-                      title="No invoices yet"
-                      description="Create a draft invoice for this client when billing starts."
-                    />
-                  )
-                }
-                getRowHref={(invoice) => `/invoices/${invoice.id}`}
-                loading={invoicesQuery.isLoading}
-                mobileCard={(invoice) => (
-                  <div className="space-y-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-mono text-sm font-semibold text-text-primary">
-                          {invoice.invoice_number || "Draft"}
-                        </p>
-                        <p className="mt-1 text-sm text-text-secondary">
-                          {formatCurrencyValue(invoice.total)}
+              invoices.length ? (
+                <div>
+                  {invoices.map((invoice) => (
+                    <Link
+                      className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-b-0 hover:bg-background-secondary"
+                      key={invoice.id}
+                      to={`/invoices/${invoice.id}`}
+                    >
+                      <span className="w-28 shrink-0 font-mono text-[11px] text-text-tertiary">
+                        {invoice.invoice_number || "Draft"}
+                      </span>
+                      <span className="min-w-0 flex-1 truncate text-sm text-text-primary">
+                        {invoice.project_title || "Unlinked invoice"}
+                      </span>
+                      <span className="shrink-0 text-sm font-medium text-text-primary">
+                        {formatCurrencyValue(invoice.total)}
+                      </span>
+                      <div className="shrink-0 text-right">
+                        <StatusBadge status={invoice.status} />
+                        <p className="mt-1 text-[11px] text-text-tertiary">
+                          {formatCurrencyValue(invoice.amount_remaining)} left
                         </p>
                       </div>
-                      <StatusBadge status={invoice.status} />
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div>
-                        <p className="data-table-mobile-label">Due date</p>
-                        <p className="mt-1 text-sm text-text-primary">
-                          {formatDate(invoice.due_date)}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="data-table-mobile-label">Remaining</p>
-                        <p className="mt-1 text-sm text-text-primary">
-                          {formatCurrencyValue(invoice.amount_remaining)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                rowKey={(invoice) => invoice.id}
-                rows={invoices}
-              />
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-6">
+                  <EmptyState
+                    action={<Button onClick={() => setIsInvoiceDrawerOpen(true)}>New Invoice</Button>}
+                    title="No invoices yet"
+                    description="Create a draft invoice for this client when billing starts."
+                  />
+                </div>
+              )
             ) : null}
 
             {activeTab === "payments" ? (
-              <DataTable
-                columns={paymentColumns}
-                emptyState={
-                  paymentsQuery.isError ? (
-                    <EmptyState
-                      tone="error"
-                      title="Payments could not load"
-                      description="The request failed. Refresh the page or sign in again."
-                    />
-                  ) : (
-                    <EmptyState
-                      icon={CreditCard}
-                      title="No payments yet"
-                      description="Payments appear here after money is recorded against this client's invoices."
-                    />
-                  )
-                }
-                getRowHref={(payment) => `/invoices/${payment.invoice_id}`}
-                loading={paymentsQuery.isLoading || invoicesQuery.isLoading}
-                mobileCard={(payment) => (
-                  <div className="space-y-4">
-                    <div className="flex items-start justify-between gap-3">
-                      <div>
-                        <p className="font-medium text-text-primary">
-                          {payment.method_display || payment.method}
-                        </p>
-                        <p className="mt-1 font-mono text-xs text-text-tertiary">
-                          {payment.provider_reference || "Cash payment"}
-                        </p>
-                      </div>
-                      <p className="text-sm font-semibold text-success-hover">
+              payments.length ? (
+                <div>
+                  {payments.map((payment) => (
+                    <Link
+                      className="flex items-center gap-3 border-b border-border px-4 py-3 last:border-b-0 hover:bg-background-secondary"
+                      key={payment.id}
+                      to={`/invoices/${payment.invoice_id}`}
+                    >
+                      <span className={cn("min-w-[76px] rounded-md px-2 py-1 text-[10px] font-semibold text-center", getPaymentMethodTone(payment.method))}>
+                        {payment.method_display || payment.method}
+                      </span>
+                      <span className="min-w-0 flex-1 truncate font-mono text-[11px] text-text-tertiary">
+                        {payment.provider_reference || "Cash payment"}
+                      </span>
+                      <span className="w-16 shrink-0 text-right text-[11px] text-text-tertiary">
+                        {formatShortDate(payment.payment_date)}
+                      </span>
+                      <span className="w-24 shrink-0 text-right text-sm font-medium text-success-hover">
                         +{formatCurrencyValue(payment.amount)}
-                      </p>
-                    </div>
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      <div>
-                        <p className="data-table-mobile-label">Invoice</p>
-                        <p className="mt-1 font-mono text-sm text-text-primary">
-                          {payment.invoice_number || "Draft"}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="data-table-mobile-label">Date</p>
-                        <p className="mt-1 text-sm text-text-primary">
-                          {formatDate(payment.payment_date)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                rowKey={(payment) => payment.id}
-                rows={payments}
-              />
+                      </span>
+                    </Link>
+                  ))}
+                </div>
+              ) : (
+                <div className="p-6">
+                  <EmptyState
+                    icon={CreditCard}
+                    title="No payments yet"
+                    description="Payments appear here after money is recorded against this client's invoices."
+                  />
+                </div>
+              )
             ) : null}
 
             {activeTab === "time" ? (
-              <div className="space-y-4">
-                <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-                  <SummaryMetric
-                    label="Total Hours"
-                    meta="Across this client"
+              <>
+                <div className="grid gap-3 border-b border-border px-4 py-4 md:grid-cols-4">
+                  <StatCard
+                    color="info"
+                    description="Across this client"
+                    icon={Clock3}
+                    label="Total hours"
+                    size="sm"
                     value={`${timeSummary.totalHours.toFixed(1)}h`}
                   />
-                  <SummaryMetric
-                    label="Billable Hours"
-                    meta={
+                  <StatCard
+                    color="success"
+                    description={
                       timeSummary.totalHours > 0
                         ? `${Math.round((timeSummary.billableHours / timeSummary.totalHours) * 100)}% billable`
                         : "No billable time yet"
                     }
+                    icon={Sparkles}
+                    label="Billable hours"
+                    size="sm"
                     value={`${timeSummary.billableHours.toFixed(1)}h`}
                   />
-                  <SummaryMetric
-                    label="Effective Rate"
-                    meta="Per billable hour"
+                  <StatCard
+                    color="primary"
+                    description="Per billable hour"
+                    icon={CreditCard}
+                    label="Effective rate"
+                    size="sm"
                     value={formatCurrencyValue(timeSummary.effectiveRate.toFixed(2))}
                   />
-                  <SummaryMetric
-                    label="Non-Billable"
-                    meta="Internal time"
+                  <StatCard
+                    color="neutral"
+                    description="Internal time"
+                    icon={Clock3}
+                    label="Non-billable"
+                    size="sm"
                     value={`${timeSummary.nonBillableHours.toFixed(1)}h`}
                   />
                 </div>
 
-                <DataTable
-                  columns={timeColumns}
-                  emptyState={
-                    timeQuery.isError ? (
-                      <EmptyState
-                        tone="error"
-                        title="Time logs could not load"
-                        description="The request failed. Refresh the page or sign in again."
-                      />
-                    ) : projects.length ? (
-                      <EmptyState
-                        action={
+                {timeSummary.logs.length ? (
+                  <div>
+                    {timeSummary.logs.map((timeLog) => (
+                      <button
+                        className="flex w-full items-center gap-3 border-b border-border px-4 py-3 text-left last:border-b-0 hover:bg-background-secondary"
+                        key={timeLog.id}
+                        onClick={() => {
+                          setSelectedTimeLog(timeLog);
+                          setIsTimeLogDrawerOpen(true);
+                        }}
+                        type="button"
+                      >
+                        <Circle
+                          className={cn(
+                            "h-3 w-3 shrink-0",
+                            timeLog.billable ? "fill-success text-success" : "fill-muted text-muted",
+                          )}
+                        />
+                        <span className="w-14 shrink-0 font-mono text-[11px] text-text-tertiary">
+                          {formatShortDate(timeLog.log_date)}
+                        </span>
+                        <span className="w-28 shrink-0 truncate text-[11px] text-primary">
+                          {timeLog.project_title}
+                        </span>
+                        <span className="min-w-0 flex-1 text-sm text-text-primary">{timeLog.description}</span>
+                        <span className="shrink-0 text-sm font-medium text-primary">{timeLog.hours}h</span>
+                        <span
+                          className={cn(
+                            "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                            timeLog.billable
+                              ? "bg-success-light text-success-hover"
+                              : "bg-muted-background text-muted-foreground",
+                          )}
+                        >
+                          {timeLog.billable ? "billable" : "non-billable"}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-6">
+                    <EmptyState
+                      action={
+                        projects.length ? (
                           <Button
                             onClick={() => {
                               setSelectedTimeLog(null);
@@ -1023,112 +911,127 @@ export function ClientDetailPage() {
                           >
                             Log Time
                           </Button>
-                        }
-                        icon={Clock3}
-                        title="No time logs yet"
-                        description="Log delivery work against one of this client's projects."
-                      />
-                    ) : (
-                      <EmptyState
-                        icon={Clock3}
-                        title="No projects available"
-                        description="A project needs to exist before time can be logged for this client."
-                      />
-                    )
-                  }
-                  loading={timeQuery.isLoading || projectsQuery.isLoading}
-                  mobileCard={(timeLog) => (
-                    <div className="space-y-4">
-                      <div className="flex items-start justify-between gap-3">
-                        <div className="flex items-start gap-3">
-                          <Circle
-                            className={cn(
-                              "mt-1 h-3 w-3 shrink-0",
-                              timeLog.billable ? "fill-success text-success" : "fill-muted text-muted",
-                            )}
-                          />
-                          <div>
-                            <p className="font-medium text-text-primary">
-                              {timeLog.description}
-                            </p>
-                            <p className="mt-1 text-sm text-text-secondary">
-                              {timeLog.project_title}
-                            </p>
-                          </div>
-                        </div>
-                        <StatusBadge status={timeLog.billable ? "paid" : "draft"} />
-                      </div>
-                      <div className="grid gap-3 sm:grid-cols-2">
-                        <div>
-                          <p className="data-table-mobile-label">Date</p>
-                          <p className="mt-1 text-sm text-text-primary">
-                            {formatDate(timeLog.log_date)}
-                          </p>
-                        </div>
-                        <div>
-                          <p className="data-table-mobile-label">Hours</p>
-                          <p className="mt-1 text-sm font-semibold text-text-primary">
-                            {timeLog.hours}h
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                  onRowClick={(timeLog) => {
-                    setSelectedTimeLog(timeLog);
-                    setIsTimeLogDrawerOpen(true);
-                  }}
-                  rowKey={(timeLog) => timeLog.id}
-                  rows={timeSummary.logs}
-                />
-              </div>
+                        ) : undefined
+                      }
+                      icon={Clock3}
+                      title={projects.length ? "No time logs yet" : "No projects available"}
+                      description={
+                        projects.length
+                          ? "Log delivery work against one of this client's projects."
+                          : "A project needs to exist before time can be logged for this client."
+                      }
+                    />
+                  </div>
+                )}
+              </>
             ) : null}
           </section>
         </div>
 
-        <aside className="hidden xl:block">
-          <div className="sticky top-24 space-y-4 rounded-lg border border-border bg-card p-5">
-            <div className="flex items-center justify-between gap-3">
-              <div>
-                <p className="page-eyebrow">Summary</p>
-                <h2 className="mt-2 section-title">Relationship Snapshot</h2>
+        <aside className="space-y-4">
+          <SectionShell title="Client info">
+            <div className="space-y-3 p-4">
+              <div className="rounded-xl bg-background-secondary px-3 py-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-text-tertiary">Contact</p>
+                <p className="mt-1 text-sm font-medium text-text-primary">{client.contact_person}</p>
+                <p className="mt-1 text-xs text-text-tertiary">{client.email}</p>
               </div>
-              <Button
-                className="shrink-0"
-                onClick={
-                  activeTab === "invoices"
-                    ? () => setIsInvoiceDrawerOpen(true)
-                    : activeTab === "time"
-                      ? () => {
-                          setSelectedTimeLog(null);
-                          setIsTimeLogDrawerOpen(true);
-                        }
-                      : () => {
-                        setSelectedProposal(null);
-                        setIsProposalDrawerOpen(true);
-                      }
-                }
-                variant="secondary"
-              >
-                {activeTab === "invoices"
-                  ? "New Invoice"
-                  : activeTab === "time"
-                    ? "Log Time"
-                    : "New Proposal"}
-              </Button>
+              <div className="rounded-xl bg-background-secondary px-3 py-3">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-text-tertiary">Region</p>
+                <p className="mt-1 text-sm text-text-primary">{client.region}</p>
+              </div>
+              {client.address ? (
+                <div className="rounded-xl bg-background-secondary px-3 py-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-text-tertiary">Address</p>
+                  <p className="mt-1 text-sm text-text-primary">{client.address}</p>
+                </div>
+              ) : null}
+              {client.notes ? (
+                <div className="rounded-xl bg-background-secondary px-3 py-3">
+                  <p className="text-[10px] font-semibold uppercase tracking-[0.05em] text-text-tertiary">Notes</p>
+                  <p className="mt-1 text-sm leading-6 text-text-secondary">{client.notes}</p>
+                </div>
+              ) : null}
             </div>
+          </SectionShell>
 
-            <div className="grid gap-3">
-              {summaryMetrics.map((metric) => (
-                <SummaryMetric
-                  key={metric.label}
-                  label={metric.label}
-                  meta={metric.meta}
-                  value={metric.value}
-                />
-              ))}
+          <SectionShell title="Revenue snapshot">
+            <div className="p-4">
+              <div className="rounded-xl bg-primary-light px-4 py-4">
+                <div className="flex items-start gap-3">
+                  <span className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+                    <ReceiptText className="h-4 w-4" />
+                  </span>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold text-primary-dark">
+                      {formatCurrencyValue(clientCollected.toFixed(2))} collected ·{" "}
+                      {formatCurrencyValue(clientOutstanding.toFixed(2))} outstanding
+                    </p>
+                    <p className="mt-1 text-xs text-primary">
+                      {clientOpenProposals} open proposal(s) · {clientBillableHours.toFixed(1)}h billable ·{" "}
+                      {formatCurrencyValue(clientEffectiveRate.toFixed(2))}/h effective rate
+                    </p>
+                    <div className="mt-3 space-y-2">
+                      <button
+                        className="flex items-center gap-1 text-xs font-medium text-primary"
+                        onClick={() => navigate("/analytics")}
+                        type="button"
+                      >
+                        View analytics
+                        <ArrowUpRight className="h-3.5 w-3.5" />
+                      </button>
+                      <button
+                        className="flex items-center gap-1 text-xs font-medium text-primary"
+                        onClick={() => setActiveTab("payments")}
+                        type="button"
+                      >
+                        Review payment history
+                        <ArrowUpRight className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          </SectionShell>
+
+          <SectionShell title="Quick actions">
+            <div className="space-y-2 p-4">
+              <button
+                className="flex w-full items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-left text-sm font-medium text-text-primary transition-colors hover:bg-background-secondary"
+                onClick={() => {
+                  setSelectedProposal(null);
+                  setIsProposalDrawerOpen(true);
+                }}
+                type="button"
+              >
+                <FileText className="h-4 w-4 text-text-tertiary" />
+                New proposal
+                <ArrowUpRight className="ml-auto h-4 w-4 text-text-tertiary" />
+              </button>
+              <button
+                className="flex w-full items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-left text-sm font-medium text-text-primary transition-colors hover:bg-background-secondary"
+                onClick={() => setIsInvoiceDrawerOpen(true)}
+                type="button"
+              >
+                <ReceiptText className="h-4 w-4 text-text-tertiary" />
+                New invoice
+                <ArrowUpRight className="ml-auto h-4 w-4 text-text-tertiary" />
+              </button>
+              <button
+                className="flex w-full items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-left text-sm font-medium text-text-primary transition-colors hover:bg-background-secondary"
+                onClick={() => {
+                  setSelectedTimeLog(null);
+                  setIsTimeLogDrawerOpen(true);
+                }}
+                type="button"
+              >
+                <Clock3 className="h-4 w-4 text-text-tertiary" />
+                Log time
+                <ArrowUpRight className="ml-auto h-4 w-4 text-text-tertiary" />
+              </button>
+            </div>
+          </SectionShell>
         </aside>
       </div>
     </section>

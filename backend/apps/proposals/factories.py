@@ -19,14 +19,10 @@ class ProposalFactory(factory.django.DjangoModelFactory):
         organisation=factory.SelfAttribute("..organisation"),
     )
     title = factory.Sequence(lambda number: f"Proposal {number}")
-    description = factory.Sequence(
-        lambda number: f"Proposal description {number}"
-    )
+    description = factory.Sequence(lambda number: f"Proposal description {number}")
     amount = Decimal("1000.00")
     status = Proposal.ProposalStatus.DRAFT
     sent_date = None
-    deadline = factory.LazyFunction(
-        lambda: timezone.localdate() + timedelta(days=14)
-    )
+    deadline = factory.LazyFunction(lambda: timezone.localdate() + timedelta(days=14))
     decision_date = None
     notes = ""

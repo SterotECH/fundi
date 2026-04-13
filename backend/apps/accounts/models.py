@@ -55,6 +55,11 @@ class UserManager(BaseUserManager):
         organisation = extra_fields.get("organisation")
         if not organisation:
             raise ValueError("Users must belong to an organisation")
+        if not isinstance(organisation, Organisation):
+            organisation = Organisation.objects.filter(pk=organisation).first()
+            if not organisation:
+                raise ValueError("Users must belong to a valid organisation")
+            extra_fields["organisation"] = organisation
 
         email = self.normalize_email(email)
         raw_user = self.model(

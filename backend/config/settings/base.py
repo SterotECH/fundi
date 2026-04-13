@@ -25,6 +25,8 @@ ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="localhost,127.0.0.1", cast=Csv(
 DJANGO_APPS = [
     "unfold",
     "django.contrib.admin",
+    # Keep accounts before auth so custom auth commands can override defaults.
+    "apps.accounts",
     "django.contrib.auth",
     "django.contrib.contenttypes",
     "django.contrib.sessions",
@@ -44,7 +46,7 @@ THIRD_PARTY_APPS = [
 
 LOCAL_APPS = [
     "apps.core",
-    "apps.accounts",
+    "apps.analytics",
     "apps.clients",
     "apps.proposals",
     "apps.projects",
@@ -191,18 +193,25 @@ UNFOLD = {
     "SITE_URL": "/admin/",
     "SITE_SYMBOL": "space_dashboard",
     "SITE_ICON": {
-        "light": lambda request: static("core/admin/brand/stero-icon-light.svg"),
-        "dark": lambda request: static("core/admin/brand/stero-icon-dark.svg"),
+        "light": lambda request: static("core/admin/brand/fundi-icon.png"),
+        "dark": lambda request: static("core/admin/brand/fundi-icon.png"),
     },
     "SITE_LOGO": {
-        "light": lambda request: static("core/admin/brand/stero-logo-light.svg"),
-        "dark": lambda request: static("core/admin/brand/stero-logo-dark.svg"),
+        "light": lambda request: static("core/admin/brand/fundi-icon.png"),
+        "dark": lambda request: static("core/admin/brand/fundi-icon.png"),
     },
     "SITE_FAVICONS": [
         {
             "rel": "icon",
-            "type": "image/svg+xml",
-            "href": lambda request: static("core/admin/brand/stero-favicon.svg"),
+            "type": "image/png",
+            "href": lambda request: static("core/admin/brand/fundi-favicon.png"),
+        },
+        {
+            "rel": "apple-touch-icon",
+            "type": "image/png",
+            "href": lambda request: static(
+                "core/admin/brand/fundi-apple-touch-icon.png"
+            ),
         },
     ],
     "SHOW_HISTORY": True,

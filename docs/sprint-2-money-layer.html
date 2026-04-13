@@ -1211,7 +1211,7 @@
     <div class="scope-col">
       <div class="scope-header out">Out — do not touch in Sprint 2</div>
       <div class="scope-items">
-        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>AI assistant / Anthropic API calls</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>Assistant automation or external model API calls</div>
         <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>Analytics charts (revenue trend, win rate, profitability)</div>
         <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>Server-side PDF generation (WeasyPrint, reportlab)</div>
         <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>Email sending of any kind</div>
@@ -1243,7 +1243,7 @@
   </div>
 
   <h3>What Sprint 2 hands to Sprint 3</h3>
-  <p>By the end of Sprint 2, every piece of financial data exists in your database in clean, queryable form. Sprint 3's analytics endpoints (<code>/analytics/revenue/</code>, <code>/analytics/win-rate/</code>, <code>/analytics/clients/profitability/</code>) are pure database aggregation queries against models that already exist. The AI assistant's <code>build_ai_context()</code> function will read from <code>Invoice</code>, <code>Payment</code>, <code>TimeLog</code>, and <code>Notification</code> — all of which Sprint 2 populates with real data. Sprint 3 has zero new model migrations. It only adds query endpoints and the Anthropic API integration layer on top of the foundation Sprint 2 built.</p>
+  <p>By the end of Sprint 2, every piece of financial data exists in your database in clean, queryable form. Sprint 3's analytics endpoints (<code>/analytics/revenue/</code>, <code>/analytics/win-rate/</code>, <code>/analytics/clients/profitability/</code>) are pure database aggregation queries against models that already exist. The intelligence layer's <code>build_ai_context()</code> function will read from <code>Invoice</code>, <code>Payment</code>, <code>TimeLog</code>, and <code>Notification</code> — all of which Sprint 2 populates with real data. Sprint 3 has zero new model migrations. It adds query endpoints, rule-based insights, and shared context-building on top of the foundation Sprint 2 built.</p>
 </div>
 
 

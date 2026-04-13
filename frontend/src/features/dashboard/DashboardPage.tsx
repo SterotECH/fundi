@@ -4,17 +4,21 @@ import {
   Bell,
   CalendarClock,
   CircleDollarSign,
+  Clock3,
   FolderKanban,
   Lightbulb,
   ReceiptText,
   Sparkles,
   Trophy,
+  TriangleAlert,
 } from "lucide-react";
 import { Link } from "react-router";
 
 import { cn } from "@/app/cn";
+import { getPipelineMetrics, getRevenueSummary } from "@/api/analytics";
+import { getAssistantBriefing } from "@/api/assistant";
 import { getDashboardSummary } from "@/api/dashboard";
-import type { DashboardSummary } from "@/api/types";
+import type { AssistantItem, DashboardSummary, Insight } from "@/api/types";
 import { EmptyState } from "@/components/status/EmptyState";
 import { LoadingState } from "@/components/status/LoadingState";
 import { StatusBadge } from "@/components/status/StatusBadge";
@@ -138,6 +142,71 @@ function formatCompactCurrency(value: string | number) {
   return formatCurrencyValue(amount);
 }
 
+function resolveAssistantHref(item: AssistantItem) {
+  if (!item.entity_type || !item.entity_id) {
+    return "/dashboard";
+  }
+
+  if (item.entity_type === "Invoice") {
+    return `/invoices/${item.entity_id}`;
+  }
+
+  if (item.entity_type === "Proposal") {
+    return "/proposals";
+  }
+
+  if (item.entity_type === "Project") {
+    return `/projects/${item.entity_id}`;
+  }
+
+  return "/dashboard";
+}
+
+function getAssistantItemMeta(item: AssistantItem) {
+  if (item.type === "invoice_follow_up") {
+    return {
+      accentClassName: "bg-error",
+      badgeClassName: "bg-error-light text-error-hover",
+      label: "Invoice follow-up",
+    };
+  }
+
+  if (item.type === "proposal_follow_up") {
+    return {
+      accentClassName: "bg-warning",
+      badgeClassName: "bg-warning-light text-warning-hover",
+      label: "Proposal follow-up",
+    };
+  }
+
+  return {
+    accentClassName: "bg-info",
+    badgeClassName: "bg-info-light text-info-hover",
+    label: "Project risk",
+  };
+}
+
+function getInsightMeta(insight: Insight) {
+  if (insight.severity === "high") {
+    return {
+      chipClassName: "bg-error-light text-error-hover",
+      iconClassName: "text-error",
+    };
+  }
+
+  if (insight.severity === "medium") {
+    return {
+      chipClassName: "bg-warning-light text-warning-hover",
+      iconClassName: "text-warning",
+    };
+  }
+
+  return {
+    chipClassName: "bg-info-light text-info-hover",
+    iconClassName: "text-info",
+  };
+}
+
 function getDashboardMetrics(data: DashboardSummary) {
   const openProposalCount =
     (data.proposal_counts.draft || 0) +
@@ -166,10 +235,33 @@ function getDashboardMetrics(data: DashboardSummary) {
   };
 }
 
+function getPipelineStatusCount(status: string, byStatus: Array<{ status: string; count: number }>) {
+  return byStatus.find((item) => item.status === status)?.count ?? 0;
+}
+
+function getPipelineStatusAmount(
+  status: string,
+  byStatus: Array<{ status: string; total_value_ghs: string }>,
+) {
+  return byStatus.find((item) => item.status === status)?.total_value_ghs ?? "0";
+}
+
 export function DashboardPage() {
   const dashboardQuery = useQuery({
     queryKey: ["dashboard"],
     queryFn: getDashboardSummary,
+  });
+  const assistantBriefingQuery = useQuery({
+    queryKey: ["assistant-briefing"],
+    queryFn: getAssistantBriefing,
+  });
+  const revenueSummaryQuery = useQuery({
+    queryKey: ["analytics", "revenue-summary"],
+    queryFn: getRevenueSummary,
+  });
+  const pipelineQuery = useQuery({
+    queryKey: ["analytics", "pipeline"],
+    queryFn: getPipelineMetrics,
   });
 
   if (dashboardQuery.isLoading) {
@@ -187,36 +279,72 @@ export function DashboardPage() {
   }
 
   const data = dashboardQuery.data;
+  const briefing = assistantBriefingQuery.data;
+  const revenueSummary = revenueSummaryQuery.data;
+  const pipeline = pipelineQuery.data;
   const metrics = getDashboardMetrics(data);
+  const openProposalsFromPipeline = pipeline
+    ? getPipelineStatusCount("draft", pipeline.by_status) +
+      getPipelineStatusCount("sent", pipeline.by_status) +
+      getPipelineStatusCount("negotiating", pipeline.by_status)
+    : metrics.openProposalCount;
+  const winRateFromPipeline = pipeline
+    ? Math.round(toNumber(pipeline.win_rate_pct))
+    : metrics.winRate;
+  const proposalCounts = pipeline
+    ? {
+        draft: getPipelineStatusCount("draft", pipeline.by_status),
+        sent: getPipelineStatusCount("sent", pipeline.by_status),
+        negotiating: getPipelineStatusCount("negotiating", pipeline.by_status),
+        won: getPipelineStatusCount("won", pipeline.by_status),
+        lost: getPipelineStatusCount("lost", pipeline.by_status),
+      }
+    : data.proposal_counts;
+  const proposalAmounts = pipeline
+    ? {
+        draft: getPipelineStatusAmount("draft", pipeline.by_status),
+        sent: getPipelineStatusAmount("sent", pipeline.by_status),
+        negotiating: getPipelineStatusAmount("negotiating", pipeline.by_status),
+        won: getPipelineStatusAmount("won", pipeline.by_status),
+        lost: getPipelineStatusAmount("lost", pipeline.by_status),
+      }
+    : data.proposal_amounts;
   const maxProposalCount = Math.max(
     1,
-    ...proposalStatusMeta.map((item) => data.proposal_counts[item.key] || 0),
+    ...proposalStatusMeta.map((item) => proposalCounts[item.key] || 0),
   );
   const maxProposalAmount = Math.max(
     1,
-    ...proposalStatusMeta.map((item) => toNumber(data.proposal_amounts[item.key])),
+    ...proposalStatusMeta.map((item) => toNumber(proposalAmounts[item.key])),
   );
   const overdueAmount = data.overdue_invoices.reduce(
     (total, invoice) => total + toNumber(invoice.amount_remaining),
     0,
   );
-  const assistantMessage = data.overdue_invoices.length
-    ? `${formatCurrencyValue(overdueAmount)} is overdue across ${data.overdue_invoices.length} invoices. Start with ${data.overdue_invoices[0]?.client_name}.`
-    : `${formatCurrencyValue(data.total_outstanding)} is currently outstanding. No overdue invoice needs escalation.`;
+  const totalOutstanding = revenueSummary?.total_outstanding ?? data.total_outstanding;
+  const overdueTotal = revenueSummary?.overdue_total ?? overdueAmount.toFixed(2);
+  const overdueCount = revenueSummary?.overdue_count ?? data.overdue_invoices.length;
   const hasPipelineData = proposalStatusMeta.some(
     (item) =>
-      (data.proposal_counts[item.key] || 0) > 0 ||
-      toNumber(data.proposal_amounts[item.key]) > 0,
+      (proposalCounts[item.key] || 0) > 0 ||
+      toNumber(proposalAmounts[item.key]) > 0,
   );
   const pipelinePulseBars = proposalStatusMeta.map((item) => ({
     ...item,
-    amount: toNumber(data.proposal_amounts[item.key]),
-    count: data.proposal_counts[item.key] || 0,
+    amount: toNumber(proposalAmounts[item.key]),
+    count: proposalCounts[item.key] || 0,
   }));
   const maxPipelinePulseValue = Math.max(
     1,
     ...pipelinePulseBars.map((item) => (item.amount > 0 ? item.amount : item.count)),
   );
+  const followUpItems = briefing?.follow_up.items?.slice(0, 3) || [];
+  const insightItems = briefing?.insights.slice(0, 2) || [];
+  const assistantHeadline =
+    briefing?.headline ||
+    (data.overdue_invoices.length
+      ? `${formatCurrencyValue(overdueAmount)} is overdue across ${data.overdue_invoices.length} invoices. Start with ${data.overdue_invoices[0]?.client_name}.`
+      : `${formatCurrencyValue(totalOutstanding)} is currently outstanding. No overdue invoice needs escalation.`);
 
   return (
     <section className="space-y-4">
@@ -238,11 +366,11 @@ export function DashboardPage() {
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
         <Link to="/invoices">
           <StatCard
-            color={data.overdue_invoices.length ? "flamingo" : "forest"}
-            description={`${data.overdue_invoices.length} overdue invoices`}
+            color={overdueCount ? "flamingo" : "forest"}
+            description={`${overdueCount} overdue invoices`}
             icon={CircleDollarSign}
             label="Outstanding"
-            value={formatCompactCurrency(data.total_outstanding)}
+            value={formatCompactCurrency(totalOutstanding)}
           />
         </Link>
         <Link to="/proposals">
@@ -251,7 +379,7 @@ export function DashboardPage() {
             description="Draft, sent, and negotiating"
             icon={ReceiptText}
             label="Open proposals"
-            value={metrics.openProposalCount}
+            value={openProposalsFromPipeline}
           />
         </Link>
         <Link to="/proposals">
@@ -260,7 +388,7 @@ export function DashboardPage() {
             description={`${metrics.decidedProposalCount} decided proposals`}
             icon={Trophy}
             label="Win rate"
-            value={`${metrics.winRate}%`}
+            value={`${winRateFromPipeline}%`}
           />
         </Link>
         <Link to="/projects">
@@ -435,7 +563,7 @@ export function DashboardPage() {
               Overdue invoices
             </h2>
             <span className="rounded-full bg-error-light px-2.5 py-1 text-[0.68rem] font-semibold text-error-hover">
-              {formatCompactCurrency(overdueAmount)}
+              {formatCompactCurrency(overdueTotal)}
             </span>
           </div>
 
@@ -537,7 +665,7 @@ export function DashboardPage() {
         <section className="rounded-lg border border-card-border bg-card/90 p-4 backdrop-blur-sm xl:col-span-4">
           <div className="flex items-center justify-between gap-3">
             <h2 className="text-sm font-semibold text-text-secondary">
-              Assistant cue
+              Assistant briefing
             </h2>
             <Sparkles className="h-4 w-4 text-icon-active" />
           </div>
@@ -549,32 +677,155 @@ export function DashboardPage() {
               </span>
               <div>
                 <p className="text-sm font-medium leading-6 text-primary-dark">
-                  {assistantMessage}
+                  {assistantHeadline}
                 </p>
-                <button
-                  className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-hover"
-                  type="button"
-                >
-                  Open reminder workflow
-                  <ArrowUpRight className="h-3.5 w-3.5" />
-                </button>
+                {briefing ? (
+                  <div className="mt-2 inline-flex items-center gap-2 rounded-full bg-card/70 px-2.5 py-1 text-[0.68rem] font-semibold text-text-secondary">
+                    <Clock3 className="h-3.5 w-3.5 text-icon-active" />
+                    Reading live CRM data
+                  </div>
+                ) : null}
               </div>
             </div>
           </div>
 
-          <div className="mt-3 grid gap-2">
-            <button
-              className="rounded-lg border border-border bg-card px-3 py-2 text-left text-xs font-semibold text-text-secondary transition-colors hover:border-border-hover hover:bg-card-hover hover:text-text-primary"
-              type="button"
-            >
-              Which proposals need follow-up this week?
-            </button>
-            <button
-              className="rounded-lg border border-border bg-card px-3 py-2 text-left text-xs font-semibold text-text-secondary transition-colors hover:border-border-hover hover:bg-card-hover hover:text-text-primary"
-              type="button"
-            >
-              Show unpaid work by client.
-            </button>
+          <div className="mt-3 space-y-3">
+            <div>
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-xs font-semibold uppercase tracking-[0.06em] text-text-tertiary">
+                  Priority follow-up
+                </h3>
+                {briefing?.follow_up.items?.length ? (
+                  <span className="text-[0.68rem] font-medium text-text-tertiary">
+                    {briefing.follow_up.items.length} active
+                  </span>
+                ) : null}
+              </div>
+
+              {assistantBriefingQuery.isLoading ? (
+                <div className="mt-2 text-xs text-text-tertiary">
+                  Loading briefing…
+                </div>
+              ) : followUpItems.length ? (
+                <div className="mt-2 grid gap-2">
+                  {followUpItems.map((item) => {
+                    const meta = getAssistantItemMeta(item);
+
+                    return (
+                      <Link
+                        className="rounded-lg border border-border bg-card px-3 py-2 transition-colors hover:border-border-hover hover:bg-card-hover"
+                        key={`${item.type}-${item.entity_id ?? item.label}`}
+                        to={resolveAssistantHref(item)}
+                      >
+                        <div className="flex items-start gap-3">
+                          <span
+                            className={cn(
+                              "mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full",
+                              meta.accentClassName,
+                            )}
+                          />
+                          <div className="min-w-0 flex-1">
+                            <div className="flex items-center justify-between gap-2">
+                              <p className="truncate text-sm font-semibold text-text-primary">
+                                {item.label}
+                              </p>
+                              <span
+                                className={cn(
+                                  "rounded-full px-2 py-0.5 text-[0.65rem] font-semibold",
+                                  meta.badgeClassName,
+                                )}
+                              >
+                                {meta.label}
+                              </span>
+                            </div>
+                            <p className="mt-1 text-xs leading-5 text-text-secondary">
+                              {item.reason}
+                            </p>
+                          </div>
+                        </div>
+                      </Link>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="mt-2 rounded-lg border border-border/70 bg-card px-3 py-2 text-xs text-text-secondary">
+                  No urgent follow-up items right now.
+                </div>
+              )}
+            </div>
+
+            <div>
+              <div className="flex items-center justify-between gap-3">
+                <h3 className="text-xs font-semibold uppercase tracking-[0.06em] text-text-tertiary">
+                  Insight signals
+                </h3>
+                {briefing?.revenue_summary ? (
+                  <span className="text-[0.68rem] font-medium text-text-tertiary">
+                    {formatCompactCurrency(briefing.revenue_summary.this_month_collected)} this month
+                  </span>
+                ) : null}
+              </div>
+
+              {insightItems.length ? (
+                <div className="mt-2 grid gap-2">
+                  {insightItems.map((insight) => {
+                    const meta = getInsightMeta(insight);
+
+                    return (
+                      <div
+                        className="rounded-lg border border-border bg-background-secondary px-3 py-2"
+                        key={`${insight.type}-${insight.entity_id ?? insight.title}`}
+                      >
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-2">
+                              <TriangleAlert
+                                className={cn("h-3.5 w-3.5 shrink-0", meta.iconClassName)}
+                              />
+                              <p className="truncate text-xs font-semibold text-text-primary">
+                                {insight.title}
+                              </p>
+                            </div>
+                            <p className="mt-1 text-xs leading-5 text-text-secondary">
+                              {insight.body}
+                            </p>
+                          </div>
+                          <span
+                            className={cn(
+                              "rounded-full px-2 py-0.5 text-[0.65rem] font-semibold capitalize",
+                              meta.chipClassName,
+                            )}
+                          >
+                            {insight.severity}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="mt-2 rounded-lg border border-border/70 bg-card px-3 py-2 text-xs text-text-secondary">
+                  No rule-based warnings are firing right now.
+                </div>
+              )}
+            </div>
+
+            <div className="grid gap-2">
+              <Link
+                className="inline-flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-left text-xs font-semibold text-text-secondary transition-colors hover:border-border-hover hover:bg-card-hover hover:text-text-primary"
+                to="/invoices"
+              >
+                Review overdue invoices
+                <ArrowUpRight className="h-3.5 w-3.5" />
+              </Link>
+              <Link
+                className="inline-flex items-center justify-between rounded-lg border border-border bg-card px-3 py-2 text-left text-xs font-semibold text-text-secondary transition-colors hover:border-border-hover hover:bg-card-hover hover:text-text-primary"
+                to="/proposals"
+              >
+                Check proposals needing follow-up
+                <ArrowUpRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
           </div>
         </section>
       </div>

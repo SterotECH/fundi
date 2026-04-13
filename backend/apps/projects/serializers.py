@@ -13,6 +13,7 @@ from apps.proposals.models import Proposal
 class ProjectListSerializer(serializers.ModelSerializer):
     client_name = serializers.CharField(source="client.name", read_only=True)
     proposal_title = serializers.CharField(source="proposal.title", read_only=True)
+
     class Meta:
         model = Project
         fields = [
@@ -52,10 +53,10 @@ class ProjectDetailSerializer(ProjectListSerializer):
             )
 
         return {
-            "total_hours": f'{payload["total_hours"]:.2f}',
-            "billable_hours": f'{payload["billable_hours"]:.2f}',
-            "non_billable_hours": f'{payload["non_billable_hours"]:.2f}',
-            "effective_rate": f'{payload["effective_rate"]:.2f}',
+            "total_hours": f"{payload['total_hours']:.2f}",
+            "billable_hours": f"{payload['billable_hours']:.2f}",
+            "non_billable_hours": f"{payload['non_billable_hours']:.2f}",
+            "effective_rate": f"{payload['effective_rate']:.2f}",
         }
 
     class Meta(ProjectListSerializer.Meta):
@@ -76,7 +77,9 @@ class ProjectCreateMilestoneSerializer(serializers.Serializer):
 
 
 class ProjectWriteSerializer(serializers.ModelSerializer):
-    milestones = ProjectCreateMilestoneSerializer(many=True, required=False, write_only=True)
+    milestones = ProjectCreateMilestoneSerializer(
+        many=True, required=False, write_only=True
+    )
     client_id = serializers.PrimaryKeyRelatedField(
         queryset=Client.objects.all(),
         source="client",
@@ -104,9 +107,7 @@ class ProjectWriteSerializer(serializers.ModelSerializer):
             return
 
         client_id.queryset = Client.objects.filter(organisation=organisation)
-        proposal_id.queryset = Proposal.objects.filter(
-            organisation=organisation
-        )
+        proposal_id.queryset = Proposal.objects.filter(organisation=organisation)
 
     def validate_budget(self, value: Decimal) -> Decimal:
         if value <= 0:
@@ -130,7 +131,9 @@ class ProjectWriteSerializer(serializers.ModelSerializer):
         milestones = attrs.get("milestones", [])
         if milestones and self.instance is not None:
             raise serializers.ValidationError(
-                {"milestones": "Milestones can only be supplied when creating a project."}
+                {
+                    "milestones": "Milestones can only be supplied when creating a project."
+                }
             )
 
         return attrs

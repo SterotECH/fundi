@@ -176,10 +176,14 @@ def list_project_milestones(
     Return milestones for one organisation-scoped project.
     """
     get_project_detail(organisation=organisation, project_id=project_id)
-    return Milestone.objects.select_related("project").filter(
-        project__organisation=organisation,
-        project_id=project_id,
-    ).order_by("order", "due_date", "-created_at")
+    return (
+        Milestone.objects.select_related("project")
+        .filter(
+            project__organisation=organisation,
+            project_id=project_id,
+        )
+        .order_by("order", "due_date", "-created_at")
+    )
 
 
 def get_project_milestone(
@@ -326,9 +330,11 @@ def list_project_time_logs(
     Return time logs plus aggregate metrics for one organisation-scoped project.
     """
     project = get_project_detail(organisation=organisation, project_id=project_id)
-    queryset = TimeLog.objects.select_related("project", "user").filter(
-        project=project
-    ).order_by("-log_date", "-created_at")
+    queryset = (
+        TimeLog.objects.select_related("project", "user")
+        .filter(project=project)
+        .order_by("-log_date", "-created_at")
+    )
 
     total_hours = queryset.aggregate(total=Sum("hours"))["total"] or ZERO_DECIMAL
     billable_hours = (

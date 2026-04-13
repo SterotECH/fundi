@@ -105,22 +105,25 @@ def test_destroy_client_soft_archives(authenticated_client, org):
 
 
 @pytest.mark.django_db
-def test_list_leads_returns_only_active_own_organisation_leads(
+def test_list_leads_returns_all_own_organisation_leads_by_default(
     authenticated_client,
     org,
 ):
     own_lead = LeadFactory(organisation=org, name="Own Lead")
     LeadFactory(organisation=OrganisationFactory(), name="Other Org Lead")
-    LeadFactory(organisation=org, status=Lead.LeadStatus.DEAD)
-    LeadFactory(organisation=org, status=Lead.LeadStatus.CONVERTED)
+    dead_lead = LeadFactory(organisation=org, status=Lead.LeadStatus.DEAD)
+    converted_lead = LeadFactory(organisation=org, status=Lead.LeadStatus.CONVERTED)
 
     response = authenticated_client.get(reverse("lead-list"))
 
     assert response.status_code == 200
     payload = response.json()
-    assert len(payload["results"]) == 1
-    assert payload["results"][0]["id"] == str(own_lead.id)
-    assert payload["results"][0]["name"] == "Own Lead"
+    returned_ids = {item["id"] for item in payload["results"]}
+    assert returned_ids == {
+        str(own_lead.id),
+        str(dead_lead.id),
+        str(converted_lead.id),
+    }
     assert "organisation" not in payload["results"][0]
 
 

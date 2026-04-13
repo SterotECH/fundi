@@ -27,8 +27,7 @@ class ProposalViewSet(viewsets.ModelViewSet):
         organisation = getattr(self.request.user, "organisation", None)
         if organisation:
             return services.list_proposals(
-                organisation=organisation,
-                filters=self.request.query_params
+                organisation=organisation, filters=self.request.query_params
             )
 
         return Proposal.objects.none()
@@ -65,12 +64,10 @@ class ProposalViewSet(viewsets.ModelViewSet):
         serializer = ProposalListSerializer(queryset, many=True)
         return Response(serializer.data, status=status.HTTP_200_OK)
 
-
     def retrieve(self, request, *args, **kwargs):
         proposal = self._get_proposal(kwargs["pk"])
         serializer = ProposalDetailSerializer(proposal)
         return Response(serializer.data, status=status.HTTP_200_OK)
-
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -78,13 +75,10 @@ class ProposalViewSet(viewsets.ModelViewSet):
         validated_data = cast(Mapping[str, Any], serializer.validated_data)
 
         proposal = services.create_proposal(
-            organisation=request.user.organisation,
-            data=validated_data
+            organisation=request.user.organisation, data=validated_data
         )
         response_serializer = ProposalDetailSerializer(proposal)
-        return Response(
-            response_serializer.data, status=status.HTTP_201_CREATED
-        )
+        return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
     def partial_update(self, request, *args, **kwargs):
         proposal = self._get_proposal(kwargs["pk"])
@@ -96,15 +90,10 @@ class ProposalViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         validated_data = cast(Mapping[str, Any], serializer.validated_data)
 
-        proposal = services.update_proposal(
-            proposal=proposal,
-            data=validated_data
-        )
+        proposal = services.update_proposal(proposal=proposal, data=validated_data)
 
         response_serializer = ProposalDetailSerializer(proposal)
-        return Response(
-            response_serializer.data, status=status.HTTP_200_OK
-        )
+        return Response(response_serializer.data, status=status.HTTP_200_OK)
 
     def destroy(self, request, *args, **kwargs):
         proposal = self._get_proposal(kwargs["pk"])
@@ -121,8 +110,7 @@ class ProposalViewSet(viewsets.ModelViewSet):
             new_status=serializer.validated_data["status"],
         )
         return Response(
-            ProposalDetailSerializer(proposal).data,
-            status=status.HTTP_200_OK
+            ProposalDetailSerializer(proposal).data, status=status.HTTP_200_OK
         )
 
     @action(detail=True, methods=["post"], url_path="convert")

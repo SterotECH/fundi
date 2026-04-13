@@ -1,0 +1,211 @@
+
+<style>
+:root {
+  --p50:#EEEDFE;--p100:#CECBF6;--p200:#AFA9EC;--p400:#7F77DD;--p600:#534AB7;--p800:#3C3489;
+  --t50:#E1F5EE;--t400:#1D9E75;--t600:#0F6E56;--t800:#085041;
+  --a50:#FAEEDA;--a400:#BA7517;--a600:#854F0B;
+  --r50:#FCEBEB;--r400:#E24B4A;--r800:#791F1F;
+  --b50:#E6F1FB;--b400:#378ADD;--b800:#0C447C;
+  --g50:#F1EFE8;--g100:#D3D1C7;--g400:#888780;--g600:#5F5E5A;
+  --glass:rgba(255,255,255,0.76);
+  --glass-b:rgba(255,255,255,0.55);
+  --page:#F4F3FC;
+  --ink:#1a1720;--ink2:#5a5580;--ink3:#9390b0;
+  --bdr:rgba(180,176,220,0.28);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;background:var(--page);color:var(--ink);font-size:14px;line-height:1.5;min-height:600px}
+.page{max-width:900px;margin:0 auto;padding:24px}
+.topbar{display:flex;align-items:center;justify-content:space-between;margin-bottom:28px;gap:12px;flex-wrap:wrap}
+.topbar-left{display:flex;align-items:baseline;gap:12px}
+.page-title{font-size:22px;font-weight:700;letter-spacing:-.02em;color:var(--ink)}
+.count-pill{font-size:12px;font-weight:600;background:var(--glass);border:1px solid var(--glass-b);border-radius:20px;padding:2px 10px;color:var(--ink3);backdrop-filter:blur(8px)}
+.topbar-right{display:flex;align-items:center;gap:8px}
+.search-wrap{position:relative}
+.search-wrap svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);pointer-events:none;opacity:.5}
+.search-input{background:var(--glass);border:1px solid var(--glass-b);border-radius:10px;padding:7px 12px 7px 32px;font-size:13px;color:var(--ink);width:220px;backdrop-filter:blur(8px);outline:none;transition:border-color .15s}
+.search-input:focus{border-color:rgba(83,74,183,.35)}
+.search-input::placeholder{color:var(--ink3)}
+.filter-group{display:flex;gap:4px}
+.filter-btn{background:var(--glass);border:1px solid var(--glass-b);border-radius:8px;padding:6px 12px;font-size:12px;font-weight:600;color:var(--ink2);cursor:pointer;backdrop-filter:blur(8px);transition:all .14s}
+.filter-btn:hover{background:rgba(83,74,183,.06);border-color:rgba(83,74,183,.2)}
+.filter-btn.active{background:var(--p50);border-color:var(--p100);color:var(--p800)}
+.btn-primary{background:var(--p600);border:none;border-radius:9px;padding:7px 16px;font-size:13px;font-weight:600;color:#fff;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .14s}
+.btn-primary:hover{background:var(--p800)}
+.btn-primary svg{width:14px;height:14px}
+.chip{font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.03em;white-space:nowrap;display:inline-block}
+.chip-new{background:#E6F1FB;color:var(--b800)}
+.chip-contacted{background:var(--p50);color:var(--p800)}
+.chip-qualified{background:var(--t50);color:var(--t800)}
+.chip-dead{background:var(--g50);color:var(--g600)}
+.chip-source-referral{background:var(--a50);color:var(--a600)}
+.chip-source-cold{background:var(--b50);color:var(--b800)}
+.chip-source-conference{background:var(--p50);color:var(--p800)}
+.chip-source-partnership{background:var(--t50);color:var(--t800)}
+.leads-grid{display:flex;flex-direction:column;gap:8px}
+.lead-card{background:var(--glass);border:1px solid var(--glass-b);border-radius:14px;padding:14px 16px;backdrop-filter:blur(12px);cursor:pointer;transition:border-color .15s,box-shadow .15s;display:grid;grid-template-columns:1fr 100px 110px 80px 36px;gap:12px;align-items:center}
+.lead-card:hover{border-color:rgba(83,74,183,.25);box-shadow:0 4px 16px rgba(83,74,183,.07)}
+.lead-card.dead{opacity:.65}
+.lead-main{}
+.lead-name{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:3px}
+.lead-contact{font-size:12px;color:var(--ink2);display:flex;align-items:center;gap:6px}
+.lead-contact svg{opacity:.5;flex-shrink:0;width:12px;height:12px}
+.lead-meta{font-size:12px;color:var(--ink3)}
+.lead-school-type{font-size:11px;color:var(--ink3);margin-top:1px}
+.lead-date{font-size:11px;color:var(--ink3);text-align:center}
+.lead-action{display:flex;gap:4px;justify-content:flex-end}
+.icon-btn{width:28px;height:28px;border-radius:7px;border:1px solid var(--bdr);background:transparent;display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--ink3);transition:all .13s}
+.icon-btn:hover{background:var(--p50);border-color:var(--p100);color:var(--p600)}
+.icon-btn svg{width:13px;height:13px}
+.convert-btn{background:var(--t50);border:1px solid rgba(29,158,117,.25);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:700;color:var(--t800);cursor:pointer;white-space:nowrap;transition:all .14s}
+.convert-btn:hover{background:var(--t400);color:#fff;border-color:var(--t400)}
+.dead-label{font-size:11px;color:var(--g400);text-align:right}
+.col-header{display:grid;grid-template-columns:1fr 100px 110px 80px 36px;gap:12px;padding:0 16px 8px;font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3)}
+.empty{text-align:center;padding:48px 24px;color:var(--ink3);font-size:13px}
+.divider-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);padding:16px 4px 8px;display:flex;align-items:center;gap:8px}
+.divider-label::after{content:'';flex:1;height:1px;background:var(--bdr)}
+.stats-strip{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-bottom:20px}
+.stat{background:var(--glass);border:1px solid var(--glass-b);border-radius:11px;padding:12px 14px;backdrop-filter:blur(8px)}
+.stat-label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px}
+.stat-val{font-size:20px;font-weight:800;color:var(--ink);line-height:1}
+.stat-sub{font-size:11px;color:var(--ink3);margin-top:2px}
+</style>
+<h2 class="sr-only">Fundi lead list page — all leads with status, source, and convert-to-client actions</h2>
+<div class="page">
+<div class="stats-strip">
+  <div class="stat"><div class="stat-label">Total leads</div><div class="stat-val">8</div><div class="stat-sub">all time</div></div>
+  <div class="stat"><div class="stat-label">Active</div><div class="stat-val" style="color:var(--p600)">5</div><div class="stat-sub">new + contacted + qualified</div></div>
+  <div class="stat"><div class="stat-label">Qualified</div><div class="stat-val" style="color:var(--t600)">2</div><div class="stat-sub">ready to convert</div></div>
+  <div class="stat"><div class="stat-label">This month</div><div class="stat-val">3</div><div class="stat-sub">added in May</div></div>
+</div>
+
+<div class="topbar">
+  <div class="topbar-left">
+    <span class="page-title">Leads</span>
+    <span class="count-pill" id="visible-count">8 leads</span>
+  </div>
+  <div class="topbar-right">
+    <div class="search-wrap">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search-input" id="search" placeholder="Search name, contact, school…" oninput="filterLeads()">
+    </div>
+    <div class="filter-group" id="status-filters">
+      <button class="filter-btn active" onclick="setFilter(this,'all')">All</button>
+      <button class="filter-btn" onclick="setFilter(this,'new')">New</button>
+      <button class="filter-btn" onclick="setFilter(this,'contacted')">Contacted</button>
+      <button class="filter-btn" onclick="setFilter(this,'qualified')">Qualified</button>
+      <button class="filter-btn" onclick="setFilter(this,'dead')">Dead</button>
+    </div>
+    <button class="btn-primary" onclick="sendPrompt('Add a new lead to Fundi — what fields do I need?')">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      New lead
+    </button>
+  </div>
+</div>
+
+<div class="col-header">
+  <span>Lead / contact</span>
+  <span style="text-align:center">Source</span>
+  <span style="text-align:center">Status</span>
+  <span style="text-align:center">Added</span>
+  <span></span>
+</div>
+
+<div class="leads-grid" id="leads-list"></div>
+</div>
+
+<script>
+const leads=[
+  {id:1,name:'Prempeh College',contact:'Mr. Samuel Asante',phone:'+233 20 811 4422',type:'Senior High School',source:'referral',status:'qualified',added:'2 May',notes:'Wants full school management suite. Budget approved.'},
+  {id:2,name:'Labone Senior High',contact:'Mrs. Afia Owusu',phone:'+233 24 330 9901',type:'Senior High School',source:'cold',status:'contacted',added:'8 May',notes:'Followed up twice. Interest in fee collection module only.'},
+  {id:3,name:'KNUST Basic School',contact:'Dr. Kwame Frimpong',phone:'+233 54 722 3310',type:'University prep',source:'conference',status:'new',added:'12 May',notes:'Met at GNAT Education Conference.'},
+  {id:4,name:'Lincoln Community School',contact:'Ms. Esi Botchway',phone:'+233 50 444 8822',type:'International School',source:'referral',status:'qualified',added:'14 May',notes:'Referred by Accra Academy SHS. Ready to see demo.'},
+  {id:5,name:'Mfantsipim School',contact:'Rev. Fr. Mensah',phone:'+233 31 209 0044',type:'Senior High School',source:'partnership',status:'contacted',added:'3 Apr',notes:'Ongoing conversation about student portal.'},
+  {id:6,name:'Wesley Girls High',contact:'Ms. Adwoa Appiah',phone:'+233 24 551 7730',type:'Senior High School',source:'cold',status:'new',added:'18 May',notes:'Cold email responded positively.'},
+  {id:7,name:'Ghana International School',contact:'Mr. Tom Bradley',phone:'+233 30 277 2222',type:'International School',source:'cold',status:'dead',added:'10 Mar',notes:'Budget freeze until 2026.'},
+  {id:8,name:'Accra College of Education',contact:'Mrs. Portia Armah',phone:'+233 20 888 6641',type:'Tertiary',source:'referral',status:'dead',added:'22 Feb',notes:'Went with a local vendor.'},
+];
+
+let activeFilter='all';
+
+function statusChip(s){
+  const map={new:'chip-new',contacted:'chip-contacted',qualified:'chip-qualified',dead:'chip-dead'};
+  const labels={new:'New',contacted:'Contacted',qualified:'Qualified',dead:'Dead'};
+  return `<span class="chip ${map[s]||''}">${labels[s]||s}</span>`;
+}
+function sourceChip(s){
+  const map={referral:'chip-source-referral',cold:'chip-source-cold',conference:'chip-source-conference',partnership:'chip-source-partnership'};
+  const labels={referral:'Referral',cold:'Cold outreach',conference:'Conference',partnership:'Partnership'};
+  return `<span class="chip ${map[s]||''}">${labels[s]||s}</span>`;
+}
+
+function setFilter(btn, val){
+  document.querySelectorAll('#status-filters .filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  activeFilter=val;
+  filterLeads();
+}
+
+function filterLeads(){
+  const q=document.getElementById('search').value.toLowerCase();
+  const list=document.getElementById('leads-list');
+  const active=leads.filter(l=>{
+    const matchFilter=activeFilter==='all'||l.status===activeFilter;
+    const matchQ=!q||(l.name+l.contact+l.type).toLowerCase().includes(q);
+    return matchFilter&&matchQ;
+  });
+  const alive=active.filter(l=>l.status!=='dead');
+  const dead=active.filter(l=>l.status==='dead');
+  let html='';
+  if(alive.length===0&&dead.length===0){
+    html=`<div class="empty">No leads match your search.</div>`;
+  } else {
+    alive.forEach(l=>{ html+=cardHTML(l); });
+    if(dead.length>0){
+      html+=`<div class="divider-label">Dead leads</div>`;
+      dead.forEach(l=>{ html+=cardHTML(l); });
+    }
+  }
+  list.innerHTML=html;
+  document.getElementById('visible-count').textContent=`${active.length} lead${active.length!==1?'s':''}`;
+}
+
+function cardHTML(l){
+  const convertBtn=l.status!=='dead'?`<button class="convert-btn" onclick="doConvert(event,${l.id})">Convert →</button>`:
+    `<span class="dead-label">Dead</span>`;
+  const actionBtn=`<button class="icon-btn" onclick="editLead(event,${l.id})" title="Edit">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+  </button>`;
+  return `<div class="lead-card${l.status==='dead'?' dead':''}" onclick="viewLead(${l.id})">
+    <div class="lead-main">
+      <div class="lead-name">${l.name}</div>
+      <div class="lead-contact">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        ${l.contact}
+      </div>
+      <div class="lead-school-type">${l.type}</div>
+    </div>
+    <div style="text-align:center">${sourceChip(l.source)}</div>
+    <div style="text-align:center">${statusChip(l.status)}</div>
+    <div class="lead-date">${l.added}</div>
+    <div class="lead-action">${actionBtn}</div>
+  </div>`;
+}
+
+function viewLead(id){
+  const l=leads.find(x=>x.id===id);
+  if(l) sendPrompt(`Show me the lead detail for ${l.name} — ${l.contact}. Notes: ${l.notes}`);
+}
+function doConvert(e,id){
+  e.stopPropagation();
+  const l=leads.find(x=>x.id===id);
+  if(l) sendPrompt(`Convert lead "${l.name}" to a client in Fundi — walk me through the convert-to-client flow`);
+}
+function editLead(e,id){
+  e.stopPropagation();
+  const l=leads.find(x=>x.id===id);
+  if(l) sendPrompt(`Edit lead ${l.name} — what fields can I update?`);
+}
+
+filterLeads();
+</script>

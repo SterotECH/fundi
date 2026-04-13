@@ -208,3 +208,104 @@ export type DashboardSummary = {
   }>;
   unread_notifications_count: number;
 };
+
+export type AssistantItem = {
+  type: string;
+  label: string;
+  reason: string;
+  entity_type?: string;
+  entity_id?: string;
+  priority: number;
+};
+
+export type AssistantDraft = {
+  subject: string;
+  body: string;
+  template_key: string;
+};
+
+export type AssistantQueryResponse = {
+  reply: string;
+  matched_rule: string;
+  data_context_used?: string;
+  draft?: AssistantDraft;
+  items?: AssistantItem[];
+};
+
+export type RevenueSummary = {
+  this_month_collected: string;
+  last_month_collected: string;
+  mom_change_pct: number;
+  ytd_collected: string;
+  total_outstanding: string;
+  overdue_count: number;
+  overdue_total: string;
+};
+
+export type RevenuePoint = {
+  month: string;
+  collected_ghs: string;
+  invoiced_ghs: string;
+};
+
+export type RevenueSeries = {
+  months: RevenuePoint[];
+  total_collected: string;
+  total_outstanding: string;
+};
+
+export type PipelineStatusRow = {
+  status: string;
+  count: number;
+  total_value_ghs: string;
+};
+
+export type PipelineMetrics = {
+  by_status: PipelineStatusRow[];
+  win_rate_pct: number;
+  avg_deal_value_ghs: string;
+  avg_days_to_close: number;
+  total_pipeline_value_ghs: string;
+};
+
+export type ClientProfitabilityRow = {
+  client_id: string;
+  client_name: string;
+  invoiced_ghs: string;
+  collected_ghs: string;
+  outstanding_ghs: string;
+  total_hours: number;
+  billable_hours: number;
+  effective_rate_ghs: string;
+  open_proposals: number;
+};
+
+export type ProjectBudgetBurnRow = {
+  project_id: string;
+  title: string;
+  client_name: string;
+  budget_ghs: string;
+  invoiced_ghs: string;
+  collected_ghs: string;
+  total_hours: number;
+  billable_hours: number;
+  burn_pct: number;
+  status: string;
+};
+
+export type Insight = {
+  type: string;
+  severity: string;
+  title: string;
+  body: string;
+  entity_type?: string;
+  entity_id?: string;
+  value?: string;
+};
+
+export type AssistantBriefing = {
+  headline: string;
+  revenue_summary: RevenueSummary;
+  follow_up: AssistantQueryResponse;
+  insights: Insight[];
+};

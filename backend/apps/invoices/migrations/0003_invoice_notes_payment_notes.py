@@ -4,20 +4,19 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('invoices', '0002_invoice_number_sequence'),
+        ("invoices", "0002_invoice_number_sequence"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='invoice',
-            name='notes',
+            model_name="invoice",
+            name="notes",
             field=models.TextField(blank=True),
         ),
         migrations.AddField(
-            model_name='payment',
-            name='notes',
+            model_name="payment",
+            name="notes",
             field=models.TextField(blank=True),
         ),
     ]

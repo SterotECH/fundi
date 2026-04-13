@@ -4,15 +4,21 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('core', '0002_notification'),
+        ("core", "0002_notification"),
     ]
 
     operations = [
         migrations.AlterField(
-            model_name='notification',
-            name='type',
-            field=models.CharField(choices=[('invoice_overdue', 'Invoice Overdue'), ('proposal_deadline', 'Proposal Deadline'), ('project_due', 'Project Due')], max_length=20),
+            model_name="notification",
+            name="type",
+            field=models.CharField(
+                choices=[
+                    ("invoice_overdue", "Invoice Overdue"),
+                    ("proposal_deadline", "Proposal Deadline"),
+                    ("project_due", "Project Due"),
+                ],
+                max_length=20,
+            ),
         ),
     ]

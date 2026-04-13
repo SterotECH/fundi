@@ -47,18 +47,9 @@ class Invoice(BaseModel):
         null=True,
         blank=True,
     )
-    subtotal = models.DecimalField(
-        max_digits=12,
-        decimal_places=2
-    )
-    tax = models.DecimalField(
-        max_digits=12,
-        decimal_places=2
-    )
-    total = models.DecimalField(
-        max_digits=12,
-        decimal_places=2
-    )
+    subtotal = models.DecimalField(max_digits=12, decimal_places=2)
+    tax = models.DecimalField(max_digits=12, decimal_places=2)
+    total = models.DecimalField(max_digits=12, decimal_places=2)
     status = models.CharField(
         max_length=20,
         choices=InvoiceStatus.choices,
@@ -87,18 +78,10 @@ class InvoiceLineItem(BaseModel):
     description = models.CharField(
         max_length=255,
     )
-    quantity = models.DecimalField(
-        max_digits=12,
-        decimal_places=2
-    )
-    unit_price = models.DecimalField(
-        max_digits=12,
-        decimal_places=2
-    )
-    line_total = models.DecimalField(
-        max_digits=12,
-        decimal_places=2
-    )
+    quantity = models.DecimalField(max_digits=12, decimal_places=2)
+    unit_price = models.DecimalField(max_digits=12, decimal_places=2)
+    line_total = models.DecimalField(max_digits=12, decimal_places=2)
+
 
 class Payment(BaseModel):
     class PaymentMethod(models.TextChoices):
@@ -116,10 +99,7 @@ class Payment(BaseModel):
     if TYPE_CHECKING:
         invoice_id: UUID
 
-    amount = models.DecimalField(
-        max_digits=12,
-        decimal_places=2
-    )
+    amount = models.DecimalField(max_digits=12, decimal_places=2)
     provider_reference = models.CharField(
         max_length=255,
         null=True,

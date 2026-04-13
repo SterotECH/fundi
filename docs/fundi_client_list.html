@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clients — Fundi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --p50:#EEEDFE;--p100:#CECBF6;--p200:#AFA9EC;--p600:#534AB7;--p800:#3C3489;
+  --t50:#E1F5EE;--t100:#9FE1CB;--t400:#1D9E75;--t600:#0F6E56;--t800:#085041;
+  --a50:#FAEEDA;--a100:#FAC775;--a400:#BA7517;--a600:#854F0B;
+  --r50:#FCEBEB;--r400:#E24B4A;--r800:#791F1F;
+  --b50:#E6F1FB;--b400:#378ADD;--b800:#0C447C;
+  --g50:#F1EFE8;--g100:#D3D1C7;--g400:#888780;--g600:#5F5E5A;--g800:#444441;
+  --glass-bg:rgba(255,255,255,0.72);
+  --glass-border:rgba(255,255,255,0.55);
+  --glass-shadow:0 4px 24px rgba(83,74,183,0.08),0 1px 4px rgba(0,0,0,0.05);
+  --page:#F4F3FC;
+  --ink:#1a1720;--ink2:#5a5580;--ink3:#9390b0;
+  --border:rgba(180,176,220,0.3);
+  --row-hover:rgba(83,74,183,0.03);
+}
+
+body{
+  background:var(--page);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  color:var(--ink);
+  font-size:14px;
+  line-height:1.5;
+  min-height:100vh;
+}
+
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 0%, rgba(83,74,183,.07) 0%, transparent 65%),
+    radial-gradient(ellipse 40% 50% at 85% 90%, rgba(29,158,117,.05) 0%, transparent 65%);
+  pointer-events:none;
+  z-index:0;
+}
+
+.wrap{
+  position:relative;
+  z-index:1;
+  max-width:1080px;
+  margin:0 auto;
+  padding:24px 24px 64px;
+}
+
+/* ── Page header ── */
+.page-header{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:16px;
+  margin-bottom:20px;
+  flex-wrap:wrap;
+}
+.page-title-block{}
+.page-breadcrumb{
+  font-size:11px;
+  color:var(--ink3);
+  margin-bottom:4px;
+  display:flex;
+  align-items:center;
+  gap:5px;
+}
+.page-breadcrumb svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.5}
+.page-title{
+  font-size:22px;
+  font-weight:600;
+  color:var(--ink);
+  letter-spacing:-.02em;
+}
+.page-subtitle{
+  font-size:12px;
+  color:var(--ink3);
+  margin-top:2px;
+}
+.page-header-right{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+.btn{
+  font-size:12px;
+  font-weight:500;
+  padding:7px 16px;
+  border-radius:9px;
+  border:0.5px solid var(--border);
+  background:var(--glass-bg);
+  color:var(--ink);
+  cursor:pointer;
+  backdrop-filter:blur(8px);
+  transition:all .15s;
+  white-space:nowrap;
+}
+.btn:hover{background:rgba(255,255,255,0.9)}
+.btn-primary{
+  background:#534AB7;
+  color:#fff;
+  border-color:#3C3489;
+}
+.btn-primary:hover{background:#3C3489}
+
+/* ── Stat strip ── */
+.stat-strip{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:10px;
+  margin-bottom:16px;
+}
+.stat-tile{
+  background:var(--glass-bg);
+  border:0.5px solid var(--glass-border);
+  border-radius:12px;
+  padding:13px 16px;
+  backdrop-filter:blur(10px);
+  box-shadow:var(--glass-shadow);
+}
+.st-label{
+  font-size:10px;
+  font-weight:600;
+  letter-spacing:.05em;
+  text-transform:uppercase;
+  color:var(--ink3);
+  margin-bottom:4px;
+}
+.st-val{
+  font-size:22px;
+  font-weight:600;
+  color:var(--ink);
+  line-height:1;
+}
+.st-sub{font-size:11px;color:var(--ink3);margin-top:3px}
+.st-sub.good{color:var(--t600)}
+.st-sub.warn{color:var(--a600)}
+.st-sub.bad{color:var(--r800)}
+
+/* ── Filter bar ── */
+.filter-bar{
+  background:var(--glass-bg);
+  border:0.5px solid var(--glass-border);
+  border-radius:14px;
+  padding:14px 18px;
+  backdrop-filter:blur(12px);
+  box-shadow:var(--glass-shadow);
+  margin-bottom:12px;
+  display:flex;
+  align-items:center;
+  gap:10px;
+  flex-wrap:wrap;
+}
+
+/* Search */
+.search-wrap{
+  position:relative;
+  flex:1;
+  min-width:200px;
+  max-width:340px;
+}
+.search-wrap svg{
+  position:absolute;
+  left:11px;
+  top:50%;
+  transform:translateY(-50%);
+  width:14px;height:14px;
+  stroke:var(--ink3);fill:none;stroke-width:1.5;
+  pointer-events:none;
+}
+.search-input{
+  width:100%;
+  font-size:13px;
+  padding:7px 12px 7px 32px;
+  border-radius:8px;
+  border:0.5px solid var(--border);
+  background:rgba(255,255,255,0.6);
+  color:var(--ink);
+  outline:none;
+  transition:border-color .15s,background .15s;
+  backdrop-filter:blur(6px);
+}
+.search-input::placeholder{color:var(--ink3)}
+.search-input:focus{
+  border-color:rgba(83,74,183,0.4);
+  background:rgba(255,255,255,0.85);
+}
+
+.filter-divider{
+  width:1px;height:24px;
+  background:var(--border);
+  flex-shrink:0;
+}
+
+/* Select dropdowns */
+.filter-select-wrap{position:relative;flex-shrink:0}
+.filter-select-wrap svg.chevron{
+  position:absolute;
+  right:10px;top:50%;
+  transform:translateY(-50%);
+  width:12px;height:12px;
+  stroke:var(--ink3);fill:none;stroke-width:1.5;
+  pointer-events:none;
+}
+.filter-select{
+  font-size:12px;
+  font-weight:500;
+  padding:7px 32px 7px 12px;
+  border-radius:8px;
+  border:0.5px solid var(--border);
+  background:rgba(255,255,255,0.6);
+  color:var(--ink);
+  appearance:none;
+  cursor:pointer;
+  outline:none;
+  transition:border-color .15s;
+  backdrop-filter:blur(6px);
+}
+.filter-select:focus{border-color:rgba(83,74,183,0.4)}
+
+/* Archive toggle */
+.archive-toggle{
+  display:flex;
+  align-items:center;
+  gap:0;
+  border:0.5px solid var(--border);
+  border-radius:8px;
+  overflow:hidden;
+  flex-shrink:0;
+}
+.toggle-btn{
+  font-size:12px;
+  font-weight:500;
+  padding:7px 14px;
+  background:transparent;
+  border:none;
+  color:var(--ink3);
+  cursor:pointer;
+  transition:all .15s;
+  white-space:nowrap;
+}
+.toggle-btn.active{
+  background:var(--p600);
+  color:#fff;
+}
+.toggle-btn:not(.active):hover{
+  background:rgba(83,74,183,0.06);
+  color:var(--ink);
+}
+
+.filter-count{
+  font-size:11px;
+  color:var(--ink3);
+  margin-left:auto;
+  white-space:nowrap;
+  flex-shrink:0;
+}
+
+/* ── Table panel ── */
+.table-panel{
+  background:var(--glass-bg);
+  border:0.5px solid var(--glass-border);
+  border-radius:14px;
+  overflow:hidden;
+  backdrop-filter:blur(12px);
+  box-shadow:var(--glass-shadow);
+}
+
+.table-scroll{overflow-x:auto}
+
+table{
+  width:100%;
+  border-collapse:collapse;
+  font-size:13px;
+}
+thead tr{
+  border-bottom:0.5px solid var(--border);
+  background:rgba(83,74,183,0.03);
+}
+th{
+  padding:11px 16px;
+  text-align:left;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--ink3);
+  white-space:nowrap;
+  user-select:none;
+}
+th.sortable{cursor:pointer;transition:color .15s}
+th.sortable:hover{color:var(--ink2)}
+th svg{
+  display:inline;vertical-align:middle;
+  width:11px;height:11px;
+  stroke:currentColor;fill:none;stroke-width:2;
+  margin-left:3px;opacity:.5;
+}
+
+tbody tr{
+  border-bottom:0.5px solid rgba(180,176,220,0.15);
+  cursor:pointer;
+  transition:background .12s;
+}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--row-hover)}
+
+td{
+  padding:12px 16px;
+  vertical-align:middle;
+  line-height:1.45;
+}
+
+/* Client name + type */
+.client-name-cell{display:flex;align-items:center;gap:10px}
+.client-avatar{
+  width:34px;height:34px;
+  border-radius:9px;
+  background:var(--p50);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;
+  color:var(--p800);
+  flex-shrink:0;
+  letter-spacing:-.5px;
+}
+.client-name{
+  font-size:13px;
+  font-weight:500;
+  color:var(--ink);
+  margin-bottom:2px;
+}
+.type-chip{
+  display:inline-block;
+  font-size:9px;
+  font-weight:700;
+  padding:1px 7px;
+  border-radius:20px;
+  letter-spacing:.04em;
+}
+.chip-shs{background:#EEEDFE;color:#3C3489}
+.chip-jhs{background:#FAEEDA;color:#854F0B}
+.chip-intl{background:#E6F1FB;color:#0C447C}
+.chip-uni{background:#E1F5EE;color:#085041}
+
+/* Contact / phone */
+.td-muted{font-size:12px;color:var(--ink2)}
+.td-faint{font-size:12px;color:var(--ink3)}
+
+/* Region */
+.region-pill{
+  display:inline-flex;
+  align-items:center;
+  gap:4px;
+  font-size:11px;
+  color:var(--ink3);
+  background:rgba(180,176,220,0.12);
+  border-radius:6px;
+  padding:2px 8px;
+}
+
+/* Proposal count */
+.proposal-count{
+  display:inline-flex;
+  align-items:center;
+  gap:5px;
+  font-size:12px;
+  font-weight:600;
+  color:var(--p600);
+}
+.proposal-count.none{color:var(--ink3);font-weight:400}
+
+/* Outstanding GHS */
+.outstanding{font-size:13px;font-weight:600;color:var(--ink)}
+.outstanding.bad{color:var(--r800)}
+.outstanding.warn{color:var(--a600)}
+.outstanding.clear{color:var(--t600)}
+
+/* Archived row */
+tbody tr.archived{opacity:.55}
+tbody tr.archived:hover{opacity:.75}
+
+/* Outstanding left border accent */
+tbody tr.has-balance td:first-child{
+  border-left:2px solid var(--r400);
+}
+
+/* ── Empty state ── */
+.empty-state{
+  padding:56px 24px;
+  text-align:center;
+}
+.empty-icon{
+  width:44px;height:44px;
+  border-radius:12px;
+  background:var(--p50);
+  display:inline-flex;
+  align-items:center;
+  justify-content:center;
+  margin-bottom:14px;
+}
+.empty-icon svg{width:20px;height:20px;stroke:var(--p600);fill:none;stroke-width:1.5}
+.empty-title{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:5px}
+.empty-sub{font-size:13px;color:var(--ink3);margin-bottom:16px}
+
+/* ── Pagination ── */
+.pagination{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:12px 18px;
+  border-top:0.5px solid var(--border);
+  gap:12px;
+  flex-wrap:wrap;
+}
+.page-info{font-size:12px;color:var(--ink3)}
+.page-controls{display:flex;align-items:center;gap:4px}
+.page-btn{
+  width:32px;height:32px;
+  border-radius:8px;
+  border:0.5px solid var(--border);
+  background:transparent;
+  font-size:12px;font-weight:500;
+  color:var(--ink3);
+  cursor:pointer;
+  display:flex;align-items:center;justify-content:center;
+  transition:all .15s;
+}
+.page-btn:hover:not(.active):not(:disabled){
+  background:rgba(83,74,183,0.07);
+  color:var(--p600);
+  border-color:rgba(83,74,183,0.25);
+}
+.page-btn.active{
+  background:var(--p600);
+  color:#fff;
+  border-color:var(--p800);
+  font-weight:700;
+}
+.page-btn:disabled{opacity:.35;cursor:default}
+.page-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.5}
+.page-ellipsis{
+  width:32px;height:32px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;color:var(--ink3);
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div class="page-title-block">
+      <div class="page-breadcrumb">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        Dashboard
+        <span>›</span>
+        Clients
+      </div>
+      <div class="page-title">Clients</div>
+      <div class="page-subtitle">All schools and institutions you work with</div>
+    </div>
+    <div class="page-header-right">
+      <button class="btn btn-primary">
+        + New client
+      </button>
+    </div>
+  </div>
+
+  <!-- Stat strip -->
+  <div class="stat-strip">
+    <div class="stat-tile">
+      <div class="st-label">Total clients</div>
+      <div class="st-val">24</div>
+      <div class="st-sub">22 active</div>
+    </div>
+    <div class="stat-tile">
+      <div class="st-label">Outstanding</div>
+      <div class="st-val">GHS 31.2k</div>
+      <div class="st-sub bad">7 invoices unpaid</div>
+    </div>
+    <div class="stat-tile">
+      <div class="st-label">Open proposals</div>
+      <div class="st-val">9</div>
+      <div class="st-sub warn">GHS 48,500 pipeline</div>
+    </div>
+    <div class="stat-tile">
+      <div class="st-label">Active projects</div>
+      <div class="st-val">6</div>
+      <div class="st-sub good">Across 4 clients</div>
+    </div>
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+
+    <!-- Search — maps to ?search= -->
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input
+        class="search-input"
+        type="text"
+        placeholder="Search by name…"
+        id="search"
+        value=""
+      />
+    </div>
+
+    <div class="filter-divider"></div>
+
+    <!-- Type filter — maps to ?type=shs|jhs|international|university -->
+    <div class="filter-select-wrap">
+      <select class="filter-select" id="filter-type">
+        <option value="">All types</option>
+        <option value="shs">Senior High (SHS)</option>
+        <option value="jhs">Junior High (JHS)</option>
+        <option value="international">International</option>
+        <option value="university">University</option>
+      </select>
+      <svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+
+    <!-- Region filter — maps to ?region= -->
+    <div class="filter-select-wrap">
+      <select class="filter-select" id="filter-region">
+        <option value="">All regions</option>
+        <option value="Greater Accra">Greater Accra</option>
+        <option value="Ashanti">Ashanti</option>
+        <option value="Eastern">Eastern</option>
+        <option value="Western">Western</option>
+        <option value="Central">Central</option>
+        <option value="Northern">Northern</option>
+        <option value="Volta">Volta</option>
+        <option value="Upper East">Upper East</option>
+        <option value="Upper West">Upper West</option>
+        <option value="Bono">Bono</option>
+        <option value="Bono East">Bono East</option>
+        <option value="Ahafo">Ahafo</option>
+        <option value="Savannah">Savannah</option>
+        <option value="North East">North East</option>
+        <option value="Oti">Oti</option>
+        <option value="Western North">Western North</option>
+      </select>
+      <svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+
+    <div class="filter-divider"></div>
+
+    <!-- Archive toggle — maps to ?is_archived=false|true -->
+    <div class="archive-toggle">
+      <button class="toggle-btn active" id="toggle-active" onclick="setArchive(false)">Active</button>
+      <button class="toggle-btn" id="toggle-archived" onclick="setArchive(true)">Archived</button>
+    </div>
+
+    <!-- Result count -->
+    <span class="filter-count" id="result-count">Showing 8 of 22 clients</span>
+
+  </div>
+
+  <!-- Table panel -->
+  <div class="table-panel">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th class="sortable">
+              Client
+              <svg viewBox="0 0 24 24"><polyline points="6 9 12 3 18 9"/><polyline points="6 15 12 21 18 15"/></svg>
+            </th>
+            <th>Contact person</th>
+            <th>Phone</th>
+            <th class="sortable">
+              Region
+              <svg viewBox="0 0 24 24"><polyline points="6 9 12 3 18 9"/><polyline points="6 15 12 21 18 15"/></svg>
+            </th>
+            <th>Open proposals</th>
+            <th class="sortable" style="text-align:right">
+              Outstanding
+              <svg viewBox="0 0 24 24"><polyline points="6 9 12 3 18 9"/><polyline points="6 15 12 21 18 15"/></svg>
+            </th>
+          </tr>
+        </thead>
+        <tbody id="client-tbody">
+
+          <!-- Row: has outstanding balance -->
+          <tr class="has-balance" onclick="window.location='#client-accra-academy'">
+            <td>
+              <div class="client-name-cell">
+                <div class="client-avatar">AA</div>
+                <div>
+                  <div class="client-name">Accra Academy Senior High School</div>
+                  <span class="type-chip chip-shs">SHS</span>
+                </div>
+              </div>
+            </td>
+            <td class="td-muted">Mrs. Abena Mensah</td>
+            <td class="td-faint">+233 30 277 1234</td>
+            <td><span class="region-pill">Greater Accra</span></td>
+            <td>
+              <span class="proposal-count">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                2 open
+              </span>
+            </td>
+            <td style="text-align:right"><span class="outstanding bad">GHS 10,000</span></td>
+          </tr>
+
+          <!-- Row: has outstanding balance -->
+          <tr class="has-balance" onclick="window.location='#client-gis'">
+            <td>
+              <div class="client-name-cell">
+                <div class="client-avatar" style="background:#E6F1FB;color:#0C447C">GI</div>
+                <div>
+                  <div class="client-name">GIS International School</div>
+                  <span class="type-chip chip-intl">International</span>
+                </div>
+              </div>
+            </td>
+            <td class="td-muted">Mr. Kweku Asante</td>
+            <td class="td-faint">+233 30 274 9900</td>
+            <td><span class="region-pill">Greater Accra</span></td>
+            <td>
+              <span class="proposal-count">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                1 open
+              </span>
+            </td>
+            <td style="text-align:right"><span class="outstanding warn">GHS 6,800</span></td>
+          </tr>
+
+          <!-- Row: clear balance -->
+          <tr onclick="window.location='#client-tema'">
+            <td>
+              <div class="client-name-cell">
+                <div class="client-avatar" style="background:#FAEEDA;color:#854F0B">TS</div>
+                <div>
+                  <div class="client-name">Tema Senior High School</div>
+                  <span class="type-chip chip-shs">SHS</span>
+                </div>
+              </div>
+            </td>
+            <td class="td-muted">Mr. Joseph Armah</td>
+            <td class="td-faint">+233 30 320 2210</td>
+            <td><span class="region-pill">Greater Accra</span></td>
+            <td>
+              <span class="proposal-count">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                1 open
+              </span>
+            </td>
+            <td style="text-align:right"><span class="outstanding clear">Paid up</span></td>
+          </tr>
+
+          <!-- Row: no proposals -->
+          <tr onclick="window.location='#client-ridge'">
+            <td>
+              <div class="client-name-cell">
+                <div class="client-avatar" style="background:#E1F5EE;color:#085041">RI</div>
+                <div>
+                  <div class="client-name">Ridge International School</div>
+                  <span class="type-chip chip-intl">International</span>
+                </div>
+              </div>
+            </td>
+            <td class="td-muted">Ms. Ama Darko</td>
+            <td class="td-faint">+233 30 278 5566</td>
+            <td><span class="region-pill">Greater Accra</span></td>
+            <td>
+              <span class="proposal-count none">—</span>
+            </td>
+            <td style="text-align:right"><span class="outstanding" style="color:var(--ink3);font-size:12px">GHS 0</span></td>
+          </tr>
+
+          <!-- Row: Eastern region -->
+          <tr onclick="window.location='#client-presbyterian'">
+            <td>
+              <div class="client-name-cell">
+                <div class="client-avatar" style="background:#FAEEDA;color:#854F0B">PB</div>
+                <div>
+                  <div class="client-name">Presbyterian Boys' Secondary School</div>
+                  <span class="type-chip chip-shs">SHS</span>
+                </div>
+              </div>
+            </td>
+            <td class="td-muted">Rev. Amponsah</td>
+            <td class="td-faint">+233 34 209 2200</td>
+            <td><span class="region-pill">Eastern</span></td>
+            <td>
+              <span class="proposal-count">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                3 open
+              </span>
+            </td>
+            <td style="text-align:right"><span class="outstanding warn">GHS 4,200</span></td>
+          </tr>
+
+          <!-- Row: Ashanti -->
+          <tr onclick="window.location='#client-osei'">
+            <td>
+              <div class="client-name-cell">
+                <div class="client-avatar" style="background:#EEEDFE;color:#3C3489">OT</div>
+                <div>
+                  <div class="client-name">Osei Tutu SHS</div>
+                  <span class="type-chip chip-shs">SHS</span>
+                </div>
+              </div>
+            </td>
+            <td class="td-muted">Mrs. Akua Frimpong</td>
+            <td class="td-faint">+233 32 209 4000</td>
+            <td><span class="region-pill">Ashanti</span></td>
+            <td>
+              <span class="proposal-count none">—</span>
+            </td>
+            <td style="text-align:right"><span class="outstanding clear">Paid up</span></td>
+          </tr>
+
+          <!-- Row: JHS -->
+          <tr onclick="window.location='#client-labone'">
+            <td>
+              <div class="client-name-cell">
+                <div class="client-avatar" style="background:#FAEEDA;color:#854F0B">LJ</div>
+                <div>
+                  <div class="client-name">Labone Junior High School</div>
+                  <span class="type-chip chip-jhs">JHS</span>
+                </div>
+              </div>
+            </td>
+            <td class="td-muted">Mr. Kofi Mensah</td>
+            <td class="td-faint">+233 30 276 3344</td>
+            <td><span class="region-pill">Greater Accra</span></td>
+            <td>
+              <span class="proposal-count">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                1 open
+              </span>
+            </td>
+            <td style="text-align:right"><span class="outstanding bad">GHS 3,200</span></td>
+          </tr>
+
+          <!-- Row: University -->
+          <tr onclick="window.location='#client-ug'">
+            <td>
+              <div class="client-name-cell">
+                <div class="client-avatar" style="background:#E1F5EE;color:#085041">UG</div>
+                <div>
+                  <div class="client-name">University of Ghana — ICT Unit</div>
+                  <span class="type-chip chip-uni">University</span>
+                </div>
+              </div>
+            </td>
+            <td class="td-muted">Dr. Nana Boateng</td>
+            <td class="td-faint">+233 30 250 0381</td>
+            <td><span class="region-pill">Greater Accra</span></td>
+            <td>
+              <span class="proposal-count">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+                1 open
+              </span>
+            </td>
+            <td style="text-align:right"><span class="outstanding" style="color:var(--ink3);font-size:12px">GHS 0</span></td>
+          </tr>
+
+        </tbody>
+      </table>
+
+      <!-- Empty state — shown when filters return 0 results -->
+      <div class="empty-state" id="empty-state" style="display:none">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="empty-title">No clients found</div>
+        <div class="empty-sub">Try adjusting your search or filters</div>
+        <button class="btn" onclick="clearFilters()">Clear filters</button>
+      </div>
+
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination">
+      <div class="page-info">Showing <strong>1–8</strong> of <strong>22</strong> active clients</div>
+      <div class="page-controls">
+
+        <button class="page-btn" disabled title="Previous page">
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+
+        <button class="page-btn active">1</button>
+        <button class="page-btn">2</button>
+        <button class="page-btn">3</button>
+        <div class="page-ellipsis">…</div>
+        <button class="page-btn">8</button>
+
+        <button class="page-btn" title="Next page">
+          <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+// ── Stub interactivity — mirrors what React Query + URL params will do ──
+
+// Archive toggle
+let showingArchived = false;
+
+function setArchive(archived) {
+  showingArchived = archived;
+  document.getElementById('toggle-active').classList.toggle('active', !archived);
+  document.getElementById('toggle-archived').classList.toggle('active', archived);
+
+  // In production: update URL param ?is_archived=true|false and refetch
+  // GET /api/v1/clients/?is_archived=true
+  const rows = document.querySelectorAll('#client-tbody tr');
+  rows.forEach(r => r.classList.toggle('archived', archived));
+
+  const label = archived ? 'Showing 2 archived clients' : 'Showing 8 of 22 clients';
+  document.getElementById('result-count').textContent = label;
+}
+
+// Clear filters helper (called from empty state CTA)
+function clearFilters() {
+  document.getElementById('search').value = '';
+  document.getElementById('filter-type').value = '';
+  document.getElementById('filter-region').value = '';
+  setArchive(false);
+  document.getElementById('empty-state').style.display = 'none';
+  document.getElementById('client-tbody').style.display = '';
+  document.getElementById('result-count').textContent = 'Showing 8 of 22 clients';
+}
+
+// Search input — debounce would go here in React (useDebounce hook)
+// Backend param: GET /api/v1/clients/?search=accra
+document.getElementById('search').addEventListener('input', function() {
+  const q = this.value.toLowerCase();
+  const rows = document.querySelectorAll('#client-tbody tr');
+  let visible = 0;
+  rows.forEach(r => {
+    const name = r.querySelector('.client-name')?.textContent.toLowerCase() || '';
+    const show = name.includes(q);
+    r.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+  document.getElementById('result-count').textContent =
+    visible > 0 ? `Showing ${visible} result${visible !== 1 ? 's' : ''}` : 'No results';
+  document.getElementById('empty-state').style.display = visible === 0 ? 'block' : 'none';
+  document.getElementById('client-tbody').style.display = visible === 0 ? 'none' : '';
+});
+
+// Type filter — backend param: GET /api/v1/clients/?type=shs
+document.getElementById('filter-type').addEventListener('change', function() {
+  const val = this.value; // '' | 'shs' | 'jhs' | 'international' | 'university'
+  // In production: append to query string and refetch via React Query
+  // queryClient.setQueryData(['clients'], ...) or just update URL
+  console.log('type filter:', val || 'all');
+});
+
+// Region filter — backend param: GET /api/v1/clients/?region=Greater+Accra
+document.getElementById('filter-region').addEventListener('change', function() {
+  const val = this.value;
+  console.log('region filter:', val || 'all');
+});
+
+// Sortable column headers — stub only
+document.querySelectorAll('th.sortable').forEach(th => {
+  th.addEventListener('click', function() {
+    // In production: toggle ?ordering=name | ?ordering=-name
+    // DRF expects: GET /api/v1/clients/?ordering=-name
+    console.log('sort by:', this.textContent.trim());
+  });
+});
+</script>
+</body>
+</html>

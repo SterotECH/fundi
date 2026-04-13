@@ -1,0 +1,846 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Proposals — Fundi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --p50:#EEEDFE;--p100:#CECBF6;--p200:#AFA9EC;--p600:#534AB7;--p800:#3C3489;
+  --t50:#E1F5EE;--t100:#9FE1CB;--t400:#1D9E75;--t600:#0F6E56;--t800:#085041;
+  --a50:#FAEEDA;--a100:#FAC775;--a400:#BA7517;--a600:#854F0B;
+  --r50:#FCEBEB;--r400:#E24B4A;--r800:#791F1F;
+  --b50:#E6F1FB;--b400:#378ADD;--b800:#0C447C;
+  --g50:#F1EFE8;--g100:#D3D1C7;--g400:#888780;--g600:#5F5E5A;--g800:#444441;
+  --glass-bg:rgba(255,255,255,0.72);
+  --glass-border:rgba(255,255,255,0.55);
+  --glass-shadow:0 4px 24px rgba(83,74,183,0.08),0 1px 4px rgba(0,0,0,0.05);
+  --page:#F4F3FC;
+  --ink:#1a1720;--ink2:#5a5580;--ink3:#9390b0;
+  --border:rgba(180,176,220,0.3);
+  --row-hover:rgba(83,74,183,0.03);
+}
+
+body{
+  background:var(--page);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  color:var(--ink);
+  font-size:14px;
+  line-height:1.5;
+  min-height:100vh;
+}
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 0%,rgba(83,74,183,.07) 0%,transparent 65%),
+    radial-gradient(ellipse 40% 50% at 85% 90%,rgba(29,158,117,.05) 0%,transparent 65%);
+  pointer-events:none;z-index:0;
+}
+
+.wrap{
+  position:relative;z-index:1;
+  max-width:1080px;margin:0 auto;
+  padding:24px 24px 64px;
+}
+
+/* ── Page header ── */
+.page-header{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:16px;margin-bottom:20px;flex-wrap:wrap;
+}
+.page-breadcrumb{
+  font-size:11px;color:var(--ink3);margin-bottom:4px;
+  display:flex;align-items:center;gap:5px;
+}
+.page-breadcrumb svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.5}
+.page-title{font-size:22px;font-weight:600;color:var(--ink);letter-spacing:-.02em;}
+.page-subtitle{font-size:12px;color:var(--ink3);margin-top:2px;}
+.page-header-right{display:flex;align-items:center;gap:8px;}
+
+.btn{
+  font-size:12px;font-weight:500;padding:7px 16px;border-radius:9px;
+  border:0.5px solid var(--border);background:var(--glass-bg);color:var(--ink);
+  cursor:pointer;backdrop-filter:blur(8px);transition:all .15s;white-space:nowrap;
+}
+.btn:hover{background:rgba(255,255,255,0.9)}
+.btn-primary{background:#534AB7;color:#fff;border-color:#3C3489;}
+.btn-primary:hover{background:#3C3489}
+
+/* ── Stat strip ── */
+.stat-strip{
+  display:grid;
+  grid-template-columns:repeat(5,1fr);
+  gap:10px;margin-bottom:16px;
+}
+.stat-tile{
+  background:var(--glass-bg);border:0.5px solid var(--glass-border);
+  border-radius:12px;padding:13px 16px;
+  backdrop-filter:blur(10px);box-shadow:var(--glass-shadow);
+  cursor:pointer;transition:all .15s;
+  position:relative;overflow:hidden;
+}
+.stat-tile::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;
+  height:3px;border-radius:0 0 12px 12px;
+  opacity:0;transition:opacity .15s;
+}
+.stat-tile:hover::after{opacity:1}
+.stat-tile.active::after{opacity:1}
+.stat-tile.t-draft::after{background:var(--g400)}
+.stat-tile.t-sent::after{background:var(--b400)}
+.stat-tile.t-neg::after{background:var(--a400)}
+.stat-tile.t-won::after{background:var(--t400)}
+.stat-tile.t-lost::after{background:var(--r400)}
+.stat-tile.active{box-shadow:var(--glass-shadow),0 0 0 1.5px rgba(83,74,183,0.2);}
+
+.st-label{
+  font-size:10px;font-weight:600;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--ink3);margin-bottom:6px;
+  display:flex;align-items:center;gap:6px;
+}
+.st-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.st-val{font-size:20px;font-weight:600;color:var(--ink);line-height:1;}
+.st-ghs{font-size:11px;color:var(--ink3);margin-top:3px;}
+
+/* ── Filter bar ── */
+.filter-bar{
+  background:var(--glass-bg);border:0.5px solid var(--glass-border);
+  border-radius:14px;padding:14px 18px;
+  backdrop-filter:blur(12px);box-shadow:var(--glass-shadow);
+  margin-bottom:12px;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+
+/* Client search */
+.search-wrap{position:relative;flex:1;min-width:180px;max-width:280px;}
+.search-wrap svg{
+  position:absolute;left:11px;top:50%;transform:translateY(-50%);
+  width:14px;height:14px;stroke:var(--ink3);fill:none;stroke-width:1.5;
+  pointer-events:none;
+}
+.search-input{
+  width:100%;font-size:13px;
+  padding:7px 12px 7px 32px;border-radius:8px;
+  border:0.5px solid var(--border);background:rgba(255,255,255,0.6);
+  color:var(--ink);outline:none;transition:border-color .15s,background .15s;
+  backdrop-filter:blur(6px);
+}
+.search-input::placeholder{color:var(--ink3)}
+.search-input:focus{border-color:rgba(83,74,183,0.4);background:rgba(255,255,255,0.85);}
+
+.filter-divider{width:1px;height:24px;background:var(--border);flex-shrink:0;}
+
+/* Selects */
+.filter-select-wrap{position:relative;flex-shrink:0;}
+.filter-select-wrap svg.chevron{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  width:12px;height:12px;stroke:var(--ink3);fill:none;stroke-width:1.5;
+  pointer-events:none;
+}
+.filter-select{
+  font-size:12px;font-weight:500;
+  padding:7px 32px 7px 12px;border-radius:8px;
+  border:0.5px solid var(--border);background:rgba(255,255,255,0.6);
+  color:var(--ink);appearance:none;cursor:pointer;outline:none;
+  transition:border-color .15s;backdrop-filter:blur(6px);
+}
+.filter-select:focus{border-color:rgba(83,74,183,0.4)}
+
+/* Date range */
+.date-range{display:flex;align-items:center;gap:6px;}
+.date-label{font-size:11px;color:var(--ink3);white-space:nowrap;}
+.date-input{
+  font-size:12px;padding:7px 10px;border-radius:8px;
+  border:0.5px solid var(--border);background:rgba(255,255,255,0.6);
+  color:var(--ink);outline:none;transition:border-color .15s;
+  backdrop-filter:blur(6px);cursor:pointer;
+  width:130px;
+}
+.date-input:focus{border-color:rgba(83,74,183,0.4)}
+.date-sep{font-size:11px;color:var(--ink3);}
+
+/* Sort */
+.sort-wrap{display:flex;align-items:center;gap:6px;margin-left:auto;}
+.sort-label{font-size:11px;color:var(--ink3);white-space:nowrap;}
+
+.filter-count{font-size:11px;color:var(--ink3);white-space:nowrap;flex-shrink:0;}
+
+/* ── Table panel ── */
+.table-panel{
+  background:var(--glass-bg);border:0.5px solid var(--glass-border);
+  border-radius:14px;overflow:hidden;
+  backdrop-filter:blur(12px);box-shadow:var(--glass-shadow);
+}
+.table-scroll{overflow-x:auto}
+
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead tr{
+  border-bottom:0.5px solid var(--border);
+  background:rgba(83,74,183,0.03);
+}
+th{
+  padding:11px 16px;text-align:left;
+  font-size:10px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink3);
+  white-space:nowrap;user-select:none;
+}
+th.sortable{cursor:pointer;transition:color .15s;}
+th.sortable:hover{color:var(--ink2)}
+th.sort-asc svg.asc,th.sort-desc svg.desc{opacity:1;color:var(--p600);}
+th svg{
+  display:inline;vertical-align:middle;
+  width:11px;height:11px;
+  stroke:currentColor;fill:none;stroke-width:2;
+  margin-left:3px;opacity:.35;
+  transition:opacity .15s;
+}
+
+tbody tr{
+  border-bottom:0.5px solid rgba(180,176,220,0.15);
+  cursor:pointer;transition:background .12s;
+}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--row-hover)}
+
+td{padding:13px 16px;vertical-align:middle;line-height:1.45;}
+
+/* Title cell */
+.proposal-title{font-size:13px;font-weight:500;color:var(--ink);margin-bottom:3px;}
+.proposal-notes{font-size:11px;color:var(--ink3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:260px;}
+
+/* Status badge */
+.status-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:10px;font-weight:700;padding:2px 9px;
+  border-radius:20px;letter-spacing:.04em;white-space:nowrap;
+}
+.status-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.s-draft{background:var(--g50);color:var(--g600);}
+.s-draft .status-dot{background:var(--g400)}
+.s-sent{background:var(--b50);color:var(--b800);}
+.s-sent .status-dot{background:var(--b400)}
+.s-negotiating{background:var(--a50);color:var(--a600);}
+.s-negotiating .status-dot{background:var(--a400)}
+.s-won{background:var(--t50);color:var(--t800);}
+.s-won .status-dot{background:var(--t400)}
+.s-lost{background:var(--r50);color:var(--r800);}
+.s-lost .status-dot{background:var(--r400)}
+
+/* Client cell */
+.client-cell{display:flex;align-items:center;gap:8px;}
+.client-avatar-sm{
+  width:26px;height:26px;border-radius:7px;
+  background:var(--p50);
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:700;color:var(--p800);
+  flex-shrink:0;letter-spacing:-.5px;
+}
+.client-name{font-size:13px;color:var(--ink2);}
+.client-type{font-size:10px;color:var(--ink3);}
+
+/* Amount */
+.amount{font-size:13px;font-weight:600;color:var(--ink);}
+.amount.won{color:var(--t600);}
+.amount.lost{color:var(--ink3);text-decoration:line-through;}
+
+/* Deadline */
+.deadline-cell{display:flex;align-items:center;gap:7px;}
+.deadline-text{font-size:12px;color:var(--ink2);}
+.deadline-chip{
+  font-size:9px;font-weight:700;padding:2px 7px;
+  border-radius:20px;letter-spacing:.03em;white-space:nowrap;
+}
+.dl-overdue{background:var(--r50);color:var(--r800);}
+.dl-urgent{background:var(--a50);color:var(--a600);}
+.dl-soon{background:var(--b50);color:var(--b800);}
+.dl-ok{background:var(--g50);color:var(--g600);}
+.dl-decided{background:var(--g50);color:var(--g600);font-weight:400;}
+
+/* Date cells */
+.date-cell{font-size:12px;color:var(--ink3);}
+.date-cell.set{color:var(--ink2);}
+
+/* Won/lost row tints */
+tbody tr.row-won{background:rgba(29,158,117,0.02);}
+tbody tr.row-won:hover{background:rgba(29,158,117,0.04);}
+tbody tr.row-lost{opacity:.6;}
+tbody tr.row-lost:hover{opacity:.8;background:var(--row-hover);}
+
+/* Overdue left accent */
+tbody tr.row-overdue td:first-child{border-left:2px solid var(--r400);}
+/* Urgent left accent */
+tbody tr.row-urgent td:first-child{border-left:2px solid var(--a400);}
+
+/* ── Empty state ── */
+.empty-state{padding:56px 24px;text-align:center;}
+.empty-icon{
+  width:44px;height:44px;border-radius:12px;background:var(--p50);
+  display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px;
+}
+.empty-icon svg{width:20px;height:20px;stroke:var(--p600);fill:none;stroke-width:1.5}
+.empty-title{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:5px;}
+.empty-sub{font-size:13px;color:var(--ink3);margin-bottom:16px;}
+
+/* ── Pagination ── */
+.pagination{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 18px;border-top:0.5px solid var(--border);
+  gap:12px;flex-wrap:wrap;
+}
+.page-info{font-size:12px;color:var(--ink3);}
+.page-controls{display:flex;align-items:center;gap:4px;}
+.page-btn{
+  width:32px;height:32px;border-radius:8px;
+  border:0.5px solid var(--border);background:transparent;
+  font-size:12px;font-weight:500;color:var(--ink3);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.page-btn:hover:not(.active):not(:disabled){
+  background:rgba(83,74,183,0.07);color:var(--p600);
+  border-color:rgba(83,74,183,0.25);
+}
+.page-btn.active{background:var(--p600);color:#fff;border-color:var(--p800);font-weight:700;}
+.page-btn:disabled{opacity:.35;cursor:default;}
+.page-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.5}
+.page-ellipsis{
+  width:32px;height:32px;
+  display:flex;align-items:center;justify-content:center;
+  font-size:12px;color:var(--ink3);
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <div class="page-breadcrumb">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        Dashboard
+        <span>›</span>
+        Pipeline
+        <span>›</span>
+        Proposals
+      </div>
+      <div class="page-title">Proposals</div>
+      <div class="page-subtitle">Track every pitch from draft to decision</div>
+    </div>
+    <div class="page-header-right">
+      <button class="btn btn-primary">+ New proposal</button>
+    </div>
+  </div>
+
+  <!-- Stat strip — clicking a tile sets the status filter -->
+  <!-- Backend: GET /api/v1/proposals/?status=sent etc. -->
+  <div class="stat-strip">
+
+    <div class="stat-tile t-draft" id="tile-all" onclick="setStatusFilter('')">
+      <div class="st-label">All open</div>
+      <div class="st-val">10</div>
+      <div class="st-ghs">GHS 64,500 total</div>
+    </div>
+
+    <div class="stat-tile t-draft" id="tile-draft" onclick="setStatusFilter('draft')">
+      <div class="st-label">
+        <span class="st-dot" style="background:var(--g400)"></span>
+        Draft
+      </div>
+      <div class="st-val">3</div>
+      <div class="st-ghs">GHS 12,000</div>
+    </div>
+
+    <div class="stat-tile t-sent" id="tile-sent" onclick="setStatusFilter('sent')">
+      <div class="st-label">
+        <span class="st-dot" style="background:var(--b400)"></span>
+        Sent
+      </div>
+      <div class="st-val">5</div>
+      <div class="st-ghs">GHS 34,500</div>
+    </div>
+
+    <div class="stat-tile t-neg" id="tile-neg" onclick="setStatusFilter('negotiating')">
+      <div class="st-label">
+        <span class="st-dot" style="background:var(--a400)"></span>
+        Negotiating
+      </div>
+      <div class="st-val">2</div>
+      <div class="st-ghs">GHS 18,000</div>
+    </div>
+
+    <div class="stat-tile t-won" id="tile-won" onclick="setStatusFilter('won')">
+      <div class="st-label">
+        <span class="st-dot" style="background:var(--t400)"></span>
+        Won
+      </div>
+      <div class="st-val">7</div>
+      <div class="st-ghs">GHS 48,200</div>
+    </div>
+
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+
+    <!-- Client search — backend: ?search=accra (searches proposal title + client name) -->
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search-input" type="text" id="search" placeholder="Search by title or client…"/>
+    </div>
+
+    <div class="filter-divider"></div>
+
+    <!-- Status filter — backend: ?status=draft|sent|negotiating|won|lost -->
+    <div class="filter-select-wrap">
+      <select class="filter-select" id="filter-status" onchange="syncTileFromSelect()">
+        <option value="">All statuses</option>
+        <option value="draft">Draft</option>
+        <option value="sent">Sent</option>
+        <option value="negotiating">Negotiating</option>
+        <option value="won">Won</option>
+        <option value="lost">Lost</option>
+      </select>
+      <svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+
+    <!-- Client filter — backend: ?client_id=<uuid> -->
+    <!-- In React: populate from GET /api/v1/clients/?is_archived=false (cached) -->
+    <div class="filter-select-wrap">
+      <select class="filter-select" id="filter-client">
+        <option value="">All clients</option>
+        <option value="uuid-aa">Accra Academy SHS</option>
+        <option value="uuid-gis">GIS International</option>
+        <option value="uuid-tema">Tema SHS</option>
+        <option value="uuid-ridge">Ridge International</option>
+        <option value="uuid-presec">Presec-Legon</option>
+        <option value="uuid-ot">Osei Tutu SHS</option>
+        <option value="uuid-ug">University of Ghana</option>
+      </select>
+      <svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+
+    <div class="filter-divider"></div>
+
+    <!-- Deadline date range -->
+    <!-- Backend: ?deadline__gte=2025-04-01&deadline__lte=2025-06-30 -->
+    <div class="date-range">
+      <span class="date-label">Deadline</span>
+      <input class="date-input" type="date" id="date-from" title="Deadline from"/>
+      <span class="date-sep">–</span>
+      <input class="date-input" type="date" id="date-to" title="Deadline to"/>
+    </div>
+
+    <div class="filter-divider"></div>
+
+    <!-- Ordering — backend: ?ordering=deadline | ?ordering=-amount_ghs -->
+    <div class="sort-wrap">
+      <span class="sort-label">Sort</span>
+      <div class="filter-select-wrap">
+        <select class="filter-select" id="filter-ordering">
+          <option value="deadline">Deadline ↑</option>
+          <option value="-deadline">Deadline ↓</option>
+          <option value="-amount_ghs">Amount ↓</option>
+          <option value="amount_ghs">Amount ↑</option>
+        </select>
+        <svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+    </div>
+
+    <span class="filter-count" id="result-count">Showing 8 of 15 proposals</span>
+
+  </div>
+
+  <!-- Table -->
+  <div class="table-panel">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Proposal</th>
+            <th>Client</th>
+            <th class="sortable" id="th-amount" onclick="toggleSort('amount_ghs')">
+              Amount
+              <svg class="asc" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+            </th>
+            <th class="sortable" id="th-deadline" onclick="toggleSort('deadline')">
+              Deadline
+              <svg class="asc" viewBox="0 0 24 24"><polyline points="18 15 12 9 6 15"/></svg>
+            </th>
+            <th>Sent date</th>
+            <th>Decision date</th>
+          </tr>
+        </thead>
+        <tbody id="proposal-tbody">
+
+          <!-- OVERDUE — past deadline, not yet decided -->
+          <tr class="row-overdue" onclick="window.location='#proposal-sms-accra'">
+            <td>
+              <div class="proposal-title">School management system v2</div>
+              <div style="margin-top:4px">
+                <span class="status-badge s-negotiating">
+                  <span class="status-dot"></span>Negotiating
+                </span>
+              </div>
+            </td>
+            <td>
+              <div class="client-cell">
+                <div class="client-avatar-sm">AA</div>
+                <div>
+                  <div class="client-name">Accra Academy SHS</div>
+                  <div class="client-type">Senior High School</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="amount">GHS 15,000</span></td>
+            <td>
+              <div class="deadline-cell">
+                <span class="deadline-text">30 Apr 2025</span>
+                <span class="deadline-chip dl-overdue">Overdue</span>
+              </div>
+            </td>
+            <td><span class="date-cell set">2 Apr 2025</span></td>
+            <td><span class="date-cell">—</span></td>
+          </tr>
+
+          <!-- URGENT — deadline within 3 days -->
+          <tr class="row-urgent" onclick="window.location='#proposal-portal-gis'">
+            <td>
+              <div class="proposal-title">Student portal v2</div>
+              <div style="margin-top:4px">
+                <span class="status-badge s-sent">
+                  <span class="status-dot"></span>Sent
+                </span>
+              </div>
+            </td>
+            <td>
+              <div class="client-cell">
+                <div class="client-avatar-sm" style="background:#E6F1FB;color:#0C447C">GI</div>
+                <div>
+                  <div class="client-name">GIS International</div>
+                  <div class="client-type">International School</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="amount">GHS 4,200</span></td>
+            <td>
+              <div class="deadline-cell">
+                <span class="deadline-text">2 May 2025</span>
+                <span class="deadline-chip dl-urgent">2 days</span>
+              </div>
+            </td>
+            <td><span class="date-cell set">15 Apr 2025</span></td>
+            <td><span class="date-cell">—</span></td>
+          </tr>
+
+          <!-- SOON — deadline within 7 days -->
+          <tr onclick="window.location='#proposal-fee-tema'">
+            <td>
+              <div class="proposal-title">Fee collection module</div>
+              <div style="margin-top:4px">
+                <span class="status-badge s-sent">
+                  <span class="status-dot"></span>Sent
+                </span>
+              </div>
+            </td>
+            <td>
+              <div class="client-cell">
+                <div class="client-avatar-sm" style="background:#FAEEDA;color:#854F0B">TS</div>
+                <div>
+                  <div class="client-name">Tema SHS</div>
+                  <div class="client-type">Senior High School</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="amount">GHS 6,800</span></td>
+            <td>
+              <div class="deadline-cell">
+                <span class="deadline-text">5 May 2025</span>
+                <span class="deadline-chip dl-soon">5 days</span>
+              </div>
+            </td>
+            <td><span class="date-cell set">20 Apr 2025</span></td>
+            <td><span class="date-cell">—</span></td>
+          </tr>
+
+          <!-- OK deadline -->
+          <tr onclick="window.location='#proposal-library-ridge'">
+            <td>
+              <div class="proposal-title">Library management system</div>
+              <div style="margin-top:4px">
+                <span class="status-badge s-sent">
+                  <span class="status-dot"></span>Sent
+                </span>
+              </div>
+            </td>
+            <td>
+              <div class="client-cell">
+                <div class="client-avatar-sm" style="background:#E1F5EE;color:#085041">RI</div>
+                <div>
+                  <div class="client-name">Ridge International</div>
+                  <div class="client-type">International School</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="amount">GHS 3,500</span></td>
+            <td>
+              <div class="deadline-cell">
+                <span class="deadline-text">22 May 2025</span>
+                <span class="deadline-chip dl-ok">12 days</span>
+              </div>
+            </td>
+            <td><span class="date-cell set">10 Apr 2025</span></td>
+            <td><span class="date-cell">—</span></td>
+          </tr>
+
+          <!-- Draft — no sent date yet -->
+          <tr onclick="window.location='#proposal-payroll-presec'">
+            <td>
+              <div class="proposal-title">Staff payroll automation</div>
+              <div style="margin-top:4px">
+                <span class="status-badge s-draft">
+                  <span class="status-dot"></span>Draft
+                </span>
+              </div>
+            </td>
+            <td>
+              <div class="client-cell">
+                <div class="client-avatar-sm" style="background:#FAEEDA;color:#854F0B">PB</div>
+                <div>
+                  <div class="client-name">Presec-Legon</div>
+                  <div class="client-type">Senior High School</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="amount">GHS 9,000</span></td>
+            <td>
+              <div class="deadline-cell">
+                <span class="deadline-text">15 Jun 2025</span>
+                <span class="deadline-chip dl-ok">36 days</span>
+              </div>
+            </td>
+            <td><span class="date-cell">—</span></td>
+            <td><span class="date-cell">—</span></td>
+          </tr>
+
+          <!-- Negotiating -->
+          <tr onclick="window.location='#proposal-ict-ug'">
+            <td>
+              <div class="proposal-title">ICT infrastructure audit</div>
+              <div style="margin-top:4px">
+                <span class="status-badge s-negotiating">
+                  <span class="status-dot"></span>Negotiating
+                </span>
+              </div>
+            </td>
+            <td>
+              <div class="client-cell">
+                <div class="client-avatar-sm" style="background:#E1F5EE;color:#085041">UG</div>
+                <div>
+                  <div class="client-name">University of Ghana</div>
+                  <div class="client-type">University</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="amount">GHS 18,000</span></td>
+            <td>
+              <div class="deadline-cell">
+                <span class="deadline-text">30 Jun 2025</span>
+                <span class="deadline-chip dl-ok">51 days</span>
+              </div>
+            </td>
+            <td><span class="date-cell set">1 Apr 2025</span></td>
+            <td><span class="date-cell">—</span></td>
+          </tr>
+
+          <!-- WON -->
+          <tr class="row-won" onclick="window.location='#proposal-sms-v2'">
+            <td>
+              <div class="proposal-title">School management system v1</div>
+              <div style="margin-top:4px">
+                <span class="status-badge s-won">
+                  <span class="status-dot"></span>Won
+                </span>
+              </div>
+            </td>
+            <td>
+              <div class="client-cell">
+                <div class="client-avatar-sm">AA</div>
+                <div>
+                  <div class="client-name">Accra Academy SHS</div>
+                  <div class="client-type">Senior High School</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="amount won">GHS 15,000</span></td>
+            <td>
+              <div class="deadline-cell">
+                <span class="deadline-text">28 Jan 2025</span>
+                <span class="deadline-chip dl-decided">Decided</span>
+              </div>
+            </td>
+            <td><span class="date-cell set">10 Jan 2025</span></td>
+            <td><span class="date-cell set">28 Jan 2025</span></td>
+          </tr>
+
+          <!-- LOST -->
+          <tr class="row-lost" onclick="window.location='#proposal-portal-v1'">
+            <td>
+              <div class="proposal-title">Student portal v1 — initial scope</div>
+              <div style="margin-top:4px">
+                <span class="status-badge s-lost">
+                  <span class="status-dot"></span>Lost
+                </span>
+              </div>
+            </td>
+            <td>
+              <div class="client-cell">
+                <div class="client-avatar-sm">AA</div>
+                <div>
+                  <div class="client-name">Accra Academy SHS</div>
+                  <div class="client-type">Senior High School</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="amount lost">GHS 3,200</span></td>
+            <td>
+              <div class="deadline-cell">
+                <span class="deadline-text">Mar 2024</span>
+                <span class="deadline-chip dl-decided">Decided</span>
+              </div>
+            </td>
+            <td><span class="date-cell set">Feb 2024</span></td>
+            <td><span class="date-cell set">Mar 2024</span></td>
+          </tr>
+
+        </tbody>
+      </table>
+
+      <!-- Empty state -->
+      <div class="empty-state" id="empty-state" style="display:none">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div class="empty-title">No proposals found</div>
+        <div class="empty-sub">Try adjusting your filters or create your first proposal</div>
+        <button class="btn" onclick="clearFilters()">Clear filters</button>
+      </div>
+
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination">
+      <div class="page-info">Showing <strong>1–8</strong> of <strong>15</strong> proposals</div>
+      <div class="page-controls">
+        <button class="page-btn" disabled>
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button class="page-btn active">1</button>
+        <button class="page-btn">2</button>
+        <div class="page-ellipsis">…</div>
+        <button class="page-btn">5</button>
+        <button class="page-btn">
+          <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+// ── Stub interactivity ──
+// Every interaction here maps 1:1 to a query param on GET /api/v1/proposals/
+
+const TILE_IDS = {
+  '':            'tile-all',
+  'draft':       'tile-draft',
+  'sent':        'tile-sent',
+  'negotiating': 'tile-neg',
+  'won':         'tile-won',
+};
+
+// Stat tile click → set status filter dropdown + highlight tile
+function setStatusFilter(status) {
+  document.getElementById('filter-status').value = status;
+  Object.entries(TILE_IDS).forEach(([s, id]) => {
+    document.getElementById(id).classList.toggle('active', s === status);
+  });
+  applyFilters();
+}
+
+// Status dropdown → sync tile highlight
+function syncTileFromSelect() {
+  const val = document.getElementById('filter-status').value;
+  Object.entries(TILE_IDS).forEach(([s, id]) => {
+    document.getElementById(id).classList.toggle('active', s === val);
+  });
+  applyFilters();
+}
+
+// Search — in React: useDebounce(400ms) then append ?search=
+document.getElementById('search').addEventListener('input', applyFilters);
+document.getElementById('filter-client').addEventListener('change', applyFilters);
+document.getElementById('filter-ordering').addEventListener('change', function() {
+  // In production: passes ?ordering=deadline | ?ordering=-amount_ghs to DRF
+  // DRF OrderingFilter picks it up — no custom code needed in the view
+  console.log('ordering:', this.value);
+});
+
+// Simple client-side filter for the stub
+function applyFilters() {
+  const q      = document.getElementById('search').value.toLowerCase();
+  const status = document.getElementById('filter-status').value;
+  const rows   = document.querySelectorAll('#proposal-tbody tr');
+  let visible  = 0;
+
+  rows.forEach(r => {
+    const title  = r.querySelector('.proposal-title')?.textContent.toLowerCase() || '';
+    const client = r.querySelector('.client-name')?.textContent.toLowerCase() || '';
+    const badge  = r.querySelector('.status-badge')?.textContent.trim().toLowerCase() || '';
+
+    const matchSearch = !q || title.includes(q) || client.includes(q);
+    const matchStatus = !status || badge.includes(status.replace('negotiating','negotiat'));
+    const show = matchSearch && matchStatus;
+
+    r.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+
+  const countEl = document.getElementById('result-count');
+  const emptyEl = document.getElementById('empty-state');
+  const tbody   = document.getElementById('proposal-tbody');
+
+  countEl.textContent = visible > 0
+    ? `Showing ${visible} proposal${visible !== 1 ? 's' : ''}`
+    : 'No results';
+  emptyEl.style.display = visible === 0 ? 'block' : 'none';
+  tbody.style.display   = visible === 0 ? 'none' : '';
+}
+
+function clearFilters() {
+  document.getElementById('search').value = '';
+  document.getElementById('filter-status').value = '';
+  document.getElementById('filter-client').value = '';
+  document.getElementById('date-from').value = '';
+  document.getElementById('date-to').value = '';
+  Object.values(TILE_IDS).forEach(id =>
+    document.getElementById(id).classList.remove('active'));
+  applyFilters();
+}
+
+// Column sort toggle — in React: manage ?ordering= in URL params
+let sortState = {}; // {col: 'asc'|'desc'}
+function toggleSort(col) {
+  const current = sortState[col];
+  const next    = current === 'asc' ? 'desc' : 'asc';
+  sortState     = { [col]: next };
+  const param   = next === 'desc' ? `-${col}` : col;
+  document.getElementById('filter-ordering').value = param;
+  console.log('ordering param:', param);
+  // In React: setSearchParams({ ordering: param }) → React Query refetches
+}
+</script>
+</body>
+</html>

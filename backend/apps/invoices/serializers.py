@@ -205,9 +205,7 @@ class InvoiceWriteSerializer(serializers.ModelSerializer):
 
         return attrs
 
-    def validate_line_items(
-        self, value: list[dict[str, Any]]
-    ) -> list[dict[str, Any]]:
+    def validate_line_items(self, value: list[dict[str, Any]]) -> list[dict[str, Any]]:
         if not value:
             raise serializers.ValidationError("At least one line item is required.")
         return value

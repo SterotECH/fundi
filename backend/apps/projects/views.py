@@ -153,9 +153,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         write_serializer.is_valid(raise_exception=True)
         validated_data = cast(Mapping[str, Any], write_serializer.validated_data)
         validated_data = {
-            key: value
-            for key, value in validated_data.items()
-            if key != "project"
+            key: value for key, value in validated_data.items() if key != "project"
         }
 
         milestone = services.create_project_milestone(
@@ -194,9 +192,7 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer.is_valid(raise_exception=True)
         validated_data = cast(Mapping[str, Any], serializer.validated_data)
         validated_data = {
-            key: value
-            for key, value in validated_data.items()
-            if key != "project"
+            key: value for key, value in validated_data.items() if key != "project"
         }
 
         milestone = services.update_project_milestone(
@@ -218,10 +214,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
         serializer = TimeLogListSerializer(queryset, many=True)
         return Response(
             {
-                "total_hours": f'{payload["total_hours"]:.2f}',
-                "billable_hours": f'{payload["billable_hours"]:.2f}',
-                "non_billable_hours": f'{payload["non_billable_hours"]:.2f}',
-                "effective_rate": f'{payload["effective_rate"]:.2f}',
+                "total_hours": f"{payload['total_hours']:.2f}",
+                "billable_hours": f"{payload['billable_hours']:.2f}",
+                "non_billable_hours": f"{payload['non_billable_hours']:.2f}",
+                "effective_rate": f"{payload['effective_rate']:.2f}",
                 "results": serializer.data,
             },
             status=status.HTTP_200_OK,

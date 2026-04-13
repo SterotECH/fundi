@@ -186,10 +186,13 @@ def test_get_proposal_detail_is_organisation_scoped(org):
     proposal = ProposalFactory(organisation=org)
     other_proposal = ProposalFactory(organisation=OrganisationFactory())
 
-    assert services.get_proposal_detail(
-        organisation=org,
-        proposal_id=str(proposal.id),
-    ) == proposal
+    assert (
+        services.get_proposal_detail(
+            organisation=org,
+            proposal_id=str(proposal.id),
+        )
+        == proposal
+    )
 
     with pytest.raises(Proposal.DoesNotExist):
         services.get_proposal_detail(

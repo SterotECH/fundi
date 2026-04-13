@@ -590,7 +590,7 @@
     <div class="meta-chip"><strong>Version</strong> 1.0</div>
     <div class="meta-chip"><strong>Status</strong> Sprint 1 complete</div>
     <div class="meta-chip"><strong>Sprints</strong> 3 planned + roadmap to Sprint 8</div>
-    <div class="meta-chip"><strong>Stack</strong> Django 6 · React · PostgreSQL · Anthropic</div>
+    <div class="meta-chip"><strong>Stack</strong> Django 6 · React · PostgreSQL · Celery</div>
     <div class="meta-chip"><strong>Currency</strong> GHS (Ghana Cedi)</div>
   </div>
 </div>
@@ -706,11 +706,12 @@
   </div>
   <div class="sprint-body">
     <div class="story-group">
-      <div class="story-group-title">AI Business Assistant</div>
-      <div class="story">As Stero, I want to <em>ask questions like "How much revenue did I collect this month?"</em> so that I get instant answers without building reports myself.</div>
-      <div class="story">As Stero, I want the <em>AI to read my live CRM data</em> when answering so that responses are accurate and current.</div>
-      <div class="story">As Stero, I want to <em>ask the assistant to draft a follow-up email</em> for a specific proposal so that I can copy-paste a professional message without writing it from scratch.</div>
+      <div class="story-group-title">Rules-Based Business Assistant</div>
+      <div class="story">As Stero, I want to <em>ask deterministic questions like "How much revenue did I collect this month?"</em> so that I get instant answers without building reports myself.</div>
+      <div class="story">As Stero, I want the <em>assistant to read my live CRM data through rules and aggregates</em> so that responses are accurate and current.</div>
+      <div class="story">As Stero, I want the assistant to <em>assemble a follow-up email draft from proposal facts and templates</em> so that I can copy-paste a professional message without writing it from scratch.</div>
       <div class="story">As Stero, I want the assistant to <em>summarise an overdue client's outstanding balance</em> in one message so that I'm prepared before making a payment call.</div>
+      <div class="story">As Stero, I want the assistant to <em>draft a follow-up email for stale projects</em> so that quiet delivery work gets nudged without me writing from scratch.</div>
     </div>
     <div class="story-group">
       <div class="story-group-title">Pipeline Analytics</div>
@@ -1089,8 +1090,9 @@
 </div>
 
 <div class="endpoint-group">
-  <div class="endpoint-group-title">AI Assistant (Sprint 3)</div>
-  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/ai/chat/</span><span class="endpoint-desc">Send message to assistant. Body: <code>{message, conversation_history?: [{role, content}]}</code>. Backend fetches live CRM context before calling Anthropic API. Returns <code>{reply, data_context_used?}</code>.</span></div>
+  <div class="endpoint-group-title">Rules-Based Assistant (Sprint 3)</div>
+  <div class="endpoint"><span class="method GET">GET</span><span class="endpoint-url">/assistant/briefing/</span><span class="endpoint-desc">Return the deterministic daily briefing for the current organisation: <code>{headline, revenue_summary, follow_up, insights}</code>. This powers both the assistant panel and scheduled morning briefings.</span></div>
+  <div class="endpoint"><span class="method POST">POST</span><span class="endpoint-url">/assistant/query/</span><span class="endpoint-desc">Send a supported business question or command. Body: <code>{message, conversation_history?: [{role, content}]}</code>. Backend fetches live CRM context, matches the request against supported rules, and returns <code>{reply, data_context_used?, matched_rule}</code>. Supported drafting includes proposal follow-ups, overdue invoice reminders, and stale project follow-ups.</span></div>
 </div>
 
 
@@ -1162,7 +1164,7 @@
 
 <div class="wireframe-block">
   <div class="wireframe-title"><span class="wireframe-screen">Dashboard</span> Bento grid command center</div>
-  <p>A 12-column bento grid. Top bar: org logo + name, notification bell with unread dot, avatar. Row 1 (4 equal tiles): Revenue (month), Outstanding GHS, Win Rate, Active Projects — each a large number with a trend sub-label. Row 2 (left 4-col × 2-row): Pipeline chart showing proposal counts and GHS by status as horizontal bars, plus a 6-month mini revenue bar chart. Row 2 (center 4-col × 2-row): Upcoming deadlines list — each row has a colored dot (red/amber/green), proposal title, school name, and deadline chip. Row 2 (right 4-col): Overdue invoices list. Row 3 (left 8-col): Active projects grid — 2×2 card layout showing project title, client, status badge, due date, and a progress bar. Row 3 (right 4-col): AI assistant quick panel — a proactive insight callout in purple, plus three quick-action prompt buttons.</p>
+  <p>A 12-column bento grid. Top bar: org logo + name, notification bell with unread dot, avatar. Row 1 (4 equal tiles): Revenue (month), Outstanding GHS, Win Rate, Active Projects — each a large number with a trend sub-label. Row 2 (left 4-col × 2-row): Pipeline chart showing proposal counts and GHS by status as horizontal bars, plus a 6-month mini revenue bar chart. Row 2 (center 4-col × 2-row): Upcoming deadlines list — each row has a colored dot (red/amber/green), proposal title, school name, and deadline chip. Row 2 (right 4-col): Overdue invoices list. Row 3 (left 8-col): Active projects grid — 2×2 card layout showing project title, client, status badge, due date, and a progress bar. Row 3 (right 4-col): intelligence quick panel — a proactive insight callout in purple, plus three quick-action rule buttons.</p>
 </div>
 
 <div class="wireframe-block">
@@ -1186,8 +1188,8 @@
 </div>
 
 <div class="wireframe-block">
-  <div class="wireframe-title"><span class="wireframe-screen">AI Assistant</span> Persistent chat panel</div>
-  <p>Full-height panel accessible as route (/assistant) or persistent right drawer. Top bar: "AI assistant" title, model indicator chip "Powered by Claude", Clear conversation icon. Message area: user bubbles right-aligned (purple background), assistant bubbles left-aligned (gray background), markdown rendering for bold/lists/tables, animated loading dots while API call is in flight. Input area (pinned to bottom): expanding textarea up to 4 rows with send button. Below input: three quick-action prompt chips — "Revenue this month", "Overdue invoices", "Draft follow-up email". Context chip in top-right shows "Reading: all CRM data" to build trust that responses are grounded in real data.</p>
+  <div class="wireframe-title"><span class="wireframe-screen">Business Assistant</span> Persistent rule panel</div>
+  <p>Full-height panel accessible as route (<code>/assistant</code>) or persistent right drawer. Top bar: "Business assistant" title, indicator chip "Rules-based", Clear conversation icon. Message area: user bubbles right-aligned (purple background), assistant bubbles left-aligned (gray background), markdown rendering for bold/lists/tables, animated loading dots while rules are being evaluated. Input area (pinned to bottom): expanding textarea up to 4 rows with send button. Below input: three quick-action prompt chips — "Revenue this month", "Overdue invoices", "Draft follow-up email". Context chip in top-right shows "Reading: live CRM data" to build trust that responses are grounded in real data.</p>
 </div>
 
 
@@ -1234,7 +1236,7 @@
   <tbody>
     <tr><td><strong>Sprint 1 — Usable Core</strong></td><td>Complete</td><td>Auth, clients, leads, proposals, dashboard working end-to-end</td></tr>
     <tr><td><strong>Sprint 2 — Money Layer</strong></td><td>End of Week 6</td><td>Invoices, payments, time logging, Celery reminders live</td></tr>
-    <tr><td><strong>Sprint 3 — Intelligence Layer</strong></td><td>End of Week 9</td><td>AI assistant, analytics, mobile polish complete</td></tr>
+    <tr><td><strong>Sprint 3 — Intelligence Layer</strong></td><td>End of Week 9</td><td>Rule-based assistant, analytics, mobile polish complete</td></tr>
   </tbody>
 </table>
 </div>
@@ -1301,7 +1303,7 @@
       <div class="scope-item"><span class="scope-icon" style="color:#A32D2D">✗</span>Celery tasks or scheduled jobs (no workers running)</div>
       <div class="scope-item"><span class="scope-icon" style="color:#A32D2D">✗</span>Milestone management within projects</div>
       <div class="scope-item"><span class="scope-icon" style="color:#A32D2D">✗</span>Analytics or charts</div>
-      <div class="scope-item"><span class="scope-icon" style="color:#A32D2D">✗</span>Anthropic API / AI assistant</div>
+      <div class="scope-item"><span class="scope-icon" style="color:#A32D2D">✗</span>External model APIs / assistant automation</div>
       <div class="scope-item"><span class="scope-icon" style="color:#A32D2D">✗</span>Email sending of any kind</div>
       <div class="scope-item"><span class="scope-icon" style="color:#A32D2D">✗</span>PDF generation</div>
       <div class="scope-item"><span class="scope-icon" style="color:#A32D2D">✗</span>File/document attachments</div>
@@ -1353,7 +1355,7 @@
     </div>
     <div class="roadmap-content">
       <div class="roadmap-title">The Intelligence Layer</div>
-      <div class="roadmap-items">AI business assistant (Claude, reads live data) · Pipeline analytics · Mobile polish</div>
+      <div class="roadmap-items">Rules-based business assistant · Pipeline analytics · Mobile polish</div>
     </div>
   </div>
   <div class="roadmap-row">
@@ -1403,7 +1405,7 @@
     </div>
     <div class="roadmap-content">
       <div class="roadmap-title">Proactive Intelligence</div>
-      <div class="roadmap-items">AI shifts from reactive (answering questions) to proactive (surfacing insights). "Accra Academy pays 14 days late consistently." "Your effective hourly rate dropped 18% — here are the projects dragging it down." Requires historical data from Sprints 1–7.</div>
+      <div class="roadmap-items">Intelligence shifts from reactive (answering questions) to proactive (surfacing insights) using scheduled rule packs and Celery. "Accra Academy pays 14 days late consistently." "Your effective hourly rate dropped 18% — here are the projects dragging it down." Requires historical data from Sprints 1–7.</div>
     </div>
   </div>
 </div>
@@ -1474,8 +1476,8 @@
 
   <div class="decision">
     <div class="decision-num">Decision 10</div>
-    <div class="decision-title">AI context injection — plan the boundaries now</div>
-    <p>When the AI assistant calls the Anthropic API in Sprint 3, a <code>build_ai_context()</code> function will inject a snapshot of CRM data as a system prompt. Plan now that this function returns a capped summary — last 3 months of activity, top 10 clients by revenue, open proposals, overdue invoices. If you let it grow unboundedly, you will hit token limits and the assistant will silently truncate context. The frontend never sends raw CRM data to Anthropic — all data access is mediated through your Django backend.</p>
+    <div class="decision-title">Intelligence context injection — plan the boundaries now</div>
+    <p>When the intelligence layer evaluates rules in Sprint 3 and beyond, a <code>build_ai_context()</code> function should inject a capped snapshot of CRM data into one shared summary object. Plan now that this function returns last 3 months of activity, top 10 clients by revenue, open proposals, and overdue invoices. If you let it grow unboundedly, downstream jobs and notifications become noisy and slow. The frontend never assembles raw CRM context itself — all data access is mediated through your Django backend.</p>
   </div>
 
   <div class="decision">

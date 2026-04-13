@@ -1,0 +1,342 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--color-background-tertiary);font-family:var(--font-sans);color:var(--color-text-primary);font-size:14px}
+
+.scene{display:flex;min-height:600px;position:relative}
+.page-bg{flex:1;padding:28px;opacity:.35;pointer-events:none;user-select:none}
+.pb-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:18px}
+.pb-title{font-size:18px;font-weight:500;color:var(--color-text-primary)}
+.pb-btn{font-size:12px;padding:6px 14px;border-radius:8px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary)}
+.pb-card{background:var(--color-background-primary);border:0.5px solid var(--color-border-tertiary);border-radius:14px;height:120px;margin-bottom:10px}
+
+.drawer{width:480px;flex-shrink:0;background:var(--color-background-primary);border-left:0.5px solid var(--color-border-secondary);display:flex;flex-direction:column}
+
+.drawer-header{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:0.5px solid var(--color-border-tertiary)}
+.dh-left{display:flex;align-items:center;gap:10px}
+.dh-icon{width:30px;height:30px;border-radius:8px;background:#EEEDFE;display:flex;align-items:center;justify-content:center}
+.dh-icon svg{width:15px;height:15px;stroke:#534AB7;fill:none;stroke-width:1.5}
+.dh-title{font-size:15px;font-weight:500;color:var(--color-text-primary)}
+.dh-close{width:28px;height:28px;border-radius:7px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);display:flex;align-items:center;justify-content:center;cursor:pointer}
+.dh-close svg{width:14px;height:14px;stroke:var(--color-text-secondary);fill:none;stroke-width:1.5}
+
+.drawer-body{flex:1;padding:20px;overflow-y:auto;display:flex;flex-direction:column;gap:18px}
+
+.field{display:flex;flex-direction:column;gap:5px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.label{font-size:12px;font-weight:500;color:var(--color-text-secondary);display:flex;align-items:center;gap:4px}
+.label .req{color:#E24B4A;font-size:11px}
+.hint{font-size:11px;color:var(--color-text-tertiary);margin-top:2px}
+.error-msg{font-size:11px;color:#A32D2D;margin-top:2px;display:none}
+.error-msg.show{display:block}
+
+input[type=text],input[type=number],input[type=date],select,textarea{width:100%;padding:8px 11px;border-radius:8px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-primary);font-size:13px;font-family:var(--font-sans);outline:none;transition:border-color .15s}
+input:focus,select:focus,textarea:focus{border-color:#534AB7;box-shadow:0 0 0 2px rgba(83,74,183,.12)}
+input.err,select.err,textarea.err{border-color:#E24B4A}
+textarea{resize:vertical;min-height:72px;line-height:1.5}
+select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23888780' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 10px center;padding-right:28px}
+
+.from-proposal-banner{background:#EEEDFE;border-radius:10px;padding:10px 13px;display:flex;align-items:center;gap:10px}
+.fpb-icon{width:28px;height:28px;border-radius:7px;background:#534AB7;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.fpb-icon svg{width:13px;height:13px;stroke:#fff;fill:none;stroke-width:1.5}
+.fpb-body{flex:1}
+.fpb-title{font-size:12px;font-weight:500;color:#3C3489}
+.fpb-sub{font-size:11px;color:#534AB7;margin-top:1px}
+.fpb-clear{font-size:11px;color:#534AB7;cursor:pointer;text-decoration:underline;flex-shrink:0}
+
+.currency-input{position:relative}
+.currency-input .prefix{position:absolute;left:11px;top:50%;transform:translateY(-50%);font-size:12px;font-weight:500;color:var(--color-text-tertiary);pointer-events:none}
+.currency-input input{padding-left:44px}
+
+.status-group{display:flex;gap:7px;flex-wrap:wrap}
+.status-opt{font-size:12px;font-weight:500;padding:6px 13px;border-radius:8px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-secondary);cursor:pointer;transition:all .15s}
+.status-opt:hover{background:var(--color-background-secondary)}
+.status-opt.sel-planning{background:#E6F1FB;color:#0C447C;border-color:#B5D4F4}
+.status-opt.sel-active{background:#E1F5EE;color:#085041;border-color:#9FE1CB}
+.status-opt.sel-hold{background:#FAEEDA;color:#854F0B;border-color:#FAC775}
+
+.section-divider{font-size:11px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--color-text-tertiary);padding-top:4px;border-top:0.5px solid var(--color-border-tertiary);padding-top:14px}
+
+.milestone-list{display:flex;flex-direction:column;gap:7px}
+.milestone-item{display:flex;align-items:center;gap:8px;background:var(--color-background-secondary);border-radius:9px;padding:8px 10px}
+.ms-drag{cursor:grab;color:var(--color-text-tertiary);flex-shrink:0}
+.ms-drag svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5}
+.ms-num{font-size:11px;font-weight:500;background:#EEEDFE;color:#534AB7;width:20px;height:20px;border-radius:5px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ms-input{flex:1;background:transparent;border:none;outline:none;font-size:13px;color:var(--color-text-primary);font-family:var(--font-sans);padding:0}
+.ms-date{width:110px;font-size:12px;padding:4px 7px;border-radius:6px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-secondary);font-family:var(--font-sans);outline:none}
+.ms-date:focus{border-color:#534AB7}
+.ms-remove{width:22px;height:22px;border-radius:5px;border:none;background:transparent;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--color-text-tertiary);flex-shrink:0}
+.ms-remove:hover{background:#FCEBEB;color:#A32D2D}
+.ms-remove svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2}
+
+.add-ms-btn{display:flex;align-items:center;gap:6px;font-size:12px;color:#534AB7;cursor:pointer;padding:6px 2px;font-weight:500;background:none;border:none;font-family:var(--font-sans)}
+.add-ms-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:2}
+
+.drawer-footer{padding:14px 20px;border-top:0.5px solid var(--color-border-tertiary);display:flex;align-items:center;justify-content:space-between;gap:10px;background:var(--color-background-primary)}
+.footer-hint{font-size:11px;color:var(--color-text-tertiary)}
+.footer-actions{display:flex;gap:8px}
+.btn-cancel{font-size:13px;font-weight:500;padding:8px 16px;border-radius:9px;border:0.5px solid var(--color-border-secondary);background:var(--color-background-primary);color:var(--color-text-secondary);cursor:pointer}
+.btn-cancel:hover{background:var(--color-background-secondary)}
+.btn-save{font-size:13px;font-weight:500;padding:8px 20px;border-radius:9px;border:0.5px solid #3C3489;background:#534AB7;color:#fff;cursor:pointer}
+.btn-save:hover{background:#3C3489}
+.btn-save:disabled{background:#AFA9EC;border-color:#AFA9EC;cursor:not-allowed}
+
+.char-count{font-size:11px;color:var(--color-text-tertiary);text-align:right;margin-top:2px}
+</style>
+
+<div class="scene">
+  <div class="page-bg">
+    <div class="pb-header">
+      <div class="pb-title">Projects</div>
+      <div class="pb-btn">+ New project</div>
+    </div>
+    <div class="pb-card"></div>
+    <div class="pb-card"></div>
+    <div class="pb-card"></div>
+  </div>
+
+  <div class="drawer">
+    <div class="drawer-header">
+      <div class="dh-left">
+        <div class="dh-icon">
+          <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+        </div>
+        <span class="dh-title">New project</span>
+      </div>
+      <div class="dh-close">
+        <svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </div>
+    </div>
+
+    <div class="drawer-body">
+
+      <div class="from-proposal-banner" id="proposal-banner">
+        <div class="fpb-icon"><svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg></div>
+        <div class="fpb-body">
+          <div class="fpb-title">Converted from won proposal</div>
+          <div class="fpb-sub">School management system v2 · GHS 15,000 · Accra Academy SHS</div>
+        </div>
+        <span class="fpb-clear" onclick="clearProposal()">Clear</span>
+      </div>
+
+      <div class="field">
+        <label class="label">Client <span class="req">*</span></label>
+        <select id="client-select" oninput="validate('client-select','client-err')">
+          <option value="">Select a client…</option>
+          <option value="aa" selected>Accra Academy Senior High School</option>
+          <option value="gis">GIS International School</option>
+          <option value="tema">Tema Senior High School</option>
+          <option value="ridge">Ridge International School</option>
+          <option value="achimota">Achimota Senior High School</option>
+        </select>
+        <span class="error-msg" id="client-err">Client is required</span>
+      </div>
+
+      <div class="field">
+        <label class="label">Project title <span class="req">*</span></label>
+        <input type="text" id="title-input" value="School management system v2" placeholder="e.g. School management system v2" oninput="validate('title-input','title-err');updateCharCount(this,'title-count',80)" maxlength="80">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:2px">
+          <span class="error-msg" id="title-err" style="margin-top:0">Title is required</span>
+          <span class="char-count" id="title-count">30 / 80</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label">Description</label>
+        <textarea id="desc-input" placeholder="What does this project deliver? Keep it to 2–3 sentences." oninput="updateCharCount(this,'desc-count',300)" maxlength="300">Complete school management platform: student records, payroll integration, fee collection via MoMo, and staff dashboard.</textarea>
+        <div style="display:flex;justify-content:flex-end;margin-top:2px">
+          <span class="char-count" id="desc-count">120 / 300</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label">Status <span class="req">*</span></label>
+        <div class="status-group" id="status-group">
+          <div class="status-opt sel-planning" onclick="setStatus(this,'planning')">Planning</div>
+          <div class="status-opt" onclick="setStatus(this,'active')">Active</div>
+          <div class="status-opt" onclick="setStatus(this,'hold')">On hold</div>
+        </div>
+        <span class="hint">Set to Active when work begins</span>
+      </div>
+
+      <div class="field-row">
+        <div class="field">
+          <label class="label">Start date <span class="req">*</span></label>
+          <input type="date" id="start-date" value="2025-02-01" oninput="validateDates()">
+          <span class="error-msg" id="date-err">Start must be before due date</span>
+        </div>
+        <div class="field">
+          <label class="label">Due date <span class="req">*</span></label>
+          <input type="date" id="due-date" value="2025-04-30" oninput="validateDates()">
+        </div>
+      </div>
+
+      <div class="field">
+        <label class="label">Budget (GHS)</label>
+        <div class="currency-input">
+          <span class="prefix">GHS</span>
+          <input type="number" id="budget-input" value="11800" min="0" step="100" placeholder="0.00" oninput="validateBudget()">
+        </div>
+        <span class="hint" id="budget-hint">Used to calculate burn rate and effective hourly rate</span>
+        <span class="error-msg" id="budget-err">Budget must be a positive number</span>
+      </div>
+
+      <div class="field">
+        <label class="label">Linked proposal</label>
+        <select id="proposal-select">
+          <option value="">None (manual project)</option>
+          <option value="p1" selected>School management system v2 — Won · GHS 15,000</option>
+          <option value="p2">Staff payroll automation — Sent · GHS 4,500</option>
+        </select>
+        <span class="hint">Links this project back to the originating proposal</span>
+      </div>
+
+      <div class="section-divider">Milestones <span style="font-weight:400;text-transform:none;letter-spacing:0;font-size:11px;color:var(--color-text-tertiary)">(optional — add now or later)</span></div>
+
+      <div class="milestone-list" id="ms-list">
+        <div class="milestone-item">
+          <div class="ms-drag"><svg viewBox="0 0 24 24"><circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="5" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="19" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/></svg></div>
+          <span class="ms-num">1</span>
+          <input class="ms-input" type="text" value="Requirements & system design" placeholder="Milestone title">
+          <input class="ms-date" type="date" value="2025-02-14">
+          <button class="ms-remove" onclick="removeMs(this)"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="milestone-item">
+          <div class="ms-drag"><svg viewBox="0 0 24 24"><circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="5" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="19" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/></svg></div>
+          <span class="ms-num">2</span>
+          <input class="ms-input" type="text" value="Database schema & Django models" placeholder="Milestone title">
+          <input class="ms-date" type="date" value="2025-02-28">
+          <button class="ms-remove" onclick="removeMs(this)"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+        <div class="milestone-item">
+          <div class="ms-drag"><svg viewBox="0 0 24 24"><circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="5" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="19" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/></svg></div>
+          <span class="ms-num">3</span>
+          <input class="ms-input" type="text" value="Core module — student records" placeholder="Milestone title">
+          <input class="ms-date" type="date" value="2025-03-15">
+          <button class="ms-remove" onclick="removeMs(this)"><svg viewBox="0 0 24 24"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>
+        </div>
+      </div>
+
+      <button class="add-ms-btn" onclick="addMilestone()">
+        <svg viewBox="0 0 24 24"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+        Add milestone
+      </button>
+
+    </div>
+
+    <div class="drawer-footer">
+      <span class="footer-hint" id="footer-hint">All required fields filled</span>
+      <div class="footer-actions">
+        <button class="btn-cancel">Cancel</button>
+        <button class="btn-save" id="save-btn" onclick="handleSave()">Create project</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+let msCount = 3;
+
+function validate(inputId, errId) {
+  const el = document.getElementById(inputId);
+  const err = document.getElementById(errId);
+  const empty = !el.value.trim();
+  el.classList.toggle('err', empty);
+  err.classList.toggle('show', empty);
+  updateFooter();
+  return !empty;
+}
+
+function validateDates() {
+  const s = document.getElementById('start-date').value;
+  const d = document.getElementById('due-date').value;
+  const err = document.getElementById('date-err');
+  const invalid = s && d && s >= d;
+  document.getElementById('start-date').classList.toggle('err', invalid);
+  document.getElementById('due-date').classList.toggle('err', invalid);
+  err.classList.toggle('show', invalid);
+  updateFooter();
+  return !invalid;
+}
+
+function validateBudget() {
+  const val = parseFloat(document.getElementById('budget-input').value);
+  const err = document.getElementById('budget-err');
+  const invalid = document.getElementById('budget-input').value !== '' && (isNaN(val) || val < 0);
+  document.getElementById('budget-input').classList.toggle('err', invalid);
+  err.classList.toggle('show', invalid);
+  updateFooter();
+  return !invalid;
+}
+
+function updateFooter() {
+  const client = document.getElementById('client-select').value;
+  const title = document.getElementById('title-input').value.trim();
+  const start = document.getElementById('start-date').value;
+  const due = document.getElementById('due-date').value;
+  const datesOk = start && due && start < due;
+  const allOk = client && title && start && due && datesOk;
+  const btn = document.getElementById('save-btn');
+  const hint = document.getElementById('footer-hint');
+  btn.disabled = !allOk;
+  if (!client) hint.textContent = 'Select a client to continue';
+  else if (!title) hint.textContent = 'Project title is required';
+  else if (!start || !due) hint.textContent = 'Start and due dates required';
+  else if (!datesOk) hint.textContent = 'Start date must be before due date';
+  else hint.textContent = 'All required fields filled';
+}
+
+function setStatus(el, val) {
+  document.querySelectorAll('.status-opt').forEach(o => o.className = 'status-opt');
+  el.classList.add('sel-' + val);
+}
+
+function updateCharCount(el, countId, max) {
+  const len = el.value.length;
+  document.getElementById(countId).textContent = len + ' / ' + max;
+}
+
+function clearProposal() {
+  document.getElementById('proposal-banner').style.display = 'none';
+  document.getElementById('proposal-select').value = '';
+}
+
+function addMilestone() {
+  msCount++;
+  const list = document.getElementById('ms-list');
+  const item = document.createElement('div');
+  item.className = 'milestone-item';
+  item.innerHTML = `<div class="ms-drag"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="9" cy="5" r="1" fill="currentColor"/><circle cx="15" cy="5" r="1" fill="currentColor"/><circle cx="9" cy="12" r="1" fill="currentColor"/><circle cx="15" cy="12" r="1" fill="currentColor"/><circle cx="9" cy="19" r="1" fill="currentColor"/><circle cx="15" cy="19" r="1" fill="currentColor"/></svg></div><span class="ms-num">${msCount}</span><input class="ms-input" type="text" placeholder="Milestone title"><input class="ms-date" type="date"><button class="ms-remove" onclick="removeMs(this)"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>`;
+  list.appendChild(item);
+  item.querySelector('.ms-input').focus();
+  renumberMs();
+}
+
+function removeMs(btn) {
+  btn.closest('.milestone-item').remove();
+  renumberMs();
+}
+
+function renumberMs() {
+  document.querySelectorAll('.ms-num').forEach((n, i) => { n.textContent = i + 1; });
+  msCount = document.querySelectorAll('.milestone-item').length;
+}
+
+function handleSave() {
+  const clientOk = validate('client-select', 'client-err');
+  const titleOk = validate('title-input', 'title-err');
+  const datesOk = validateDates();
+  const budgetOk = validateBudget();
+  if (clientOk && titleOk && datesOk && budgetOk) {
+    document.getElementById('save-btn').textContent = 'Creating…';
+    document.getElementById('save-btn').disabled = true;
+    setTimeout(() => {
+      document.getElementById('save-btn').textContent = 'Created!';
+      document.getElementById('save-btn').style.background = '#1D9E75';
+      document.getElementById('save-btn').style.borderColor = '#0F6E56';
+    }, 800);
+  }
+}
+
+updateFooter();
+</script>

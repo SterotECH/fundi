@@ -192,9 +192,22 @@ def test_convert_lead_to_client_rejects_already_converted_lead(org):
 
 
 @pytest.mark.django_db
-def test_list_leads_excludes_converted_by_default_but_allows_status_filter(org):
-    active_lead = LeadFactory(organisation=org, status=Lead.LeadStatus.NEW)
-    converted_lead = LeadFactory(organisation=org, status=Lead.LeadStatus.CONVERTED)
+def test_list_leads_returns_all_statuses_by_default_and_allows_status_filter(org):
+    active_lead = LeadFactory(
+        organisation=org,
+        name="Alpha Lead",
+        status=Lead.LeadStatus.NEW,
+    )
+    converted_lead = LeadFactory(
+        organisation=org,
+        name="Bravo Lead",
+        status=Lead.LeadStatus.CONVERTED,
+    )
+    dead_lead = LeadFactory(
+        organisation=org,
+        name="Charlie Lead",
+        status=Lead.LeadStatus.DEAD,
+    )
 
     default_queryset = services.list_leads(organisation=org, filters={})
     converted_queryset = services.list_leads(
@@ -202,7 +215,7 @@ def test_list_leads_excludes_converted_by_default_but_allows_status_filter(org):
         filters={"status": Lead.LeadStatus.CONVERTED},
     )
 
-    assert list(default_queryset) == [active_lead]
+    assert list(default_queryset) == [active_lead, converted_lead, dead_lead]
     assert list(converted_queryset) == [converted_lead]
 
 

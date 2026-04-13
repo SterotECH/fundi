@@ -16,6 +16,7 @@ urlpatterns = [
     # All v1 API routes delegated to apps
     path(API_V1_PREFIX, include("apps.core.urls")),
     path(API_V1_PREFIX, include("apps.accounts.urls")),
+    path(API_V1_PREFIX, include("apps.analytics.urls")),
     path(API_V1_PREFIX, include("apps.clients.urls")),
     path(API_V1_PREFIX, include("apps.proposals.urls")),
     path(API_V1_PREFIX, include("apps.projects.urls")),

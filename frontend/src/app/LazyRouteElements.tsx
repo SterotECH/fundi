@@ -11,6 +11,11 @@ const DashboardPage = lazy(() =>
     default: module.DashboardPage,
   })),
 );
+const AnalyticsPage = lazy(() =>
+  import("@/features/analytics/AnalyticsPage").then((module) => ({
+    default: module.AnalyticsPage,
+  })),
+);
 const ClientsPage = lazy(() =>
   import("@/features/clients/ClientsPage").then((module) => ({
     default: module.ClientsPage,
@@ -39,9 +44,24 @@ const ProposalsPage = lazy(() =>
     default: module.ProposalsPage,
   })),
 );
+const ProposalDetailPage = lazy(() =>
+  import("@/features/proposals/ProposalDetailPage").then((module) => ({
+    default: module.ProposalDetailPage,
+  })),
+);
 const InvoicesPage = lazy(() =>
   import("@/features/invoices/InvoicesPage").then((module) => ({
     default: module.InvoicesPage,
+  })),
+);
+const ProjectsPage = lazy(() =>
+  import("@/features/projects/ProjectsPage").then((module) => ({
+    default: module.ProjectsPage,
+  })),
+);
+const ProjectDetailPage = lazy(() =>
+  import("@/features/projects/ProjectDetailPage").then((module) => ({
+    default: module.ProjectDetailPage,
   })),
 );
 const InvoiceDetailPage = lazy(() =>
@@ -64,6 +84,10 @@ export function LoginRouteElement() {
 
 export function DashboardRouteElement() {
   return withSuspense(<DashboardPage />);
+}
+
+export function AnalyticsRouteElement() {
+  return withSuspense(<AnalyticsPage />);
 }
 
 export function ClientsRouteElement() {
@@ -90,8 +114,20 @@ export function ProposalsRouteElement() {
   return withSuspense(<ProposalsPage />);
 }
 
+export function ProposalDetailRouteElement() {
+  return withSuspense(<ProposalDetailPage />);
+}
+
 export function InvoicesRouteElement() {
   return withSuspense(<InvoicesPage />);
+}
+
+export function ProjectsRouteElement() {
+  return withSuspense(<ProjectsPage />);
+}
+
+export function ProjectDetailRouteElement() {
+  return withSuspense(<ProjectDetailPage />);
 }
 
 export function InvoiceDetailRouteElement() {

@@ -1,0 +1,1077 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sprint 3 — The Intelligence Layer · Stero Tech Company OS</title>
+<style>
+  :root {
+    --purple-50:#EEEDFE;--purple-100:#CECBF6;--purple-200:#AFA9EC;
+    --purple-400:#7F77DD;--purple-600:#534AB7;--purple-800:#3C3489;--purple-900:#26215C;
+    --teal-50:#E1F5EE;--teal-100:#9FE1CB;--teal-400:#1D9E75;--teal-600:#0F6E56;--teal-800:#085041;
+    --amber-50:#FAEEDA;--amber-400:#BA7517;--amber-600:#854F0B;
+    --red-50:#FCEBEB;--red-400:#E24B4A;--red-800:#791F1F;
+    --blue-50:#E6F1FB;--blue-400:#378ADD;--blue-800:#0C447C;
+    --gray-50:#F1EFE8;--gray-100:#D3D1C7;--gray-400:#888780;--gray-600:#5F5E5A;--gray-800:#444441;
+    --coral-50:#FAECE7;--coral-400:#D85A30;
+    --glass-bg:rgba(255,255,255,0.78);
+    --glass-border:rgba(255,255,255,0.6);
+    --page-bg:#F4F3FC;
+    --ink:#1a1720;--ink2:#5a5580;--ink3:#9390b0;
+    --border:rgba(180,176,220,0.3);
+  }
+
+  *{box-sizing:border-box;margin:0;padding:0}
+
+  body{
+    font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+    background:var(--page-bg);
+    color:var(--ink);
+    line-height:1.65;
+    font-size:15px;
+  }
+
+  body::before{
+    content:'';
+    position:fixed;inset:0;
+    background:
+      radial-gradient(ellipse 60% 40% at 20% 10%,rgba(83,74,183,.07) 0%,transparent 70%),
+      radial-gradient(ellipse 50% 50% at 80% 80%,rgba(29,158,117,.05) 0%,transparent 70%),
+      radial-gradient(ellipse 40% 60% at 70% 20%,rgba(186,117,23,.04) 0%,transparent 70%);
+    pointer-events:none;z-index:0;
+  }
+
+  .page{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:0 24px 80px}
+
+  /* COVER */
+  .cover{padding:60px 0 44px;border-bottom:1px solid var(--border);margin-bottom:48px;display:flex;align-items:flex-start;justify-content:space-between;gap:24px;flex-wrap:wrap}
+  .cover-left{flex:1;min-width:280px}
+  .cover-breadcrumb{display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ink3);margin-bottom:20px}
+  .cover-breadcrumb .logo{width:28px;height:28px;background:var(--purple-600);border-radius:7px;display:inline-flex;align-items:center;justify-content:center;color:#fff;font-size:11px;font-weight:700}
+  .sprint-badge{display:inline-flex;align-items:center;gap:7px;background:var(--amber-50);color:var(--amber-600);font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;padding:4px 12px;border-radius:20px;border:1px solid rgba(186,117,23,.25);margin-bottom:16px}
+  .cover h1{font-size:40px;font-weight:800;letter-spacing:-.03em;color:var(--ink);line-height:1.1;margin-bottom:12px}
+  .cover h1 em{color:var(--amber-400);font-style:normal}
+  .cover-sub{font-size:16px;color:var(--ink2);max-width:520px;line-height:1.6}
+  .cover-meta{display:flex;flex-direction:column;gap:10px;background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:16px;padding:20px 24px;backdrop-filter:blur(12px);min-width:220px;flex-shrink:0}
+  .meta-row{display:flex;justify-content:space-between;align-items:baseline;gap:16px}
+  .meta-key{font-size:11px;color:var(--ink3);font-weight:600;letter-spacing:.04em;text-transform:uppercase}
+  .meta-val{font-size:13px;font-weight:700;color:var(--ink)}
+  .meta-divider{height:1px;background:var(--border)}
+
+  /* TOC */
+  .toc{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:16px;padding:28px 32px;margin-bottom:56px;backdrop-filter:blur(12px)}
+  .toc-label{font-size:11px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--ink3);margin-bottom:16px}
+  .toc-grid{display:grid;grid-template-columns:1fr 1fr;gap:0}
+  .toc-item{display:flex;align-items:baseline;gap:10px;padding:6px 0;border-bottom:1px solid rgba(180,176,220,.12)}
+  .toc-item:nth-last-child(-n+2){border-bottom:none}
+  .toc-num{font-size:11px;font-weight:700;color:var(--amber-400);width:24px;flex-shrink:0;font-variant-numeric:tabular-nums}
+  .toc-link{font-size:14px;color:var(--ink);text-decoration:none;transition:color .15s}
+  .toc-link:hover{color:var(--amber-600)}
+
+  /* SECTION */
+  .section{margin-bottom:64px}
+  .section-header{display:flex;align-items:center;gap:14px;margin-bottom:28px;padding-top:8px}
+  .section-icon{width:36px;height:36px;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+  .section-icon svg{width:18px;height:18px}
+  h2{font-size:26px;font-weight:700;letter-spacing:-.02em}
+  h3{font-size:17px;font-weight:700;color:var(--ink);margin:32px 0 14px}
+  h4{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin:24px 0 10px}
+  p{margin-bottom:14px;color:var(--ink);line-height:1.75}
+  p:last-child{margin-bottom:0}
+  code{font-family:'SF Mono','Fira Code','Cascadia Code',monospace;font-size:12px;background:var(--purple-50);color:var(--purple-800);padding:1px 6px;border-radius:5px}
+
+  /* GLASS CARD */
+  .card{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:16px;padding:24px;backdrop-filter:blur(12px);margin-bottom:16px}
+  .card-sm{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:12px;padding:16px;backdrop-filter:blur(8px);margin-bottom:12px}
+
+  /* CHIPS */
+  .chip{display:inline-flex;align-items:center;gap:4px;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px;letter-spacing:.04em;white-space:nowrap}
+  .chip-p{background:var(--purple-50);color:var(--purple-800)}
+  .chip-t{background:var(--teal-50);color:var(--teal-800)}
+  .chip-a{background:var(--amber-50);color:var(--amber-600)}
+  .chip-r{background:var(--red-50);color:var(--red-800)}
+  .chip-b{background:var(--blue-50);color:var(--blue-800)}
+  .chip-g{background:var(--gray-50);color:var(--gray-600)}
+
+  /* STAT GRID */
+  .stat-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:16px 0}
+  .stat-card{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:12px;padding:14px 16px;backdrop-filter:blur(8px)}
+  .stat-label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:5px}
+  .stat-val{font-size:24px;font-weight:800;color:var(--ink);line-height:1}
+  .stat-sub{font-size:11px;color:var(--ink3);margin-top:4px}
+
+  /* TABLES */
+  .table-wrap{overflow-x:auto;margin:16px 0}
+  table{width:100%;border-collapse:collapse;font-size:13.5px}
+  th{background:rgba(83,74,183,.05);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink2);padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);white-space:nowrap}
+  td{padding:10px 14px;border-bottom:1px solid rgba(180,176,220,.15);vertical-align:top;line-height:1.55}
+  tr:last-child td{border-bottom:none}
+  td code{font-size:11.5px}
+  tr:hover td{background:rgba(83,74,183,.02)}
+
+  /* CALLOUTS */
+  .callout{border-radius:12px;padding:16px 20px;margin:20px 0;border-left:3px solid}
+  .callout-purple{background:var(--purple-50);border-color:var(--purple-600)}
+  .callout-teal{background:var(--teal-50);border-color:var(--teal-400)}
+  .callout-amber{background:var(--amber-50);border-color:var(--amber-400)}
+  .callout-red{background:var(--red-50);border-color:var(--red-400)}
+  .callout-title{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;margin-bottom:6px}
+  .callout-purple .callout-title{color:var(--purple-800)}
+  .callout-teal .callout-title{color:var(--teal-800)}
+  .callout-amber .callout-title{color:var(--amber-600)}
+  .callout-red .callout-title{color:var(--red-800)}
+  .callout p,.callout li{font-size:14px;margin-bottom:0}
+  .callout ul{padding-left:18px}
+  .callout li{margin-bottom:4px}
+
+  /* WEEK GRID */
+  .week-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:16px 0}
+  .week-card{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:14px;padding:18px;backdrop-filter:blur(8px)}
+  .week-num{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);margin-bottom:6px}
+  .week-title{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:12px}
+  .week-item{font-size:13px;color:var(--ink2);padding:3px 0;display:flex;gap:7px;line-height:1.5}
+  .week-item::before{content:'·';color:var(--ink3);flex-shrink:0}
+  .week-bar{height:4px;border-radius:2px;margin-top:14px;overflow:hidden;background:rgba(180,176,220,.2)}
+  .week-bar-fill{height:100%;border-radius:2px;background:var(--amber-400)}
+
+  /* ENDPOINT LIST */
+  .endpoint-group{margin-bottom:24px}
+  .endpoint-group-label{font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px;padding-bottom:6px;border-bottom:1px solid var(--border)}
+  .endpoint{display:grid;grid-template-columns:68px 300px 1fr;gap:10px;align-items:start;padding:9px 12px;border-radius:10px;background:var(--glass-bg);border:1px solid var(--glass-border);margin-bottom:5px;font-size:13px;backdrop-filter:blur(6px)}
+  .method{font-family:'SF Mono','Fira Code',monospace;font-size:10px;font-weight:700;padding:2px 6px;border-radius:5px;text-align:center;align-self:start;margin-top:1px;letter-spacing:.03em}
+  .GET{background:var(--blue-50);color:var(--blue-800)}
+  .POST{background:var(--teal-50);color:var(--teal-800)}
+  .PATCH{background:var(--amber-50);color:var(--amber-600)}
+  .DELETE{background:var(--red-50);color:var(--red-800)}
+  .endpoint-url{font-family:'SF Mono','Fira Code',monospace;font-size:11.5px;color:var(--purple-800);word-break:break-all}
+  .endpoint-desc{color:var(--ink2);line-height:1.5}
+
+  /* ANALYTICS MOCKUP */
+  .chart-shell{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:16px;padding:24px;backdrop-filter:blur(12px);margin:16px 0}
+  .chart-header{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:20px}
+  .chart-title{font-size:14px;font-weight:700;color:var(--ink)}
+  .chart-meta{font-size:12px;color:var(--ink3)}
+  .bar-chart{display:flex;align-items:flex-end;gap:10px;height:120px;padding-bottom:2px}
+  .bar-wrap{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px}
+  .bar{width:100%;border-radius:5px 5px 0 0;background:var(--purple-100);transition:background .2s;min-height:4px;position:relative}
+  .bar.current{background:var(--purple-600)}
+  .bar-label{font-size:10px;color:var(--ink3);white-space:nowrap}
+  .bar-val{font-size:10px;font-weight:700;color:var(--ink3)}
+  .bar-val.hi{color:var(--purple-800)}
+
+  .kpi-row{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin:16px 0}
+  .kpi-card{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:14px;padding:18px 20px;backdrop-filter:blur(8px)}
+  .kpi-label{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px}
+  .kpi-val{font-size:28px;font-weight:800;color:var(--ink);line-height:1;margin-bottom:4px}
+  .kpi-delta{font-size:12px;font-weight:600}
+  .kpi-delta.up{color:var(--teal-600)}
+  .kpi-delta.down{color:var(--red-400)}
+  .kpi-delta.neutral{color:var(--ink3)}
+  .kpi-sub{font-size:11px;color:var(--ink3);margin-top:3px}
+
+  /* PROFITABILITY TABLE */
+  .profit-row{display:grid;grid-template-columns:1fr 100px 90px 90px 90px;gap:8px;align-items:center;padding:10px 14px;border-radius:10px;background:var(--glass-bg);border:1px solid var(--glass-border);margin-bottom:6px;backdrop-filter:blur(6px);font-size:13px}
+  .profit-header{display:grid;grid-template-columns:1fr 100px 90px 90px 90px;gap:8px;padding:6px 14px;font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3)}
+  .profit-name{font-weight:600;color:var(--ink)}
+  .profit-num{font-weight:700;text-align:right}
+  .profit-bar-cell{display:flex;align-items:center;gap:6px}
+  .profit-mini-bar{height:5px;border-radius:3px;background:var(--teal-400);flex-shrink:0}
+
+  /* INSIGHT CARDS */
+  .insight-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+  .insight-card{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:14px;padding:18px 20px;backdrop-filter:blur(8px)}
+  .insight-icon{width:32px;height:32px;border-radius:9px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;flex-shrink:0}
+  .insight-icon svg{width:16px;height:16px}
+  .insight-title{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:6px}
+  .insight-body{font-size:13px;color:var(--ink2);line-height:1.6}
+  .insight-value{font-size:22px;font-weight:800;margin:8px 0 4px}
+
+  /* ISSUE LIST */
+  .issue-list{}
+  .issue{display:flex;align-items:flex-start;gap:12px;padding:10px 0;border-bottom:1px solid rgba(180,176,220,.15)}
+  .issue:last-child{border-bottom:none}
+  .issue-num{font-size:11px;font-weight:700;color:var(--amber-400);width:30px;flex-shrink:0;font-family:'SF Mono','Fira Code',monospace;margin-top:2px}
+  .issue-body{flex:1}
+  .issue-title{font-size:13.5px;color:var(--ink);font-weight:500;line-height:1.45;margin-bottom:5px}
+  .issue-tags{display:flex;gap:5px;flex-wrap:wrap}
+  .it-be{background:var(--amber-50);color:var(--amber-600)}
+  .it-fe{background:var(--blue-50);color:var(--blue-800)}
+  .it-m{background:var(--gray-50);color:var(--gray-600)}
+  .it-ch{background:var(--purple-50);color:var(--purple-800)}
+
+  /* SCOPE GRID */
+  .scope-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+  .scope-col{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:14px;overflow:hidden;backdrop-filter:blur(8px)}
+  .scope-header{padding:12px 18px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-bottom:1px solid var(--border)}
+  .scope-header.in{background:rgba(29,158,117,.07);color:var(--teal-800)}
+  .scope-header.out{background:rgba(226,75,74,.06);color:var(--red-800)}
+  .scope-items{padding:8px 0}
+  .scope-item{display:flex;align-items:flex-start;gap:10px;padding:6px 18px;font-size:13.5px;color:var(--ink);line-height:1.5}
+  .scope-icon{flex-shrink:0;margin-top:3px;font-size:12px}
+
+  /* CHECKLIST */
+  .checklist-item{display:flex;align-items:flex-start;gap:12px;padding:9px 0;border-bottom:1px solid rgba(180,176,220,.12);font-size:14px;color:var(--ink)}
+  .checklist-item:last-child{border-bottom:none}
+  .check-box{width:16px;height:16px;border-radius:5px;border:2px solid rgba(180,176,220,.5);flex-shrink:0;margin-top:2px}
+
+  /* SPRINT HANDOFF */
+  .handoff-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:16px 0}
+  .handoff-card{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:14px;padding:20px;backdrop-filter:blur(8px)}
+  .handoff-sprint{font-size:10px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;margin-bottom:10px}
+  .handoff-item{font-size:13px;color:var(--ink2);padding:4px 0;display:flex;gap:8px;line-height:1.5;border-bottom:1px solid rgba(180,176,220,.1)}
+  .handoff-item:last-child{border-bottom:none}
+  .handoff-arrow{color:var(--ink3);flex-shrink:0}
+
+  /* AI FUTURE SECTION */
+  .ai-arch{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:16px;padding:28px;backdrop-filter:blur(12px);margin:16px 0}
+  .ai-arch-title{font-size:18px;font-weight:700;color:var(--ink);margin-bottom:6px}
+  .ai-arch-sub{font-size:14px;color:var(--ink2);margin-bottom:24px;line-height:1.65}
+  .ai-layer{display:flex;align-items:stretch;gap:14px;margin-bottom:10px}
+  .ai-layer-num{width:28px;display:flex;flex-direction:column;align-items:center;flex-shrink:0}
+  .ai-layer-circle{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:700;flex-shrink:0}
+  .ai-layer-line{flex:1;width:1px;background:rgba(180,176,220,.3);margin:4px auto 0}
+  .ai-layer-body{flex:1;padding-bottom:14px}
+  .ai-layer-title{font-size:14px;font-weight:700;color:var(--ink);margin-bottom:3px}
+  .ai-layer-desc{font-size:13px;color:var(--ink2);line-height:1.6}
+  .ai-layer-sprint{font-size:10px;font-weight:700;padding:1px 7px;border-radius:10px;display:inline-block;margin-top:5px}
+
+  /* MOBILE SECTION */
+  .mobile-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin:16px 0}
+  .mobile-card{background:var(--glass-bg);border:1px solid var(--glass-border);border-radius:14px;padding:18px;backdrop-filter:blur(8px)}
+  .mobile-screen{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--ink3);margin-bottom:8px}
+  .mobile-issue{font-size:13px;color:var(--ink2);padding:3px 0;display:flex;gap:7px;line-height:1.5}
+  .mobile-issue::before{content:'·';color:var(--ink3)}
+
+  /* FOOTER */
+  .doc-footer{margin-top:64px;padding-top:24px;border-top:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;font-size:13px;color:var(--ink3)}
+
+  ul,ol{padding-left:20px;margin-bottom:14px}
+  li{margin-bottom:5px;line-height:1.65}
+  strong{font-weight:700}
+
+  @media print{
+    body::before{display:none}
+    body{background:#fff;font-size:13px}
+    .card,.week-card,.insight-card,.scope-col{break-inside:avoid}
+  }
+</style>
+</head>
+<body>
+<div class="page">
+
+<!-- COVER -->
+<div class="cover">
+  <div class="cover-left">
+    <div class="cover-breadcrumb">
+      <span class="logo">ST</span>
+      <span>Stero Tech Inc.</span>
+      <span>·</span>
+      <span>Company OS</span>
+    </div>
+    <div class="sprint-badge">Sprint 3 · Weeks 7–9</div>
+    <h1>The <em>Intelligence</em> Layer</h1>
+    <p class="cover-sub">Rules-based analytics, proactive insights, pipeline charts, and full mobile polish — built entirely on the data Sprint 2 already collected. No LLM in Sprint 3. The intelligence context layer is wired for Celery-driven automations and later rule-based expansion.</p>
+  </div>
+  <div class="cover-meta">
+    <div class="meta-row"><span class="meta-key">Sprint</span><span class="meta-val">3 of 3</span></div>
+    <div class="meta-divider"></div>
+    <div class="meta-row"><span class="meta-key">Weeks</span><span class="meta-val">7 – 9</span></div>
+    <div class="meta-divider"></div>
+    <div class="meta-row"><span class="meta-key">New models</span><span class="meta-val">0</span></div>
+    <div class="meta-row"><span class="meta-key">New migrations</span><span class="meta-val">0</span></div>
+    <div class="meta-row"><span class="meta-key">New endpoints</span><span class="meta-val">9</span></div>
+    <div class="meta-row"><span class="meta-key">New screens</span><span class="meta-val">4</span></div>
+    <div class="meta-divider"></div>
+    <div class="meta-row"><span class="meta-key">LLM</span><span class="meta-val">None</span></div>
+    <div class="meta-row"><span class="meta-key">Rule engine</span><span class="meta-val">Fully wired ✓</span></div>
+  </div>
+</div>
+
+<!-- TOC -->
+<div class="toc">
+  <div class="toc-label">Contents</div>
+  <div class="toc-grid">
+    <div class="toc-item"><span class="toc-num">01</span><a class="toc-link" href="#s1">Sprint 2 exit gate</a></div>
+    <div class="toc-item"><span class="toc-num">06</span><a class="toc-link" href="#s6">Proactive insights spec</a></div>
+    <div class="toc-item"><span class="toc-num">02</span><a class="toc-link" href="#s2">The no-LLM decision</a></div>
+    <div class="toc-item"><span class="toc-num">07</span><a class="toc-link" href="#s7">Intelligence context layer</a></div>
+    <div class="toc-item"><span class="toc-num">03</span><a class="toc-link" href="#s3">Week-by-week plan</a></div>
+    <div class="toc-item"><span class="toc-num">08</span><a class="toc-link" href="#s8">Mobile polish spec</a></div>
+    <div class="toc-item"><span class="toc-num">04</span><a class="toc-link" href="#s4">Analytics API contract</a></div>
+    <div class="toc-item"><span class="toc-num">09</span><a class="toc-link" href="#s9">GitHub issues + scope</a></div>
+    <div class="toc-item"><span class="toc-num">05</span><a class="toc-link" href="#s5">Analytics screen specs</a></div>
+    <div class="toc-item"><span class="toc-num">10</span><a class="toc-link" href="#s10">Sprint 4 handoff</a></div>
+  </div>
+</div>
+
+
+<!-- S1: EXIT GATE -->
+<div class="section" id="s1">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--teal-50)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--teal-600)" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+    </div>
+    <h2>Sprint 2 exit gate</h2>
+  </div>
+
+  <p>All of these must be true and verified against real data — not seeded fixtures — before Sprint 3 begins. Sprint 3 is entirely aggregation queries against Sprint 2's data. If the underlying data is dirty or missing, every chart will be wrong.</p>
+
+  <div class="card">
+    <div class="checklist-item"><div class="check-box"></div><div>At least 3 invoices exist across different clients with statuses spanning <code>draft</code>, <code>sent</code>, <code>partial</code>, <code>paid</code>, and <code>overdue</code> — analytics need real variance to render meaningfully</div></div>
+    <div class="checklist-item"><div class="check-box"></div><div>At least 2 payments recorded with real GHS amounts against real invoices — <code>total_outstanding</code> dashboard tile showing correct live sum</div></div>
+    <div class="checklist-item"><div class="check-box"></div><div>At least 5 time log entries across 2+ projects — <code>/projects/{id}/timelogs/</code> aggregate returning correct <code>total_hours</code>, <code>billable_hours</code>, and <code>effective_rate</code></div></div>
+    <div class="checklist-item"><div class="check-box"></div><div>Celery Beat running in Docker and both tasks (<code>check_overdue_invoices</code>, <code>check_proposal_deadlines</code>) visible in <code>docker compose logs celery_worker</code></div></div>
+    <div class="checklist-item"><div class="check-box"></div><div>Notification bell showing unread count — at least one notification created either manually or by Celery</div></div>
+    <div class="checklist-item"><div class="check-box"></div><div>At least 3 proposals in decided states (<code>won</code> or <code>lost</code>) — win rate chart needs decided proposals to be meaningful</div></div>
+    <div class="checklist-item"><div class="check-box"></div><div>All Sprint 2 pytest-django tests passing — including the payment status transition edge cases (partial → paid, delete → recalculate)</div></div>
+  </div>
+
+  <div class="callout callout-amber">
+    <div class="callout-title">Seed realistic data before Sprint 3 begins</div>
+    <p>Write a management command <code>python manage.py seed_demo_data</code> that creates 6 months of invoices, payments, proposals (won and lost), and time logs with realistic GHS amounts and Ghanaian school names. You will need this data to develop and visually validate every chart in Sprint 3. Running analytics screens against 2 records produces meaningless output and hides bugs.</p>
+  </div>
+</div>
+
+
+<!-- S2: NO-LLM DECISION -->
+<div class="section" id="s2">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--amber-50)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber-600)" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+    </div>
+    <h2>The no-LLM decision</h2>
+  </div>
+
+  <p>Sprint 3 delivers zero LLM calls. This is the right call for three concrete reasons.</p>
+
+  <div class="card">
+    <h3 style="margin-top:0">Why no LLM in Sprint 3</h3>
+    <p><strong>You don't have enough data yet.</strong> An LLM reading 3 invoices and 5 time logs will produce vapid observations ("Your revenue this month is GHS 3,200"). The same data in a well-designed analytics screen tells you much more, instantly, at zero cost per query.</p>
+    <p><strong>The context layer needs to be built first anyway.</strong> The future intelligence roadmap depends on a <code>build_ai_context()</code> function that serialises a structured snapshot of your CRM data. You build that function in Sprint 3 as shared infrastructure for Celery jobs, notifications, and later rule packs. When future sprints expand automation, the context is already tested and correct.</p>
+    <p style="margin-bottom:0"><strong>Rules beat LLMs for deterministic queries.</strong> "What's my win rate?" has one correct answer. A SQL aggregate cannot drift. The rule-based insights you build in Sprint 3 will be more reliable and faster than any probabilistic layer for structured financial questions, and they remain useful all the way through Sprint 8.</p>
+  </div>
+
+  <div class="ai-arch" id="s7-preview">
+    <div class="ai-arch-title">Intelligence layer architecture — full picture</div>
+    <div class="ai-arch-sub">Sprint 3 builds layers 1 and 2. Later sprints add layers 3 and 4 without introducing an LLM. The key insight: those layers do not require schema changes. They read from the same endpoints and database tables you build now.</div>
+
+    <div class="ai-layer">
+      <div class="ai-layer-num">
+        <div class="ai-layer-circle" style="background:var(--teal-50);color:var(--teal-800)">1</div>
+        <div class="ai-layer-line"></div>
+      </div>
+      <div class="ai-layer-body">
+        <div class="ai-layer-title">Data foundation</div>
+        <div class="ai-layer-desc">Invoice, Payment, TimeLog, Notification models — populated with real data from production usage. Sprint 2 complete.</div>
+        <div class="ai-layer-sprint" style="background:var(--teal-50);color:var(--teal-800)">Sprint 2 ✓</div>
+      </div>
+    </div>
+
+    <div class="ai-layer">
+      <div class="ai-layer-num">
+        <div class="ai-layer-circle" style="background:var(--amber-50);color:var(--amber-600)">2</div>
+        <div class="ai-layer-line"></div>
+      </div>
+      <div class="ai-layer-body">
+        <div class="ai-layer-title">Analytics endpoints + rule-based insights</div>
+        <div class="ai-layer-desc">Pure SQL aggregation. Revenue by month, win rate, profitability per client, time-to-close, budget burn. Also: <code>build_ai_context()</code> plus a deterministic assistant endpoint for summaries, recommendations, and template-based email drafts. No free-form model output.</div>
+        <div class="ai-layer-sprint" style="background:var(--amber-50);color:var(--amber-600)">Sprint 3 — this sprint</div>
+      </div>
+    </div>
+
+    <div class="ai-layer">
+      <div class="ai-layer-num">
+        <div class="ai-layer-circle" style="background:var(--purple-50);color:var(--purple-800)">3</div>
+        <div class="ai-layer-line"></div>
+      </div>
+      <div class="ai-layer-body">
+        <div class="ai-layer-title">Operations intelligence layer</div>
+        <div class="ai-layer-desc">Sprint 4 consumes the same analytics outputs inside the operations layer: contracts, expenses, attachments, staff tasks, and project workflows. <code>build_ai_context()</code> becomes a shared summary function for dashboard callouts, task suggestions, and escalation rules. No new models are required for the intelligence logic itself.</div>
+        <div class="ai-layer-sprint" style="background:var(--blue-50);color:var(--blue-800)">Sprint 4</div>
+      </div>
+    </div>
+
+    <div class="ai-layer">
+      <div class="ai-layer-num">
+        <div class="ai-layer-circle" style="background:var(--gray-50);color:var(--gray-800)">4</div>
+      </div>
+      <div class="ai-layer-body">
+        <div class="ai-layer-title">Proactive rule engine (future)</div>
+        <div class="ai-layer-desc">Celery tasks run weekly and monthly, call <code>build_ai_context()</code>, evaluate rule packs, and write findings to the Notification table. "Accra Academy has paid late 3 months in a row." "Project burn crossed 80% with 40% of invoices still unpaid." This layer gets stronger as more historical data accumulates and remains rule-based through Sprint 8.</div>
+        <div class="ai-layer-sprint" style="background:var(--gray-50);color:var(--gray-800)">Sprint 5–8</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- S3: WEEK PLAN -->
+<div class="section" id="s3">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--purple-50)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--purple-600)" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+    </div>
+    <h2>Week-by-week delivery plan</h2>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-card"><div class="stat-label">New models</div><div class="stat-val">0</div><div class="stat-sub">Zero new migrations</div></div>
+    <div class="stat-card"><div class="stat-label">Analytics endpoints</div><div class="stat-val">10</div><div class="stat-sub">Aggregates + assistant router + briefing</div></div>
+    <div class="stat-card"><div class="stat-label">New screens</div><div class="stat-val">4</div><div class="stat-sub">Analytics · Insights · Client detail upgrade · Mobile</div></div>
+    <div class="stat-card"><div class="stat-label">Context engine</div><div class="stat-val">1</div><div class="stat-sub">build_ai_context() ready for later rule jobs</div></div>
+  </div>
+
+  <div class="week-grid">
+    <div class="week-card">
+      <div class="week-num">Week 7 · Days 1–5</div>
+      <div class="week-title">Analytics backend</div>
+      <div class="week-item">Seed management command (demo data)</div>
+      <div class="week-item">Revenue by month endpoint</div>
+      <div class="week-item">Win rate + time-to-close endpoint</div>
+      <div class="week-item">Client profitability endpoint</div>
+      <div class="week-item">Budget burn per project endpoint</div>
+      <div class="week-item">Rule-based assistant endpoint + intent router</div>
+      <div class="week-item">Email draft templates for proposal and invoice follow-up</div>
+      <div class="week-item">build_ai_context() function (shared rule context, no UI caller yet)</div>
+      <div class="week-item">pytest-django tests for all Sprint 3 endpoints</div>
+      <div class="week-bar"><div class="week-bar-fill" style="width:100%"></div></div>
+    </div>
+    <div class="week-card">
+      <div class="week-num">Week 8 · Days 6–10</div>
+      <div class="week-title">Analytics frontend + insights</div>
+      <div class="week-item">Analytics screen: revenue bar chart</div>
+      <div class="week-item">Analytics screen: win rate + pipeline funnel</div>
+      <div class="week-item">Client profitability table (sortable)</div>
+      <div class="week-item">Rule-based insights panel (5 insight types)</div>
+      <div class="week-item">Client detail: upgraded revenue summary tab</div>
+      <div class="week-item">Dashboard: analytics tiles wired to live data</div>
+      <div class="week-bar"><div class="week-bar-fill" style="width:100%"></div></div>
+    </div>
+    <div class="week-card">
+      <div class="week-num">Week 9 · Days 11–15</div>
+      <div class="week-title">Mobile + polish + handoff</div>
+      <div class="week-item">Mobile responsiveness pass — all screens</div>
+      <div class="week-item">Empty states on every list and chart</div>
+      <div class="week-item">Loading skeletons on all async data</div>
+      <div class="week-item">Error states (API down, network fail)</div>
+      <div class="week-item">build_ai_context() integration test</div>
+      <div class="week-item">Sprint 3 demo → Sprint 4 operations kickoff doc</div>
+      <div class="week-bar"><div class="week-bar-fill" style="width:100%"></div></div>
+    </div>
+  </div>
+
+  <div class="callout callout-purple">
+    <div class="callout-title">Backend-first rule still applies</div>
+    <p>Week 7 is backend only. Every analytics endpoint must have a passing pytest test before the frontend touches it. The charts in Week 8 should be wiring React Query hooks to already-tested endpoints, not discovering API design bugs at the same time as building UI.</p>
+  </div>
+</div>
+
+
+<!-- S4: API CONTRACT -->
+<div class="section" id="s4">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--amber-50)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber-600)" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>
+    </div>
+    <h2>Analytics API contract</h2>
+  </div>
+
+  <p>All endpoints prefixed <code>/api/v1/analytics/</code>. All require JWT auth. All are GET-only — pure read. All filter by <code>request.user.organisation</code> implicitly. No pagination — these are aggregate queries that return small summary objects, not lists.</p>
+
+  <div class="endpoint-group">
+    <div class="endpoint-group-label">Revenue</div>
+    <div class="endpoint">
+      <span class="method GET">GET</span>
+      <span class="endpoint-url">/analytics/revenue/</span>
+      <span class="endpoint-desc">Monthly revenue from <code>paid</code> and <code>partial</code> payments for the last 12 months. Query param: <code>months=12</code> (default). Returns <code>{months: [{month: "2025-04", collected_ghs: "18400.00", invoiced_ghs: "22000.00"}], total_collected, total_outstanding}</code>. Source: <code>Payment.amount</code> grouped by <code>payment_date__year</code> + <code>payment_date__month</code>.</span>
+    </div>
+    <div class="endpoint">
+      <span class="method GET">GET</span>
+      <span class="endpoint-url">/analytics/revenue/summary/</span>
+      <span class="endpoint-desc">Flat summary for dashboard tiles: <code>{this_month_collected, last_month_collected, mom_change_pct, ytd_collected, total_outstanding, overdue_count, overdue_total}</code>. This replaces the hardcoded dashboard tiles.</span>
+    </div>
+  </div>
+
+  <div class="endpoint-group">
+    <div class="endpoint-group-label">Pipeline</div>
+    <div class="endpoint">
+      <span class="method GET">GET</span>
+      <span class="endpoint-url">/analytics/pipeline/</span>
+      <span class="endpoint-desc">Proposal funnel + win metrics: <code>{by_status: [{status, count, total_value_ghs}], win_rate_pct, avg_deal_value_ghs, avg_days_to_close, total_pipeline_value_ghs}</code>. Only proposals with <code>decision_date</code> set count toward <code>avg_days_to_close</code>.</span>
+    </div>
+  </div>
+
+  <div class="endpoint-group">
+    <div class="endpoint-group-label">Clients</div>
+    <div class="endpoint">
+      <span class="method GET">GET</span>
+      <span class="endpoint-url">/analytics/clients/</span>
+      <span class="endpoint-desc">Per-client profitability. Returns array sorted by <code>revenue_ghs</code> desc: <code>[{client_id, client_name, invoiced_ghs, collected_ghs, outstanding_ghs, total_hours, billable_hours, effective_rate_ghs, open_proposals}]</code>. Query param: <code>sort_by=revenue|hours|rate</code>.</span>
+    </div>
+  </div>
+
+  <div class="endpoint-group">
+    <div class="endpoint-group-label">Projects</div>
+    <div class="endpoint">
+      <span class="method GET">GET</span>
+      <span class="endpoint-url">/analytics/projects/</span>
+      <span class="endpoint-desc">Budget burn per project. Returns array: <code>[{project_id, title, client_name, budget_ghs, invoiced_ghs, collected_ghs, total_hours, billable_hours, burn_pct, status}]</code>. <code>burn_pct</code> = <code>(billable_hours * effective_rate) / budget * 100</code>.</span>
+    </div>
+  </div>
+
+  <div class="endpoint-group">
+    <div class="endpoint-group-label">Insights (rule-based)</div>
+    <div class="endpoint">
+      <span class="method GET">GET</span>
+      <span class="endpoint-url">/analytics/insights/</span>
+      <span class="endpoint-desc">Computed rule-based observations about the business. Returns <code>[{type, severity, title, body, entity_type?, entity_id?, value?}]</code>. See insight spec in section 6. These are computed fresh on each request — no storage. Fast enough at Stero's data volume.</span>
+    </div>
+  </div>
+
+  <div class="endpoint-group">
+    <div class="endpoint-group-label">Business Assistant (rule-based)</div>
+    <div class="endpoint">
+      <span class="method GET">GET</span>
+      <span class="endpoint-url">/assistant/briefing/</span>
+      <span class="endpoint-desc">Daily assistant briefing payload for the current organisation. Returns <code>{headline, revenue_summary, follow_up, insights}</code> where <code>follow_up</code> reuses the structured recommendation contract from the assistant router.</span>
+    </div>
+    <div class="endpoint">
+      <span class="method POST">POST</span>
+      <span class="endpoint-url">/assistant/query/</span>
+      <span class="endpoint-desc">Deterministic business assistant router. Accepts <code>{message, conversation_history?, context?}</code> and returns <code>{reply, matched_rule, data_context_used?, draft?}</code>. Supported Sprint 3 intents: revenue summary, overdue balance summary, proposal summary, client health summary, project risk summary, today's follow-up recommendations, proposal follow-up email draft, overdue invoice reminder draft, and stale project follow-up draft.</span>
+    </div>
+  </div>
+
+  <div class="callout callout-teal">
+    <div class="callout-title">Query performance — no optimisation needed yet</div>
+    <p>At Stero's current data volume (tens of clients, hundreds of invoices), all these queries run in under 50ms with zero extra indexes beyond the FKs you already have. Do not add database indexes, caching, or materialised views in Sprint 3. Profile first, optimise when you can measure a real problem. The only index worth considering now is <code>payment_date</code> on <code>Payment</code> if you find the revenue query slow — but you won't.</p>
+  </div>
+
+  <h3>Rule-based assistant scope</h3>
+  <p>The assistant in Sprint 3 is narrow on purpose. It does not invent answers and it does not handle arbitrary writing. It routes known requests to deterministic service functions and, when needed, fills structured templates with CRM data.</p>
+
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Intent</th><th>Service output</th><th>Why it belongs in Sprint 3</th></tr></thead>
+    <tbody>
+      <tr><td>Revenue summary</td><td>Collected this month, outstanding balance, overdue count</td><td>Pure aggregation over invoices and payments</td></tr>
+      <tr><td>Overdue balance summary</td><td>Amount paid, amount remaining, days overdue, client context</td><td>Deterministic and useful before a collection call</td></tr>
+      <tr><td>Proposal summary</td><td>Status, amount, deadline, age, client</td><td>Structured CRM facts, no model needed</td></tr>
+      <tr><td>Client health summary</td><td>Revenue, outstanding, open proposals, active work, logged hours</td><td>Cross-table summary, still deterministic</td></tr>
+      <tr><td>Project risk summary</td><td>Budget, burn %, billable hours, status, risk classification</td><td>Reads directly from analytics calculations</td></tr>
+      <tr><td>Follow-up recommendations</td><td>Ranked list of urgent invoices, proposals, and projects</td><td>Sorting and thresholds, ideal for Celery-backed workflows later</td></tr>
+      <tr><td>Daily briefing</td><td><code>{headline, revenue_summary, follow_up, insights}</code></td><td>One stable contract for the assistant panel and Celery-scheduled morning briefings</td></tr>
+      <tr><td>Proposal follow-up email draft</td><td><code>{subject, body, template_key}</code></td><td>Template fill, grounded in proposal facts</td></tr>
+      <tr><td>Overdue invoice reminder draft</td><td><code>{subject, body, template_key}</code></td><td>Template fill, grounded in invoice facts</td></tr>
+      <tr><td>Stale project follow-up draft</td><td><code>{reply, draft, items}</code></td><td>Template fill for open projects with no recent time logs or past-due delivery dates</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout callout-purple">
+    <div class="callout-title">Template drafting, not open-ended writing</div>
+    <p>Email drafting in Sprint 3 is template-driven. The backend chooses a template based on CRM facts such as proposal status, deadline proximity, overdue duration, and outstanding amount, then fills placeholders with client and project data. This gives you useful drafts without any hallucination risk.</p>
+  </div>
+
+  <h3>build_ai_context() function</h3>
+  <p>Write this in <code>analytics/services.py</code>. It is not an API endpoint. It is called internally. It becomes the shared context snapshot for Celery jobs, dashboard intelligence callouts, and later rule packs.</p>
+
+  <div class="card-sm" style="font-family:'SF Mono','Fira Code',monospace;font-size:12.5px;color:var(--purple-800);background:var(--purple-50);border-color:var(--purple-100);line-height:1.8">
+    def build_ai_context(organisation) -> str:<br>
+    &nbsp;&nbsp;# Fetches and serialises a structured snapshot of CRM data.<br>
+    &nbsp;&nbsp;# Capped: last 3 months activity, top 10 clients by revenue,<br>
+    &nbsp;&nbsp;# open proposals, overdue invoices, active projects with hours.<br>
+    &nbsp;&nbsp;# Returns a plain-text summary string, under 2,000 tokens.<br>
+    &nbsp;&nbsp;# Never includes payment references or personal contact details.<br>
+    &nbsp;&nbsp;# Tested independently from any future consumer.
+  </div>
+
+  <div class="callout callout-amber">
+    <div class="callout-title">Hard token cap on the context function</div>
+    <p>The output of <code>build_ai_context()</code> must stay under 2,000 tokens (roughly 1,500 words). Enforce this with a character count assertion in the test. When you have 500 clients and 5,000 invoices, this function must still return a capped summary — not a full database dump. The cap is not a later-sprint concern; it's a Sprint 3 design constraint you build in from day one. Use recency (last 3 months) and importance (top 10 by revenue) as your two trimming axes.</p>
+  </div>
+</div>
+
+
+<!-- S5: ANALYTICS SCREENS -->
+<div class="section" id="s5">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--purple-50)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--purple-600)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+    </div>
+    <h2>Analytics screen specifications</h2>
+  </div>
+
+  <h3>Revenue chart — 12-month bar chart</h3>
+
+  <div class="chart-shell">
+    <div class="chart-header">
+      <div class="chart-title">Revenue collected — last 12 months</div>
+      <div class="chart-meta">GHS · Payments received</div>
+    </div>
+    <div class="bar-chart">
+      <div class="bar-wrap"><div class="bar" style="height:32%"></div><div class="bar-label">May</div><div class="bar-val">8.2k</div></div>
+      <div class="bar-wrap"><div class="bar" style="height:45%"></div><div class="bar-label">Jun</div><div class="bar-val">11.4k</div></div>
+      <div class="bar-wrap"><div class="bar" style="height:28%"></div><div class="bar-label">Jul</div><div class="bar-val">7.1k</div></div>
+      <div class="bar-wrap"><div class="bar" style="height:38%"></div><div class="bar-label">Aug</div><div class="bar-val">9.6k</div></div>
+      <div class="bar-wrap"><div class="bar" style="height:55%"></div><div class="bar-label">Sep</div><div class="bar-val">13.9k</div></div>
+      <div class="bar-wrap"><div class="bar" style="height:42%"></div><div class="bar-label">Oct</div><div class="bar-val">10.6k</div></div>
+      <div class="bar-wrap"><div class="bar" style="height:60%"></div><div class="bar-label">Nov</div><div class="bar-val">15.2k</div></div>
+      <div class="bar-wrap"><div class="bar" style="height:50%"></div><div class="bar-label">Dec</div><div class="bar-val">12.6k</div></div>
+      <div class="bar-wrap"><div class="bar" style="height:36%"></div><div class="bar-label">Jan</div><div class="bar-val">9.1k</div></div>
+      <div class="bar-wrap"><div class="bar" style="height:48%"></div><div class="bar-label">Feb</div><div class="bar-val">12.1k</div></div>
+      <div class="bar-wrap"><div class="bar" style="height:62%"></div><div class="bar-label">Mar</div><div class="bar-val">15.7k</div></div>
+      <div class="bar-wrap"><div class="bar current" style="height:73%"></div><div class="bar-label">Apr</div><div class="bar-val hi">18.4k</div></div>
+    </div>
+  </div>
+
+  <div class="callout callout-purple">
+    <div class="callout-title">No charting library in Sprint 3</div>
+    <p>Build the revenue bar chart with pure CSS flexbox — no Recharts, no Chart.js. A CSS bar chart with <code>height</code> proportional to the max value is 15 lines of JSX and zero dependencies. It renders instantly, looks correct on mobile, and prints cleanly. Add a real charting library only if you later need interactivity (tooltips, zoom, drill-down). Don't add a 50KB dependency to draw 12 rectangles.</p>
+  </div>
+
+  <h3>Key performance indicators</h3>
+  <div class="kpi-row">
+    <div class="kpi-card">
+      <div class="kpi-label">Win rate</div>
+      <div class="kpi-val">68%</div>
+      <div class="kpi-delta up">↑ 4pp vs last quarter</div>
+      <div class="kpi-sub">11 decided proposals</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Avg days to close</div>
+      <div class="kpi-val">18d</div>
+      <div class="kpi-delta down">↑ 3 days slower</div>
+      <div class="kpi-sub">Sent → decision</div>
+    </div>
+    <div class="kpi-card">
+      <div class="kpi-label">Avg deal value</div>
+      <div class="kpi-val">GHS 7,400</div>
+      <div class="kpi-delta up">↑ GHS 600 vs prev</div>
+      <div class="kpi-sub">Won proposals only</div>
+    </div>
+  </div>
+
+  <h3>Client profitability table</h3>
+
+  <div class="profit-header">
+    <span>Client</span>
+    <span style="text-align:right">Revenue</span>
+    <span style="text-align:right">Hours</span>
+    <span style="text-align:right">Rate/h</span>
+    <span style="text-align:right">Outstanding</span>
+  </div>
+  <div class="profit-row">
+    <div class="profit-name">Accra Academy SHS</div>
+    <div class="profit-num" style="color:var(--teal-600)">GHS 15,000</div>
+    <div class="profit-num">42.5h</div>
+    <div class="profit-num">GHS 353</div>
+    <div class="profit-num" style="color:var(--amber-400)">GHS 10,000</div>
+  </div>
+  <div class="profit-row">
+    <div class="profit-name">Ridge International School</div>
+    <div class="profit-num" style="color:var(--teal-600)">GHS 6,800</div>
+    <div class="profit-num">18h</div>
+    <div class="profit-num">GHS 378</div>
+    <div class="profit-num" style="color:var(--ink3)">GHS 6,800</div>
+  </div>
+  <div class="profit-row">
+    <div class="profit-name">GIS International</div>
+    <div class="profit-num" style="color:var(--teal-600)">GHS 4,200</div>
+    <div class="profit-num">22h</div>
+    <div class="profit-num" style="color:var(--red-400)">GHS 191</div>
+    <div class="profit-num" style="color:var(--red-400)">GHS 4,200</div>
+  </div>
+  <div class="profit-row">
+    <div class="profit-name">Tema SHS</div>
+    <div class="profit-num" style="color:var(--teal-600)">GHS 3,200</div>
+    <div class="profit-num">8h</div>
+    <div class="profit-num">GHS 400</div>
+    <div class="profit-num" style="color:var(--ink3)">—</div>
+  </div>
+
+  <p style="margin-top:12px;font-size:13px;color:var(--ink3)">Effective rate shown in <span style="color:var(--red-400)">red</span> when below GHS 250/h (configurable threshold). Table is sortable by any column — client-side sort via React state, no extra API call.</p>
+
+  <div class="callout callout-teal">
+    <div class="callout-title">Client-side sort — no backend changes needed</div>
+    <p>The <code>/analytics/clients/</code> endpoint returns all rows in one response. Sorting is handled in React with <code>useState</code> for the active sort column — no <code>sort_by</code> query param needed. The backend <code>sort_by</code> param listed in the API contract is there for when you eventually add server-side pagination for large datasets. Don't implement it now.</p>
+  </div>
+</div>
+
+  <h3>Assistant response patterns</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Request type</th><th>Response shape</th><th>Frontend use</th></tr></thead>
+    <tbody>
+      <tr><td>Summary / question</td><td><code>{reply, matched_rule, data_context_used}</code></td><td>Plain assistant reply card</td></tr>
+      <tr><td>Recommendation</td><td><code>{reply, matched_rule, data_context_used}</code></td><td>Priority list / briefing panel</td></tr>
+      <tr><td>Email draft</td><td><code>{reply, matched_rule, draft:{subject, body, template_key}}</code></td><td>Preview and copy-to-email workflow</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+
+<!-- S6: INSIGHTS -->
+<div class="section" id="s6">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--blue-50)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue-400)" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+    </div>
+    <h2>Proactive insights specification</h2>
+  </div>
+
+  <p>Five deterministic insight types computed from your CRM data. Each is a pure function: given the data, it produces an observation or says nothing. No fuzzy logic, no LLM. These are the observations you'd make yourself if you reviewed the numbers every morning — automated.</p>
+
+  <div class="insight-grid">
+    <div class="insight-card">
+      <div class="insight-icon" style="background:var(--red-50)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--red-400)" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+      </div>
+      <div class="insight-title">Overdue concentration</div>
+      <div class="insight-body">Fires when one client accounts for &gt;50% of total outstanding balance. <strong>Signal:</strong> collection risk is concentrated, not spread.</div>
+      <div class="insight-value" style="color:var(--red-400)">73%</div>
+      <div style="font-size:12px;color:var(--ink3)">of outstanding is with Accra Academy</div>
+    </div>
+
+    <div class="insight-card">
+      <div class="insight-icon" style="background:var(--amber-50)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber-600)" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+      </div>
+      <div class="insight-title">Low effective rate client</div>
+      <div class="insight-body">Fires when a client's effective hourly rate falls below a configurable floor (default GHS 250/h). <strong>Signal:</strong> project may be underpriced or scope-crept.</div>
+      <div class="insight-value" style="color:var(--amber-400)">GHS 191/h</div>
+      <div style="font-size:12px;color:var(--ink3)">GIS International — below floor</div>
+    </div>
+
+    <div class="insight-card">
+      <div class="insight-icon" style="background:var(--teal-50)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--teal-600)" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      </div>
+      <div class="insight-title">Revenue trend</div>
+      <div class="insight-body">Compares this month's collected revenue to the previous 3-month average. Fires when change is &gt;±20%. Positive or negative.</div>
+      <div class="insight-value" style="color:var(--teal-600)">+34%</div>
+      <div style="font-size:12px;color:var(--ink3)">Above 3-month avg (GHS 13,700)</div>
+    </div>
+
+    <div class="insight-card">
+      <div class="insight-icon" style="background:var(--purple-50)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--purple-600)" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+      </div>
+      <div class="insight-title">Pipeline stall</div>
+      <div class="insight-body">Fires when a proposal has been in <code>sent</code> or <code>negotiating</code> status for longer than 2× the average days-to-close. <strong>Signal:</strong> follow up.</div>
+      <div class="insight-value" style="color:var(--purple-600)">2 proposals</div>
+      <div style="font-size:12px;color:var(--ink3)">Stalled 34+ days (avg is 18)</div>
+    </div>
+  </div>
+
+  <div class="insight-grid" style="grid-template-columns:1fr">
+    <div class="insight-card">
+      <div class="insight-icon" style="background:var(--blue-50)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="var(--blue-400)" stroke-width="2"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+      </div>
+      <div class="insight-title">Budget burn warning</div>
+      <div class="insight-body" style="max-width:600px">Fires when a project's billable hours multiplied by effective rate exceeds 80% of the project budget, but the project status is not <code>done</code>. This means you're consuming more time value than was priced. The fix is either to raise the next invoice to cover additional scope, or flag the project for a budget conversation. <strong>Threshold:</strong> 80% burn. <strong>Signal:</strong> act before you go over, not after.</div>
+    </div>
+  </div>
+
+  <h3>Insights implementation notes</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Insight type</th><th>Logic location</th><th>Fires when</th><th>Severity</th></tr></thead>
+    <tbody>
+      <tr><td>Overdue concentration</td><td><code>analytics/insights.py</code></td><td>One client &gt;50% of outstanding</td><td><span class="chip chip-r">high</span></td></tr>
+      <tr><td>Low effective rate</td><td><code>analytics/insights.py</code></td><td>Rate &lt; GHS 250/h (configurable)</td><td><span class="chip chip-a">medium</span></td></tr>
+      <tr><td>Revenue trend</td><td><code>analytics/insights.py</code></td><td>MoM change &gt;±20%</td><td><span class="chip chip-t">info</span></td></tr>
+      <tr><td>Pipeline stall</td><td><code>analytics/insights.py</code></td><td>Proposal age &gt; 2× avg days-to-close</td><td><span class="chip chip-a">medium</span></td></tr>
+      <tr><td>Budget burn warning</td><td><code>analytics/insights.py</code></td><td>Burn &gt; 80% and status != done</td><td><span class="chip chip-r">high</span></td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout callout-amber">
+    <div class="callout-title">Insights return nothing when data is insufficient</div>
+    <p>Each insight function receives the organisation's data and either returns an insight object or returns <code>None</code>. The revenue trend insight requires at least 4 months of data — if you have less, it stays silent rather than producing a misleading comparison. The pipeline stall insight requires at least 3 decided proposals to establish an average. Always check for sufficient data before computing. An empty insights panel is correct; a wrong insight destroys trust.</p>
+  </div>
+</div>
+
+
+<!-- S7: AI CONTEXT LAYER -->
+<div class="section" id="s7">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--purple-50)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--purple-600)" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+    </div>
+    <h2>Intelligence context layer</h2>
+  </div>
+
+  <p>The <code>build_ai_context()</code> function is the main shared-infrastructure task in Sprint 3. It is not connected to any model API. Its job in Sprint 3 is to exist, be tested, and be correct so the assistant router, Celery jobs, and later rule-based automations can reuse one trusted summary builder.</p>
+
+  <div class="card">
+    <h3 style="margin-top:0">What the function must return</h3>
+    <p>A plain-text operating summary. It does not use Markdown headings or JSON — it's a dense paragraph-by-paragraph snapshot that reads clearly for humans, Celery jobs, and rule evaluators. Example output structure:</p>
+
+    <div class="card-sm" style="font-family:'SF Mono','Fira Code',monospace;font-size:12px;color:var(--ink);background:var(--gray-50);border-color:var(--gray-100);line-height:1.75">
+      Stero Tech Inc. operating summary for rule evaluation.<br><br>
+      BUSINESS SNAPSHOT (as of {date}):<br>
+      Active clients: 5. Revenue collected this month: GHS 18,400 (up 23% vs last month).<br>
+      Outstanding receivables: GHS 17,200 across 3 invoices. 1 invoice overdue by 14 days.<br><br>
+      ACTIVE PROJECTS (3):<br>
+      - School management system (Accra Academy SHS): 42.5h logged, GHS 15,000 invoiced, GHS 5,000 collected. Due Apr 30.<br>
+      - Student portal v2 (GIS International): 18h logged, GHS 4,200 invoiced, unpaid. Due May 15.<br>
+      ...<br><br>
+      PIPELINE (last 90 days):<br>
+      5 open proposals totalling GHS 34,500. Win rate 68% (11 decided). Avg 18 days to close.<br><br>
+      [Total: ~400 words / ~500 tokens]
+    </div>
+  </div>
+
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Section</th><th>Data source</th><th>Cap</th></tr></thead>
+    <tbody>
+      <tr><td>Business snapshot</td><td><code>/analytics/revenue/summary/</code> result</td><td>Always included</td></tr>
+      <tr><td>Active projects</td><td><code>Project.objects.filter(status='active')</code> with hours</td><td>Max 5 projects</td></tr>
+      <tr><td>Open proposals</td><td><code>Proposal.objects.exclude(status__in=['won','lost'])</code></td><td>Max 5, by deadline asc</td></tr>
+      <tr><td>Overdue invoices</td><td><code>Invoice.objects.filter(status='overdue')</code></td><td>All (usually &lt;5)</td></tr>
+      <tr><td>Top clients</td><td><code>/analytics/clients/</code> top 5 by revenue</td><td>Max 5</td></tr>
+      <tr><td>Recent payments</td><td>Last 3 payments recorded</td><td>Max 3</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <div class="callout callout-purple">
+    <div class="callout-title">Test the function independently of any future consumer</div>
+    <p>Write a pytest test that calls <code>build_ai_context(organisation)</code> with seeded data and asserts: (1) the output is a string, (2) length is under 8,000 characters, (3) it contains the organisation name, (4) it contains current month revenue. This test runs in CI with no external API key needed — just a populated test database. That gives later rule jobs one trusted input contract.</p>
+  </div>
+</div>
+
+
+<!-- S8: MOBILE -->
+<div class="section" id="s8">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--teal-50)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--teal-600)" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+    </div>
+    <h2>Mobile polish specification</h2>
+  </div>
+
+  <p>Ghana is a mobile-first market. Every screen must work on a 375px viewport. This is Week 9's primary task. The fix is almost always the same: collapsing grids from multi-column to single-column at <code>@media (max-width: 640px)</code>.</p>
+
+  <div class="mobile-grid">
+    <div class="mobile-card">
+      <div class="mobile-screen">Dashboard</div>
+      <div class="mobile-issue">Bento grid collapses to single column</div>
+      <div class="mobile-issue">Stat tiles: 2×2 grid on mobile</div>
+      <div class="mobile-issue">Pipeline chart scrollable horizontally</div>
+      <div class="mobile-issue">Insights panel: full-screen modal</div>
+    </div>
+    <div class="mobile-card">
+      <div class="mobile-screen">Invoice detail</div>
+      <div class="mobile-issue">Line items table: scroll horizontally</div>
+      <div class="mobile-issue">Bill-to + project: stacked (not side-by-side)</div>
+      <div class="mobile-issue">Action bar: sticky bottom bar (not top-right)</div>
+      <div class="mobile-issue">Print: no mobile changes needed</div>
+    </div>
+    <div class="mobile-card">
+      <div class="mobile-screen">Drawers</div>
+      <div class="mobile-issue">Record payment: full-screen sheet on mobile</div>
+      <div class="mobile-issue">Log time: full-screen sheet on mobile</div>
+      <div class="mobile-issue">Method button group: wraps to 2×2</div>
+      <div class="mobile-issue">Quick-select hours: wraps to 3×2</div>
+    </div>
+    <div class="mobile-card">
+      <div class="mobile-screen">Lists</div>
+      <div class="mobile-issue">Client list: name + status chip + amount only</div>
+      <div class="mobile-issue">Invoice list: truncate client name at 20 chars</div>
+      <div class="mobile-issue">Profitability table: hide Hours + Rate columns</div>
+      <div class="mobile-issue">Show mobile-only "tap to see details" hint</div>
+    </div>
+    <div class="mobile-card">
+      <div class="mobile-screen">Analytics</div>
+      <div class="mobile-issue">Revenue chart: 6 months on mobile (not 12)</div>
+      <div class="mobile-issue">KPI cards: 1 column on mobile</div>
+      <div class="mobile-issue">Insights: full-width cards, stacked</div>
+      <div class="mobile-issue">Profitability: sortable by tap on column header</div>
+    </div>
+    <div class="mobile-card">
+      <div class="mobile-screen">Navigation</div>
+      <div class="mobile-issue">Sidebar: bottom tab bar on mobile (5 items max)</div>
+      <div class="mobile-issue">Notification bell: stays in top-right</div>
+      <div class="mobile-issue">Active item: bold label + colored icon</div>
+      <div class="mobile-issue">Overflow items: accessible via "More" tab</div>
+    </div>
+  </div>
+
+  <div class="callout callout-teal">
+    <div class="callout-title">Mobile bottom nav — 5 items only</div>
+    <p>The bottom tab bar on mobile should have: Dashboard, Clients, Finance (invoices + payments), Pipeline (leads + proposals), and More (time logs, analytics, settings). Don't try to fit the full sidebar into the bottom bar. The "More" tab opens a full-screen overlay with the remaining navigation items. This pattern is standard on mobile and users understand it immediately.</p>
+  </div>
+
+  <h3>Empty states and loading states (all screens)</h3>
+  <div class="table-wrap">
+  <table>
+    <thead><tr><th>Screen</th><th>Empty state message</th><th>CTA</th></tr></thead>
+    <tbody>
+      <tr><td>Invoice list</td><td>"No invoices yet. Create your first one."</td><td>New invoice →</td></tr>
+      <tr><td>Client list</td><td>"No clients yet. Add your first school."</td><td>Add client →</td></tr>
+      <tr><td>Analytics (no data)</td><td>"Analytics will appear once you have invoices and payments."</td><td>Create invoice →</td></tr>
+      <tr><td>Insights (no triggers)</td><td>"All clear — no issues detected in your data."</td><td>None needed</td></tr>
+      <tr><td>Time logs</td><td>"No hours logged on this project yet."</td><td>Log time →</td></tr>
+      <tr><td>Notifications</td><td>"You're all caught up."</td><td>None needed</td></tr>
+    </tbody>
+  </table>
+  </div>
+  <p>Every loading state is a skeleton — matching the layout of the loaded state with gray animated shimmer. No spinners. No "Loading…" text. Skeletons are pure CSS: <code>background: linear-gradient(90deg, var(--gray-50) 25%, var(--gray-100) 50%, var(--gray-50) 75%)</code> with <code>background-size: 200% 100%</code> and a keyframe animation.</p>
+</div>
+
+
+<!-- S9: ISSUES + SCOPE -->
+<div class="section" id="s9">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--gray-50)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--gray-600)" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+    </div>
+    <h2>GitHub issues + scope freeze</h2>
+  </div>
+
+  <h3>All 22 Sprint 3 issues</h3>
+  <p>Issue numbers continue from Sprint 2's 38. Create all before touching code.</p>
+
+  <div class="card">
+    <div class="issue-list">
+      <div class="issue"><div class="issue-num">#39</div><div class="issue-body"><div class="issue-title">Management command: seed_demo_data — 6 months of invoices, payments, proposals, time logs with realistic GHS amounts and school names</div><div class="issue-tags"><span class="chip issue-tag it-ch">chore</span><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#40</div><div class="issue-body"><div class="issue-title">Analytics app: revenue by month endpoint — payments grouped by month, last 12 months, returns collected + invoiced split</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#41</div><div class="issue-body"><div class="issue-title">Analytics: revenue summary endpoint — MoM delta, YTD, outstanding, overdue count</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#42</div><div class="issue-body"><div class="issue-title">Analytics: pipeline endpoint — proposals by status, win rate, avg deal value, avg days to close</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#43</div><div class="issue-body"><div class="issue-title">Analytics: clients profitability endpoint — revenue, hours, effective rate, outstanding per client</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#44</div><div class="issue-body"><div class="issue-title">Analytics: projects budget burn endpoint — burn%, billable hours, invoiced vs budget per project</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#45</div><div class="issue-body"><div class="issue-title">analytics/insights.py — all 5 rule-based insight functions with data-sufficiency guards</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#46</div><div class="issue-body"><div class="issue-title">analytics/services.py — build_ai_context(organisation) function, hard cap at 8,000 chars, pytest test asserting structure and length</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#47</div><div class="issue-body"><div class="issue-title">assistant/query endpoint — deterministic intent router for summaries, recommendations, and email drafts</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#48</div><div class="issue-body"><div class="issue-title">assistant templates — proposal follow-up, overdue invoice reminder, and stale project follow-up subjects/bodies with placeholder fill</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#48A</div><div class="issue-body"><div class="issue-title">assistant/briefing endpoint + daily Celery beat job for deterministic morning briefings</div><div class="issue-tags"><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#49</div><div class="issue-body"><div class="issue-title">pytest-django — full test coverage for all Sprint 3 endpoints including assistant routes, no-data, and threshold boundaries</div><div class="issue-tags"><span class="chip issue-tag it-ch">chore</span><span class="chip issue-tag it-be">backend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#50</div><div class="issue-body"><div class="issue-title">Analytics screen: revenue bar chart (pure CSS flexbox, 12-month, current month highlighted)</div><div class="issue-tags"><span class="chip issue-tag it-fe">frontend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#51</div><div class="issue-body"><div class="issue-title">Analytics screen: KPI tiles — win rate, avg days to close, avg deal value, MoM revenue delta</div><div class="issue-tags"><span class="chip issue-tag it-fe">frontend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#52</div><div class="issue-body"><div class="issue-title">Analytics screen: client profitability table — sortable columns, red rate highlight below threshold</div><div class="issue-tags"><span class="chip issue-tag it-fe">frontend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#53</div><div class="issue-body"><div class="issue-title">Analytics screen: insights panel — 5 insight types, severity colour coding, entity links</div><div class="issue-tags"><span class="chip issue-tag it-fe">frontend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#54</div><div class="issue-body"><div class="issue-title">Assistant panel: summary replies, recommendation replies, and draft preview/copy UI</div><div class="issue-tags"><span class="chip issue-tag it-fe">frontend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#55</div><div class="issue-body"><div class="issue-title">Dashboard upgrade: wire revenue summary tile + pipeline funnel to live analytics endpoints (replace hardcoded values)</div><div class="issue-tags"><span class="chip issue-tag it-fe">frontend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#56</div><div class="issue-body"><div class="issue-title">Client detail upgrade: replace stub revenue section with live analytics summary card</div><div class="issue-tags"><span class="chip issue-tag it-fe">frontend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#57</div><div class="issue-body"><div class="issue-title">Loading skeletons on all async screens — CSS shimmer, no spinners, no "Loading…" text</div><div class="issue-tags"><span class="chip issue-tag it-fe">frontend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#58</div><div class="issue-body"><div class="issue-title">Empty states on all list and chart screens — contextual message + relevant CTA</div><div class="issue-tags"><span class="chip issue-tag it-fe">frontend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#59</div><div class="issue-body"><div class="issue-title">Mobile: bottom tab bar navigation (5 items, overflow into More sheet)</div><div class="issue-tags"><span class="chip issue-tag it-fe">frontend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#60</div><div class="issue-body"><div class="issue-title">Mobile responsiveness pass — all screens at 375px: dashboard, invoice, drawers, analytics, client list, assistant panel</div><div class="issue-tags"><span class="chip issue-tag it-fe">frontend</span></div></div></div>
+      <div class="issue"><div class="issue-num">#61</div><div class="issue-body"><div class="issue-title">Error states: API unreachable and network failure — non-blocking banner + retry button on each affected tile</div><div class="issue-tags"><span class="chip issue-tag it-fe">frontend</span></div></div></div>
+    </div>
+  </div>
+
+  <h3>Scope freeze</h3>
+  <div class="scope-grid">
+    <div class="scope-col">
+      <div class="scope-header in">In — Sprint 3 must deliver</div>
+      <div class="scope-items">
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Seed management command with 6 months of demo data</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Revenue by month + summary analytics endpoints</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Pipeline win rate + days-to-close endpoint</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Client profitability endpoint</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Project budget burn endpoint</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>5 rule-based insight functions (insights.py)</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>build_ai_context() function with test (no model call)</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span><code>POST /assistant/query/</code> endpoint for supported deterministic intents</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span><code>GET /assistant/briefing/</code> endpoint returning headline, revenue summary, follow-up recommendations, and insights</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Summary intents: revenue, overdue balance, proposal, client health, project risk</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Recommendation intent: "who should I follow up today?"</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Template drafting: proposal follow-up, overdue invoice reminder, and stale project follow-up</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Analytics screen (bar chart + KPIs + profitability table)</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Insights panel on analytics screen</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Dashboard tiles wired to live analytics data</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Loading skeletons on all async screens</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Empty states on all list + chart screens</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Mobile responsiveness pass — all screens</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--teal-600)">✓</span>Mobile bottom tab bar navigation</div>
+      </div>
+    </div>
+    <div class="scope-col">
+      <div class="scope-header out">Out — do not touch in Sprint 3</div>
+      <div class="scope-items">
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>LLM or external model API calls — any of them</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>Open-ended chat UI that pretends to support arbitrary requests</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>Email sending (still Sprint 4)</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>Recharts, Chart.js, or any charting library</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>Drill-down from chart to underlying records</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>Date range picker on analytics (always last 12 months)</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>Export to CSV or PDF</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>Expenses or P&amp;L view</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>Multi-user or role-based access</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>WebSocket or server-sent events</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>Contracts or document model</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>Recurring invoices</div>
+        <div class="scope-item"><span class="scope-icon" style="color:var(--red-400)">✗</span>New database migrations of any kind</div>
+      </div>
+    </div>
+  </div>
+
+  <h3>Sprint 3 definition of done</h3>
+  <div class="card">
+    <div class="checklist-item"><div class="check-box"></div><div>The analytics screen shows a 12-month revenue bar chart with real data from the database — not demo fixtures hardcoded in the component</div></div>
+    <div class="checklist-item"><div class="check-box"></div><div>Win rate shows the correct percentage calculated from actual decided proposals</div></div>
+    <div class="checklist-item"><div class="check-box"></div><div>Client profitability table is sortable by clicking column headers with no page reload</div></div>
+    <div class="checklist-item"><div class="check-box"></div><div>At least one insight fires correctly against the seeded demo data (e.g. low effective rate for a seeded low-value client)</div></div>
+    <div class="checklist-item"><div class="check-box"></div><div><code>build_ai_context()</code> returns a string under 8,000 characters, contains the current month's revenue, and its pytest test passes</div></div>
+    <div class="checklist-item"><div class="check-box"></div><div>Every list screen shows a proper empty state with a CTA — not a blank white area</div></div>
+    <div class="checklist-item"><div class="check-box"></div><div>Every data-loading screen shows a skeleton, not a spinner</div></div>
+    <div class="checklist-item"><div class="check-box"></div><div>All screens are usable on a 375px viewport (tested in Chrome DevTools responsive mode)</div></div>
+    <div class="checklist-item"><div class="check-box"></div><div>Mobile bottom tab bar navigates correctly between main sections</div></div>
+    <div class="checklist-item"><div class="check-box"></div><div><code>/assistant/query/</code> returns grounded replies for supported summary intents and an explicit unsupported message for unknown requests</div></div>
+    <div class="checklist-item"><div class="check-box"></div><div><code>/assistant/briefing/</code> returns a stable structured payload reused by both the assistant panel and the daily Celery briefing task</div></div>
+    <div class="checklist-item"><div class="check-box"></div><div>Proposal follow-up, overdue invoice reminder, and stale project follow-up drafts return <code>subject</code> + <code>body</code> filled from real CRM data</div></div>
+    <div class="checklist-item"><div class="check-box"></div><div>All Sprint 3 endpoints have passing pytest-django tests covering edge cases (zero data, single record, threshold boundaries, unsupported assistant requests)</div></div>
+  </div>
+</div>
+
+
+<!-- S10: SPRINT 4 HANDOFF -->
+<div class="section" id="s10">
+  <div class="section-header">
+    <div class="section-icon" style="background:var(--amber-50)">
+      <svg viewBox="0 0 24 24" fill="none" stroke="var(--amber-600)" stroke-width="2"><polyline points="5 12 12 5 19 12"/><polyline points="5 19 12 12 19 19"/></svg>
+    </div>
+    <h2>What Sprint 3 hands to Sprint 4</h2>
+  </div>
+
+  <p>Sprint 4 is the operations layer. Sprint 3 gives it better numbers, safer alerts, and reusable intelligence plumbing. The list below is what Sprint 4 picks up and builds on.</p>
+
+  <div class="handoff-grid">
+    <div class="handoff-card">
+      <div class="handoff-sprint" style="color:var(--amber-600)">Sprint 3 delivers to Sprint 4</div>
+      <div class="handoff-item"><span class="handoff-arrow">→</span><span><code>build_ai_context(organisation)</code> — tested, correct, capped. Sprint 4 can reuse it inside Celery jobs, contract alerts, expense warnings, and dashboard summaries without rebuilding aggregation logic.</span></div>
+      <div class="handoff-item"><span class="handoff-arrow">→</span><span>All analytics endpoints — Sprint 4 can show live financial context inside contracts, expenses, and project operations screens without inventing a second reporting layer.</span></div>
+      <div class="handoff-item"><span class="handoff-arrow">→</span><span>Rule-based insights — Sprint 4 can attach them to tasks, reminders, and notification workflows. "Why is GIS margin low?" already has deterministic data behind it.</span></div>
+      <div class="handoff-item"><span class="handoff-arrow">→</span><span>Mobile-ready UI — Sprint 4 adds more operational screens, and Sprint 3's mobile foundation prevents those screens from becoming desktop-only regressions.</span></div>
+    </div>
+    <div class="handoff-card">
+      <div class="handoff-sprint" style="color:var(--blue-800)">What Sprint 4 builds on top</div>
+      <div class="handoff-item"><span class="handoff-arrow">+</span><span>Contracts model + Expenses model — the two new root entities Sprint 4 introduces. Both get <code>organisation</code> FK, AuditLog signal, soft delete — same pattern as everything before them.</span></div>
+      <div class="handoff-item"><span class="handoff-arrow">+</span><span>Document attachments, task assignment, and project kanban — all of them can surface the same analytics summaries and insight warnings Sprint 3 already computes.</span></div>
+      <div class="handoff-item"><span class="handoff-arrow">+</span><span>Email sending via Celery — a new task reads from the <code>Notification</code> table (built in Sprint 2) and sends emails. Notifications already exist; Sprint 4 adds the delivery mechanism.</span></div>
+      <div class="handoff-item"><span class="handoff-arrow">+</span><span>Role-aware operational workflows — multi-user screens can consume the existing rule outputs without changing how intelligence is calculated.</span></div>
+    </div>
+  </div>
+
+  <div class="callout callout-purple">
+    <div class="callout-title">The full four-sprint picture</div>
+    <p>Sprint 1 built the client and pipeline data. Sprint 2 built the financial data. Sprint 3 aggregates that data into analytics and prepares the intelligence context layer. Sprint 4 expands the operations layer on top of that foundation and reuses the same rule outputs in more workflows. The roadmap stays deterministic: better data first, better rules second, broader automation later.</p>
+  </div>
+</div>
+
+
+<!-- FOOTER -->
+<div class="doc-footer">
+  <div>Stero Tech Inc. · Company OS · Sprint 3 Implementation Plan</div>
+  <div>Rules-based intelligence · Zero new migrations · GHS · Ghana</div>
+</div>
+
+</div>
+</body>
+</html>

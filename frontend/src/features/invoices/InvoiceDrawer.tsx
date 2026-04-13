@@ -28,6 +28,7 @@ type InvoiceDrawerProps = {
   open: boolean;
   invoice?: InvoiceDetail | null;
   initialClientId?: string;
+  initialProjectId?: string;
   onClose: () => void;
 };
 
@@ -50,14 +51,15 @@ export function InvoiceDrawer({
   open,
   invoice,
   initialClientId,
+  initialProjectId,
   onClose,
 }: Readonly<InvoiceDrawerProps>) {
   const mode = invoice ? "edit" : "create";
   const [serverError, setServerError] = useState("");
 
   const defaultValues = useMemo(
-    () => createInvoiceFormState(invoice ?? null, initialClientId),
-    [invoice, initialClientId],
+    () => createInvoiceFormState(invoice ?? null, initialClientId, initialProjectId),
+    [invoice, initialClientId, initialProjectId],
   );
 
   const {

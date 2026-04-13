@@ -110,11 +110,13 @@ def test_dashboard_api_returns_sprint_2_summary_data(
     )
     ProposalFactory(
         organisation=org,
+        amount="500.00",
         status=Proposal.ProposalStatus.DRAFT,
         deadline=timezone.localdate() + timedelta(days=20),
     )
     ProposalFactory(
         organisation=org,
+        amount="1500.00",
         status=Proposal.ProposalStatus.WON,
         deadline=timezone.localdate() + timedelta(days=2),
     )
@@ -267,11 +269,14 @@ def test_mark_all_notifications_read_service_updates_rows_and_writes_audit(user,
     assert updated == 2
     assert first.is_read is True
     assert second.is_read is True
-    assert AuditLog.objects.filter(
-        organisation=org,
-        entity_type="Notification",
-        action=AuditLog.Action.UPDATED,
-    ).count() == 2
+    assert (
+        AuditLog.objects.filter(
+            organisation=org,
+            entity_type="Notification",
+            action=AuditLog.Action.UPDATED,
+        ).count()
+        == 2
+    )
 
 
 @pytest.mark.django_db
@@ -363,11 +368,14 @@ def test_notification_read_all_endpoint_marks_all_read(authenticated_client, use
     assert response.status_code == 204
     assert first.is_read is True
     assert second.is_read is True
-    assert AuditLog.objects.filter(
-        entity_type="Notification",
-        action=AuditLog.Action.UPDATED,
-        user=user,
-    ).count() >= 2
+    assert (
+        AuditLog.objects.filter(
+            entity_type="Notification",
+            action=AuditLog.Action.UPDATED,
+            user=user,
+        ).count()
+        >= 2
+    )
 
 
 @pytest.mark.django_db
@@ -555,13 +563,16 @@ def test_celery_task_wrappers_return_service_payloads(org):
 def test_celery_beat_periodic_tasks_are_seeded():
     overdue_task = PeriodicTask.objects.get(name="Check overdue invoices daily")
     deadline_task = PeriodicTask.objects.get(name="Check proposal deadlines daily")
+    briefing_task = PeriodicTask.objects.get(name="Build daily assistant briefings")
 
     assert overdue_task.task == "apps.core.tasks.check_overdue_invoices"
     assert deadline_task.task == "apps.core.tasks.check_proposal_deadlines"
+    assert briefing_task.task == "apps.analytics.tasks.build_daily_briefings"
     assert overdue_task.crontab.minute == "0"
     assert overdue_task.crontab.hour == "7"
     assert str(overdue_task.crontab.timezone) == "Africa/Accra"
     assert deadline_task.crontab == overdue_task.crontab
+    assert briefing_task.crontab == overdue_task.crontab
 
 
 @pytest.mark.django_db

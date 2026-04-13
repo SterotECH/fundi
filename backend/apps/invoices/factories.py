@@ -27,9 +27,7 @@ class InvoiceFactory(factory.django.DjangoModelFactory):
     total = Decimal("1000.00")
     status = Invoice.InvoiceStatus.DRAFT
     notes = ""
-    due_date = factory.LazyFunction(
-        lambda: timezone.localdate() + timedelta(days=30)
-    )
+    due_date = factory.LazyFunction(lambda: timezone.localdate() + timedelta(days=30))
     issue_date = factory.LazyFunction(timezone.localdate)
 
 

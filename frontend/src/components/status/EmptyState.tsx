@@ -35,7 +35,7 @@ export function EmptyState({
   title,
   tone = "neutral",
   variant = "ghost",
-}: EmptyStateProps) {
+}: Readonly<EmptyStateProps>) {
   const Icon = icon ?? (tone === "error" ? systemIcons.alertTriangle : systemIcons.inbox);
   const resolvedColor = color ?? (tone === "error" ? "error" : "secondary");
 

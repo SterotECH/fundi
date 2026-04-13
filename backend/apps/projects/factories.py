@@ -23,9 +23,7 @@ class ProjectFactory(factory.django.DjangoModelFactory):
     description = factory.Sequence(lambda number: f"Project description {number}")
     status = Project.ProjectStatus.PLANNING
     start_date = factory.LazyFunction(timezone.localdate)
-    due_date = factory.LazyFunction(
-        lambda: timezone.localdate() + timedelta(days=30)
-    )
+    due_date = factory.LazyFunction(lambda: timezone.localdate() + timedelta(days=30))
     budget = Decimal("1000.00")
 
 
@@ -36,9 +34,7 @@ class MilestoneFactory(factory.django.DjangoModelFactory):
     project = factory.SubFactory(ProjectFactory)
     title = factory.Sequence(lambda number: f"Milestone {number}")
     description = factory.Sequence(lambda number: f"Milestone note {number}")
-    due_date = factory.LazyFunction(
-        lambda: timezone.localdate() + timedelta(days=7)
-    )
+    due_date = factory.LazyFunction(lambda: timezone.localdate() + timedelta(days=7))
     is_completed = False
     completed_at = None
     order = factory.Sequence(int)

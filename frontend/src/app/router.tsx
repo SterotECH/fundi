@@ -1,6 +1,7 @@
 import { createBrowserRouter, Navigate } from "react-router";
 
 import {
+  AnalyticsRouteElement,
   ClientCreateRouteElement,
   ClientDetailRouteElement,
   ClientEditRouteElement,
@@ -10,6 +11,9 @@ import {
   InvoicesRouteElement,
   LeadsRouteElement,
   LoginRouteElement,
+  ProjectDetailRouteElement,
+  ProposalDetailRouteElement,
+  ProjectsRouteElement,
   ProposalsRouteElement,
 } from "@/app/LazyRouteElements";
 import { RouteErrorPage } from "@/app/RouteErrorPage";
@@ -32,12 +36,16 @@ export const router = createBrowserRouter([
         children: [
           { index: true, element: <Navigate to="/dashboard" replace /> },
           { path: "/dashboard", element: <DashboardRouteElement /> },
+          { path: "/analytics", element: <AnalyticsRouteElement /> },
           { path: "/clients", element: <ClientsRouteElement /> },
           { path: "/clients/new", element: <ClientCreateRouteElement /> },
           { path: "/clients/:clientId/edit", element: <ClientEditRouteElement /> },
           { path: "/clients/:clientId", element: <ClientDetailRouteElement /> },
           { path: "/leads", element: <LeadsRouteElement /> },
           { path: "/proposals", element: <ProposalsRouteElement /> },
+          { path: "/proposals/:proposalId", element: <ProposalDetailRouteElement /> },
+          { path: "/projects", element: <ProjectsRouteElement /> },
+          { path: "/projects/:projectId", element: <ProjectDetailRouteElement /> },
           { path: "/invoices", element: <InvoicesRouteElement /> },
           { path: "/invoices/:invoiceId", element: <InvoiceDetailRouteElement /> },
         ],

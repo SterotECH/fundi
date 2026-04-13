@@ -1,0 +1,989 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Invoices — Fundi</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --p50:#EEEDFE;--p100:#CECBF6;--p200:#AFA9EC;--p600:#534AB7;--p800:#3C3489;
+  --t50:#E1F5EE;--t100:#9FE1CB;--t400:#1D9E75;--t600:#0F6E56;--t800:#085041;
+  --a50:#FAEEDA;--a100:#FAC775;--a400:#BA7517;--a600:#854F0B;
+  --r50:#FCEBEB;--r400:#E24B4A;--r800:#791F1F;
+  --b50:#E6F1FB;--b400:#378ADD;--b800:#0C447C;
+  --g50:#F1EFE8;--g100:#D3D1C7;--g400:#888780;--g600:#5F5E5A;--g800:#444441;
+  --glass-bg:rgba(255,255,255,0.72);
+  --glass-border:rgba(255,255,255,0.55);
+  --glass-shadow:0 4px 24px rgba(83,74,183,0.08),0 1px 4px rgba(0,0,0,0.05);
+  --page:#F4F3FC;
+  --ink:#1a1720;--ink2:#5a5580;--ink3:#9390b0;
+  --border:rgba(180,176,220,0.3);
+  --row-hover:rgba(83,74,183,0.03);
+}
+
+body{
+  background:var(--page);
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',system-ui,sans-serif;
+  color:var(--ink);font-size:14px;line-height:1.5;min-height:100vh;
+}
+body::before{
+  content:'';position:fixed;inset:0;
+  background:
+    radial-gradient(ellipse 60% 40% at 15% 0%,rgba(83,74,183,.07) 0%,transparent 65%),
+    radial-gradient(ellipse 40% 50% at 85% 90%,rgba(29,158,117,.05) 0%,transparent 65%);
+  pointer-events:none;z-index:0;
+}
+
+.wrap{position:relative;z-index:1;max-width:1120px;margin:0 auto;padding:24px 24px 64px;}
+
+/* ── Page header ── */
+.page-header{
+  display:flex;align-items:flex-end;justify-content:space-between;
+  gap:16px;margin-bottom:20px;flex-wrap:wrap;
+}
+.page-breadcrumb{
+  font-size:11px;color:var(--ink3);margin-bottom:4px;
+  display:flex;align-items:center;gap:5px;
+}
+.page-breadcrumb svg{width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:1.5}
+.page-title{font-size:22px;font-weight:600;color:var(--ink);letter-spacing:-.02em;}
+.page-subtitle{font-size:12px;color:var(--ink3);margin-top:2px;}
+.page-header-right{display:flex;align-items:center;gap:8px;}
+.btn{
+  font-size:12px;font-weight:500;padding:7px 16px;border-radius:9px;
+  border:0.5px solid var(--border);background:var(--glass-bg);color:var(--ink);
+  cursor:pointer;backdrop-filter:blur(8px);transition:all .15s;white-space:nowrap;
+}
+.btn:hover{background:rgba(255,255,255,0.9)}
+.btn-primary{background:#534AB7;color:#fff;border-color:#3C3489;}
+.btn-primary:hover{background:#3C3489}
+
+/* ── Financial summary strip ── */
+.summary-strip{
+  display:grid;
+  grid-template-columns:1fr 1fr 1fr 1fr 1fr;
+  gap:10px;margin-bottom:16px;
+}
+.summary-tile{
+  background:var(--glass-bg);border:0.5px solid var(--glass-border);
+  border-radius:12px;padding:14px 16px;
+  backdrop-filter:blur(10px);box-shadow:var(--glass-shadow);
+  position:relative;overflow:hidden;
+}
+/* coloured bottom stripe — status semantics */
+.summary-tile::after{
+  content:'';position:absolute;bottom:0;left:0;right:0;height:3px;border-radius:0 0 12px 12px;
+}
+.tile-total::after{background:var(--p600)}
+.tile-collected::after{background:var(--t400)}
+.tile-outstanding::after{background:var(--r400)}
+.tile-overdue::after{background:var(--r400)}
+.tile-draft::after{background:var(--g400)}
+
+.st-label{
+  font-size:10px;font-weight:600;letter-spacing:.05em;
+  text-transform:uppercase;color:var(--ink3);margin-bottom:5px;
+  display:flex;align-items:center;gap:5px;
+}
+.st-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;}
+.st-val{font-size:20px;font-weight:600;color:var(--ink);line-height:1;}
+.st-sub{font-size:11px;color:var(--ink3);margin-top:3px;}
+.st-sub.good{color:var(--t600)}
+.st-sub.warn{color:var(--a600)}
+.st-sub.bad{color:var(--r800)}
+
+/* collection progress bar inside tile */
+.collect-bar{height:4px;border-radius:2px;background:rgba(180,176,220,.2);margin-top:8px;overflow:hidden;}
+.collect-fill{height:100%;border-radius:2px;background:var(--t400);transition:width .3s;}
+
+/* ── Filter bar ── */
+.filter-bar{
+  background:var(--glass-bg);border:0.5px solid var(--glass-border);
+  border-radius:14px;padding:14px 18px;
+  backdrop-filter:blur(12px);box-shadow:var(--glass-shadow);
+  margin-bottom:12px;
+  display:flex;align-items:center;gap:10px;flex-wrap:wrap;
+}
+.search-wrap{position:relative;flex:1;min-width:180px;max-width:260px;}
+.search-wrap svg{
+  position:absolute;left:11px;top:50%;transform:translateY(-50%);
+  width:14px;height:14px;stroke:var(--ink3);fill:none;stroke-width:1.5;pointer-events:none;
+}
+.search-input{
+  width:100%;font-size:13px;padding:7px 12px 7px 32px;border-radius:8px;
+  border:0.5px solid var(--border);background:rgba(255,255,255,0.6);
+  color:var(--ink);outline:none;transition:border-color .15s,background .15s;
+  backdrop-filter:blur(6px);
+}
+.search-input::placeholder{color:var(--ink3)}
+.search-input:focus{border-color:rgba(83,74,183,0.4);background:rgba(255,255,255,0.85);}
+
+.filter-divider{width:1px;height:24px;background:var(--border);flex-shrink:0;}
+
+.filter-select-wrap{position:relative;flex-shrink:0;}
+.filter-select-wrap svg.chevron{
+  position:absolute;right:10px;top:50%;transform:translateY(-50%);
+  width:12px;height:12px;stroke:var(--ink3);fill:none;stroke-width:1.5;pointer-events:none;
+}
+.filter-select{
+  font-size:12px;font-weight:500;padding:7px 30px 7px 12px;border-radius:8px;
+  border:0.5px solid var(--border);background:rgba(255,255,255,0.6);
+  color:var(--ink);appearance:none;cursor:pointer;outline:none;
+  transition:border-color .15s;backdrop-filter:blur(6px);
+}
+.filter-select:focus{border-color:rgba(83,74,183,0.4)}
+
+/* Status pills — quick filter row */
+.status-pills{display:flex;align-items:center;gap:5px;flex-wrap:wrap;}
+.status-pill{
+  font-size:11px;font-weight:600;padding:4px 12px;border-radius:20px;
+  border:0.5px solid var(--border);background:rgba(255,255,255,0.5);
+  color:var(--ink3);cursor:pointer;transition:all .15s;white-space:nowrap;
+  backdrop-filter:blur(4px);
+}
+.status-pill:hover{color:var(--ink);background:rgba(255,255,255,0.8);}
+.status-pill.active-pill{border-width:1.5px;}
+.pill-all.active-pill{background:var(--p50);color:var(--p800);border-color:var(--p200);}
+.pill-draft.active-pill{background:var(--g50);color:var(--g600);border-color:var(--g100);}
+.pill-sent.active-pill{background:var(--b50);color:var(--b800);border-color:#85B7EB;}
+.pill-partial.active-pill{background:var(--a50);color:var(--a600);border-color:var(--a100);}
+.pill-paid.active-pill{background:var(--t50);color:var(--t800);border-color:var(--t100);}
+.pill-overdue.active-pill{background:var(--r50);color:var(--r800);border-color:#F09595;}
+
+.date-range{display:flex;align-items:center;gap:6px;}
+.date-label{font-size:11px;color:var(--ink3);white-space:nowrap;}
+.date-input{
+  font-size:12px;padding:7px 10px;border-radius:8px;
+  border:0.5px solid var(--border);background:rgba(255,255,255,0.6);
+  color:var(--ink);outline:none;width:130px;
+  transition:border-color .15s;backdrop-filter:blur(6px);cursor:pointer;
+}
+.date-input:focus{border-color:rgba(83,74,183,0.4)}
+.date-sep{font-size:11px;color:var(--ink3);}
+
+/* date range mode toggle */
+.date-mode-toggle{
+  display:flex;align-items:center;gap:0;
+  border:0.5px solid var(--border);border-radius:7px;overflow:hidden;flex-shrink:0;
+}
+.date-mode-btn{
+  font-size:11px;font-weight:500;padding:5px 10px;
+  background:transparent;border:none;color:var(--ink3);cursor:pointer;transition:all .15s;
+}
+.date-mode-btn.active{background:var(--p600);color:#fff;}
+.date-mode-btn:not(.active):hover{background:rgba(83,74,183,0.06);color:var(--ink);}
+
+.sort-wrap{display:flex;align-items:center;gap:6px;margin-left:auto;}
+.sort-label{font-size:11px;color:var(--ink3);white-space:nowrap;}
+.filter-count{font-size:11px;color:var(--ink3);white-space:nowrap;flex-shrink:0;}
+
+/* ── Table ── */
+.table-panel{
+  background:var(--glass-bg);border:0.5px solid var(--glass-border);
+  border-radius:14px;overflow:hidden;
+  backdrop-filter:blur(12px);box-shadow:var(--glass-shadow);
+}
+.table-scroll{overflow-x:auto;}
+
+table{width:100%;border-collapse:collapse;font-size:13px;}
+thead tr{border-bottom:0.5px solid var(--border);background:rgba(83,74,183,0.03);}
+th{
+  padding:11px 14px;text-align:left;
+  font-size:10px;font-weight:700;letter-spacing:.06em;
+  text-transform:uppercase;color:var(--ink3);white-space:nowrap;user-select:none;
+}
+th.sortable{cursor:pointer;transition:color .15s;}
+th.sortable:hover{color:var(--ink2);}
+th svg{
+  display:inline;vertical-align:middle;
+  width:11px;height:11px;stroke:currentColor;fill:none;stroke-width:2;
+  margin-left:3px;opacity:.35;
+}
+
+tbody tr{
+  border-bottom:0.5px solid rgba(180,176,220,0.15);
+  cursor:pointer;transition:background .12s;
+}
+tbody tr:last-child{border-bottom:none}
+tbody tr:hover{background:var(--row-hover)}
+td{padding:13px 14px;vertical-align:middle;line-height:1.4;}
+
+/* left border accents */
+tbody tr.row-overdue td:first-child{border-left:2px solid var(--r400);}
+tbody tr.row-partial td:first-child{border-left:2px solid var(--a400);}
+tbody tr.row-paid td:first-child{border-left:2px solid var(--t400);}
+
+/* Invoice number */
+.inv-num{
+  font-family:'SF Mono','Fira Code','Cascadia Code',monospace;
+  font-size:11.5px;font-weight:600;color:var(--p800);white-space:nowrap;
+}
+.inv-num-draft{color:var(--ink3);font-weight:400;}
+
+/* Status badge */
+.status-badge{
+  display:inline-flex;align-items:center;gap:5px;
+  font-size:10px;font-weight:700;padding:2px 9px;
+  border-radius:20px;letter-spacing:.04em;white-space:nowrap;margin-top:4px;
+}
+.status-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0;}
+.s-draft{background:var(--g50);color:var(--g600);}
+.s-draft .status-dot{background:var(--g400)}
+.s-sent{background:var(--b50);color:var(--b800);}
+.s-sent .status-dot{background:var(--b400)}
+.s-partial{background:var(--a50);color:var(--a600);}
+.s-partial .status-dot{background:var(--a400)}
+.s-paid{background:var(--t50);color:var(--t800);}
+.s-paid .status-dot{background:var(--t400)}
+.s-overdue{background:var(--r50);color:var(--r800);}
+.s-overdue .status-dot{background:var(--r400)}
+
+/* Client cell */
+.client-cell{display:flex;align-items:center;gap:8px;}
+.client-avatar-sm{
+  width:26px;height:26px;border-radius:7px;background:var(--p50);
+  display:flex;align-items:center;justify-content:center;
+  font-size:9px;font-weight:700;color:var(--p800);flex-shrink:0;
+}
+.client-name{font-size:13px;color:var(--ink2);}
+.client-type{font-size:10px;color:var(--ink3);}
+
+/* Project pill */
+.project-pill{
+  display:inline-flex;align-items:center;gap:4px;
+  font-size:11px;color:var(--p600);
+  background:var(--p50);border-radius:6px;
+  padding:2px 8px;white-space:nowrap;max-width:180px;
+  overflow:hidden;text-overflow:ellipsis;
+}
+.project-pill svg{width:10px;height:10px;stroke:currentColor;fill:none;stroke-width:1.5;flex-shrink:0;}
+.no-project{font-size:11px;color:var(--ink3);}
+
+/* Line item summary */
+.line-summary{font-size:12px;color:var(--ink3);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px;}
+.line-count{font-size:10px;color:var(--ink3);margin-top:1px;}
+
+/* Amount + paid/remaining */
+.amount-cell{text-align:right;}
+.amount-total{font-size:13px;font-weight:600;color:var(--ink);}
+.amount-paid-row{
+  display:flex;align-items:center;justify-content:flex-end;gap:5px;margin-top:3px;
+}
+.amount-paid{font-size:11px;color:var(--t600);font-weight:500;}
+.amount-remaining{font-size:11px;color:var(--r800);}
+.amount-sep{font-size:10px;color:var(--ink3);}
+
+/* Paid bar under amount */
+.paid-bar{
+  height:3px;border-radius:2px;
+  background:rgba(180,176,220,.2);
+  margin-top:5px;overflow:hidden;
+  max-width:80px;margin-left:auto;
+}
+.paid-fill{height:100%;border-radius:2px;background:var(--t400);}
+
+/* Date cells */
+.date-cell{font-size:12px;color:var(--ink3);}
+.date-cell.set{color:var(--ink2);}
+.date-overdue{font-size:12px;color:var(--r800);font-weight:500;}
+
+/* Paid rows */
+tbody tr.row-paid{background:rgba(29,158,117,0.015);}
+tbody tr.row-paid:hover{background:rgba(29,158,117,0.03);}
+
+/* ── Empty state ── */
+.empty-state{padding:56px 24px;text-align:center;}
+.empty-icon{
+  width:44px;height:44px;border-radius:12px;background:var(--p50);
+  display:inline-flex;align-items:center;justify-content:center;margin-bottom:14px;
+}
+.empty-icon svg{width:20px;height:20px;stroke:var(--p600);fill:none;stroke-width:1.5}
+.empty-title{font-size:15px;font-weight:600;color:var(--ink);margin-bottom:5px;}
+.empty-sub{font-size:13px;color:var(--ink3);margin-bottom:16px;}
+
+/* ── Pagination ── */
+.pagination{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:12px 18px;border-top:0.5px solid var(--border);
+  gap:12px;flex-wrap:wrap;
+}
+.page-info{font-size:12px;color:var(--ink3);}
+.page-controls{display:flex;align-items:center;gap:4px;}
+.page-btn{
+  width:32px;height:32px;border-radius:8px;
+  border:0.5px solid var(--border);background:transparent;
+  font-size:12px;font-weight:500;color:var(--ink3);cursor:pointer;
+  display:flex;align-items:center;justify-content:center;transition:all .15s;
+}
+.page-btn:hover:not(.active):not(:disabled){
+  background:rgba(83,74,183,0.07);color:var(--p600);border-color:rgba(83,74,183,0.25);
+}
+.page-btn.active{background:var(--p600);color:#fff;border-color:var(--p800);font-weight:700;}
+.page-btn:disabled{opacity:.35;cursor:default;}
+.page-btn svg{width:13px;height:13px;stroke:currentColor;fill:none;stroke-width:1.5}
+.page-ellipsis{
+  width:32px;height:32px;display:flex;align-items:center;justify-content:center;
+  font-size:12px;color:var(--ink3);
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- Page header -->
+  <div class="page-header">
+    <div>
+      <div class="page-breadcrumb">
+        <svg viewBox="0 0 24 24"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
+        Dashboard
+        <span>›</span>
+        Finance
+        <span>›</span>
+        Invoices
+      </div>
+      <div class="page-title">Invoices</div>
+      <div class="page-subtitle">All invoices, payments, and collection status</div>
+    </div>
+    <div class="page-header-right">
+      <button class="btn">
+        <svg style="width:12px;height:12px;stroke:currentColor;fill:none;stroke-width:2;vertical-align:middle;margin-right:4px" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+        Export
+      </button>
+      <button class="btn btn-primary">+ New invoice</button>
+    </div>
+  </div>
+
+  <!-- Financial summary strip -->
+  <!-- All values come from GET /api/v1/dashboard/ or a dedicated summary endpoint -->
+  <div class="summary-strip">
+
+    <div class="summary-tile tile-total">
+      <div class="st-label">
+        <span class="st-dot" style="background:var(--p600)"></span>
+        Total invoiced
+      </div>
+      <div class="st-val">GHS 51,700</div>
+      <div class="st-sub">14 invoices</div>
+    </div>
+
+    <div class="summary-tile tile-collected">
+      <div class="st-label">
+        <span class="st-dot" style="background:var(--t400)"></span>
+        Collected
+      </div>
+      <div class="st-val">GHS 20,500</div>
+      <div class="st-sub good">40% of total</div>
+      <div class="collect-bar"><div class="collect-fill" style="width:40%"></div></div>
+    </div>
+
+    <div class="summary-tile tile-outstanding">
+      <div class="st-label">
+        <span class="st-dot" style="background:var(--r400)"></span>
+        Outstanding
+      </div>
+      <div class="st-val">GHS 31,200</div>
+      <div class="st-sub bad">7 invoices unpaid</div>
+    </div>
+
+    <div class="summary-tile tile-overdue">
+      <div class="st-label">
+        <span class="st-dot" style="background:var(--r400)"></span>
+        Overdue
+      </div>
+      <div class="st-val">GHS 10,700</div>
+      <div class="st-sub bad">3 invoices past due</div>
+    </div>
+
+    <div class="summary-tile tile-draft">
+      <div class="st-label">
+        <span class="st-dot" style="background:var(--g400)"></span>
+        Draft
+      </div>
+      <div class="st-val">3</div>
+      <div class="st-sub warn">Not yet sent</div>
+    </div>
+
+  </div>
+
+  <!-- Filter bar -->
+  <div class="filter-bar">
+
+    <!-- Search — backend: ?search= (searches invoice_number + client__name) -->
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input class="search-input" type="text" id="search" placeholder="Invoice # or client…"/>
+    </div>
+
+    <div class="filter-divider"></div>
+
+    <!-- Status quick pills — backend: ?status=draft|sent|partial|paid|overdue -->
+    <div class="status-pills">
+      <button class="status-pill pill-all active-pill" onclick="setStatus('')">All</button>
+      <button class="status-pill pill-draft" onclick="setStatus('draft')">Draft</button>
+      <button class="status-pill pill-sent" onclick="setStatus('sent')">Sent</button>
+      <button class="status-pill pill-partial" onclick="setStatus('partial')">Partial</button>
+      <button class="status-pill pill-paid" onclick="setStatus('paid')">Paid</button>
+      <button class="status-pill pill-overdue" onclick="setStatus('overdue')">Overdue</button>
+    </div>
+
+    <div class="filter-divider"></div>
+
+    <!-- Client filter — backend: ?client_id=<uuid> -->
+    <div class="filter-select-wrap">
+      <select class="filter-select" id="filter-client">
+        <option value="">All clients</option>
+        <option value="uuid-aa">Accra Academy SHS</option>
+        <option value="uuid-gis">GIS International</option>
+        <option value="uuid-tema">Tema SHS</option>
+        <option value="uuid-ridge">Ridge International</option>
+        <option value="uuid-presec">Presec-Legon</option>
+        <option value="uuid-ug">University of Ghana</option>
+      </select>
+      <svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+
+    <!-- Project filter — backend: ?project_id=<uuid> -->
+    <!-- In React: populate from GET /api/v1/projects/ (filtered by selected client if set) -->
+    <div class="filter-select-wrap">
+      <select class="filter-select" id="filter-project">
+        <option value="">All projects</option>
+        <option value="uuid-sms">School management system v2</option>
+        <option value="uuid-portal">Student portal v2</option>
+        <option value="uuid-fee">Fee collection module</option>
+        <option value="uuid-lib">Library system</option>
+        <option value="uuid-payroll">Payroll integration</option>
+      </select>
+      <svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+    </div>
+
+    <div class="filter-divider"></div>
+
+    <!-- Date range + mode toggle (issue date vs due date) -->
+    <!-- Backend: ?issue_date__gte= / ?issue_date__lte=
+                  ?due_date__gte=  / ?due_date__lte= -->
+    <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+      <div class="date-mode-toggle">
+        <button class="date-mode-btn active" id="mode-issue" onclick="setDateMode('issue')">Issue</button>
+        <button class="date-mode-btn" id="mode-due" onclick="setDateMode('due')">Due</button>
+      </div>
+      <div class="date-range">
+        <input class="date-input" type="date" id="date-from" title="From"/>
+        <span class="date-sep">–</span>
+        <input class="date-input" type="date" id="date-to" title="To"/>
+      </div>
+    </div>
+
+    <div class="filter-divider"></div>
+
+    <!-- Ordering — backend: ?ordering=due_date | ?ordering=-total_ghs -->
+    <div class="sort-wrap">
+      <span class="sort-label">Sort</span>
+      <div class="filter-select-wrap">
+        <select class="filter-select" id="filter-ordering">
+          <option value="due_date">Due date ↑</option>
+          <option value="-due_date">Due date ↓</option>
+          <option value="-total_ghs">Amount ↓</option>
+          <option value="total_ghs">Amount ↑</option>
+          <option value="-issue_date">Newest first</option>
+          <option value="issue_date">Oldest first</option>
+        </select>
+        <svg class="chevron" viewBox="0 0 24 24"><polyline points="6 9 12 15 18 9"/></svg>
+      </div>
+    </div>
+
+    <span class="filter-count" id="result-count">Showing 8 of 14 invoices</span>
+  </div>
+
+  <!-- Table panel -->
+  <div class="table-panel">
+    <div class="table-scroll">
+      <table>
+        <thead>
+          <tr>
+            <th>Invoice</th>
+            <th>Client</th>
+            <th>Project</th>
+            <th>Description</th>
+            <th class="sortable" onclick="toggleSort('total_ghs')" style="text-align:right">
+              Amount
+              <svg viewBox="0 0 24 24"><polyline points="6 9 12 3 18 9"/><polyline points="6 15 12 21 18 15"/></svg>
+            </th>
+            <th style="text-align:right">Paid / Remaining</th>
+            <th>Issue date</th>
+            <th class="sortable" onclick="toggleSort('due_date')">
+              Due date
+              <svg viewBox="0 0 24 24"><polyline points="6 9 12 3 18 9"/><polyline points="6 15 12 21 18 15"/></svg>
+            </th>
+          </tr>
+        </thead>
+        <tbody id="invoice-tbody">
+
+          <!-- OVERDUE — partial payment, past due -->
+          <tr class="row-overdue" onclick="window.location='#inv-007'">
+            <td>
+              <div class="inv-num">STERO-2025-0007</div>
+              <span class="status-badge s-overdue">
+                <span class="status-dot"></span>Overdue
+              </span>
+            </td>
+            <td>
+              <div class="client-cell">
+                <div class="client-avatar-sm">AA</div>
+                <div>
+                  <div class="client-name">Accra Academy SHS</div>
+                  <div class="client-type">Senior High School</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="project-pill">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                School mgmt v2
+              </span>
+            </td>
+            <td>
+              <div class="line-summary">School management system — core module</div>
+              <div class="line-count">4 line items</div>
+            </td>
+            <td class="amount-cell">
+              <div class="amount-total">GHS 15,000</div>
+              <div class="amount-paid-row">
+                <span class="amount-paid">GHS 5,000 paid</span>
+                <span class="amount-sep">·</span>
+                <span class="amount-remaining">GHS 10,000 left</span>
+              </div>
+              <div class="paid-bar"><div class="paid-fill" style="width:33%"></div></div>
+            </td>
+            <td style="text-align:right">
+              <div class="amount-paid" style="font-size:12px;">GHS 5,000</div>
+              <div class="amount-remaining" style="font-size:12px;margin-top:2px;">GHS 10,000</div>
+            </td>
+            <td><span class="date-cell set">15 Apr 2025</span></td>
+            <td><span class="date-overdue">30 Apr 2025</span></td>
+          </tr>
+
+          <!-- OVERDUE — nothing paid -->
+          <tr class="row-overdue" onclick="window.location='#inv-004'">
+            <td>
+              <div class="inv-num">STERO-2025-0004</div>
+              <span class="status-badge s-overdue">
+                <span class="status-dot"></span>Overdue
+              </span>
+            </td>
+            <td>
+              <div class="client-cell">
+                <div class="client-avatar-sm" style="background:#FAEEDA;color:#854F0B">PB</div>
+                <div>
+                  <div class="client-name">Presec-Legon</div>
+                  <div class="client-type">Senior High School</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="project-pill">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                Payroll integration
+              </span>
+            </td>
+            <td>
+              <div class="line-summary">Staff payroll automation — full build</div>
+              <div class="line-count">2 line items</div>
+            </td>
+            <td class="amount-cell">
+              <div class="amount-total">GHS 7,500</div>
+              <div class="amount-paid-row">
+                <span class="amount-remaining">GHS 7,500 left</span>
+              </div>
+              <div class="paid-bar"><div class="paid-fill" style="width:0%"></div></div>
+            </td>
+            <td style="text-align:right">
+              <div style="font-size:12px;color:var(--ink3);">GHS 0</div>
+              <div class="amount-remaining" style="font-size:12px;margin-top:2px;">GHS 7,500</div>
+            </td>
+            <td><span class="date-cell set">1 Mar 2025</span></td>
+            <td><span class="date-overdue">31 Mar 2025</span></td>
+          </tr>
+
+          <!-- PARTIAL -->
+          <tr class="row-partial" onclick="window.location='#inv-006'">
+            <td>
+              <div class="inv-num">STERO-2025-0006</div>
+              <span class="status-badge s-partial">
+                <span class="status-dot"></span>Partial
+              </span>
+            </td>
+            <td>
+              <div class="client-cell">
+                <div class="client-avatar-sm" style="background:#E6F1FB;color:#0C447C">GI</div>
+                <div>
+                  <div class="client-name">GIS International</div>
+                  <div class="client-type">International School</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="project-pill">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                Student portal v2
+              </span>
+            </td>
+            <td>
+              <div class="line-summary">Student portal — design & development</div>
+              <div class="line-count">3 line items</div>
+            </td>
+            <td class="amount-cell">
+              <div class="amount-total">GHS 6,800</div>
+              <div class="amount-paid-row">
+                <span class="amount-paid">GHS 3,000 paid</span>
+                <span class="amount-sep">·</span>
+                <span class="amount-remaining">GHS 3,800 left</span>
+              </div>
+              <div class="paid-bar"><div class="paid-fill" style="width:44%"></div></div>
+            </td>
+            <td style="text-align:right">
+              <div class="amount-paid" style="font-size:12px;">GHS 3,000</div>
+              <div class="amount-remaining" style="font-size:12px;margin-top:2px;">GHS 3,800</div>
+            </td>
+            <td><span class="date-cell set">10 Apr 2025</span></td>
+            <td><span class="date-cell set">10 May 2025</span></td>
+          </tr>
+
+          <!-- SENT — nothing paid yet -->
+          <tr onclick="window.location='#inv-008'">
+            <td>
+              <div class="inv-num">STERO-2025-0008</div>
+              <span class="status-badge s-sent">
+                <span class="status-dot"></span>Sent
+              </span>
+            </td>
+            <td>
+              <div class="client-cell">
+                <div class="client-avatar-sm" style="background:#E1F5EE;color:#085041">RI</div>
+                <div>
+                  <div class="client-name">Ridge International</div>
+                  <div class="client-type">International School</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="project-pill">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                Library system
+              </span>
+            </td>
+            <td>
+              <div class="line-summary">Library management — full system</div>
+              <div class="line-count">5 line items</div>
+            </td>
+            <td class="amount-cell">
+              <div class="amount-total">GHS 3,500</div>
+              <div class="amount-paid-row">
+                <span style="font-size:11px;color:var(--ink3)">Awaiting payment</span>
+              </div>
+              <div class="paid-bar"><div class="paid-fill" style="width:0%"></div></div>
+            </td>
+            <td style="text-align:right">
+              <div style="font-size:12px;color:var(--ink3);">GHS 0</div>
+              <div style="font-size:12px;color:var(--ink3);margin-top:2px;">GHS 3,500</div>
+            </td>
+            <td><span class="date-cell set">20 Apr 2025</span></td>
+            <td><span class="date-cell set">20 May 2025</span></td>
+          </tr>
+
+          <!-- SENT — no project linked -->
+          <tr onclick="window.location='#inv-009'">
+            <td>
+              <div class="inv-num">STERO-2025-0009</div>
+              <span class="status-badge s-sent">
+                <span class="status-dot"></span>Sent
+              </span>
+            </td>
+            <td>
+              <div class="client-cell">
+                <div class="client-avatar-sm" style="background:#FAEEDA;color:#854F0B">TS</div>
+                <div>
+                  <div class="client-name">Tema SHS</div>
+                  <div class="client-type">Senior High School</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="no-project">No project</span></td>
+            <td>
+              <div class="line-summary">Consulting — annual IT advisory retainer</div>
+              <div class="line-count">1 line item</div>
+            </td>
+            <td class="amount-cell">
+              <div class="amount-total">GHS 2,400</div>
+              <div class="amount-paid-row">
+                <span style="font-size:11px;color:var(--ink3)">Awaiting payment</span>
+              </div>
+              <div class="paid-bar"><div class="paid-fill" style="width:0%"></div></div>
+            </td>
+            <td style="text-align:right">
+              <div style="font-size:12px;color:var(--ink3);">GHS 0</div>
+              <div style="font-size:12px;color:var(--ink3);margin-top:2px;">GHS 2,400</div>
+            </td>
+            <td><span class="date-cell set">22 Apr 2025</span></td>
+            <td><span class="date-cell set">22 May 2025</span></td>
+          </tr>
+
+          <!-- PAID -->
+          <tr class="row-paid" onclick="window.location='#inv-005'">
+            <td>
+              <div class="inv-num">STERO-2025-0005</div>
+              <span class="status-badge s-paid">
+                <span class="status-dot"></span>Paid
+              </span>
+            </td>
+            <td>
+              <div class="client-cell">
+                <div class="client-avatar-sm" style="background:#FAEEDA;color:#854F0B">TS</div>
+                <div>
+                  <div class="client-name">Tema SHS</div>
+                  <div class="client-type">Senior High School</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="project-pill">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                Fee collection
+              </span>
+            </td>
+            <td>
+              <div class="line-summary">Fee collection module — MoMo integration</div>
+              <div class="line-count">3 line items</div>
+            </td>
+            <td class="amount-cell">
+              <div class="amount-total">GHS 3,200</div>
+              <div class="amount-paid-row">
+                <span class="amount-paid">Paid in full</span>
+              </div>
+              <div class="paid-bar"><div class="paid-fill" style="width:100%"></div></div>
+            </td>
+            <td style="text-align:right">
+              <div class="amount-paid" style="font-size:12px;">GHS 3,200</div>
+              <div style="font-size:12px;color:var(--t600);margin-top:2px;">GHS 0 left</div>
+            </td>
+            <td><span class="date-cell set">5 Feb 2025</span></td>
+            <td><span class="date-cell set">5 Mar 2025</span></td>
+          </tr>
+
+          <!-- DRAFT — no number yet -->
+          <tr onclick="window.location='#inv-draft-1'">
+            <td>
+              <div class="inv-num inv-num-draft">Draft</div>
+              <span class="status-badge s-draft">
+                <span class="status-dot"></span>Draft
+              </span>
+            </td>
+            <td>
+              <div class="client-cell">
+                <div class="client-avatar-sm" style="background:#E1F5EE;color:#085041">UG</div>
+                <div>
+                  <div class="client-name">University of Ghana</div>
+                  <div class="client-type">University</div>
+                </div>
+              </div>
+            </td>
+            <td>
+              <span class="project-pill">
+                <svg viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M3 9h18M9 21V9"/></svg>
+                ICT infrastructure
+              </span>
+            </td>
+            <td>
+              <div class="line-summary">ICT audit — Phase 1 deliverables</div>
+              <div class="line-count">2 line items</div>
+            </td>
+            <td class="amount-cell">
+              <div class="amount-total" style="color:var(--ink3);">GHS 9,000</div>
+              <div class="amount-paid-row">
+                <span style="font-size:11px;color:var(--ink3)">Not sent yet</span>
+              </div>
+            </td>
+            <td style="text-align:right">
+              <div style="font-size:12px;color:var(--ink3);">—</div>
+            </td>
+            <td><span class="date-cell">—</span></td>
+            <td><span class="date-cell">—</span></td>
+          </tr>
+
+          <!-- PAID (older) -->
+          <tr class="row-paid" onclick="window.location='#inv-003'">
+            <td>
+              <div class="inv-num">STERO-2025-0003</div>
+              <span class="status-badge s-paid">
+                <span class="status-dot"></span>Paid
+              </span>
+            </td>
+            <td>
+              <div class="client-cell">
+                <div class="client-avatar-sm">AA</div>
+                <div>
+                  <div class="client-name">Accra Academy SHS</div>
+                  <div class="client-type">Senior High School</div>
+                </div>
+              </div>
+            </td>
+            <td><span class="no-project">No project</span></td>
+            <td>
+              <div class="line-summary">Annual support & maintenance contract</div>
+              <div class="line-count">1 line item</div>
+            </td>
+            <td class="amount-cell">
+              <div class="amount-total">GHS 4,300</div>
+              <div class="amount-paid-row">
+                <span class="amount-paid">Paid in full</span>
+              </div>
+              <div class="paid-bar"><div class="paid-fill" style="width:100%"></div></div>
+            </td>
+            <td style="text-align:right">
+              <div class="amount-paid" style="font-size:12px;">GHS 4,300</div>
+              <div style="font-size:12px;color:var(--t600);margin-top:2px;">GHS 0 left</div>
+            </td>
+            <td><span class="date-cell set">10 Jan 2025</span></td>
+            <td><span class="date-cell set">10 Feb 2025</span></td>
+          </tr>
+
+        </tbody>
+      </table>
+
+      <!-- Empty state -->
+      <div class="empty-state" id="empty-state" style="display:none">
+        <div class="empty-icon">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+        </div>
+        <div class="empty-title">No invoices found</div>
+        <div class="empty-sub">Try adjusting your filters</div>
+        <button class="btn" onclick="clearFilters()">Clear filters</button>
+      </div>
+    </div>
+
+    <!-- Pagination -->
+    <div class="pagination">
+      <div class="page-info">Showing <strong>1–8</strong> of <strong>14</strong> invoices</div>
+      <div class="page-controls">
+        <button class="page-btn" disabled>
+          <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+        </button>
+        <button class="page-btn active">1</button>
+        <button class="page-btn">2</button>
+        <div class="page-ellipsis">…</div>
+        <button class="page-btn">4</button>
+        <button class="page-btn">
+          <svg viewBox="0 0 24 24"><polyline points="9 18 15 12 9 6"/></svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+</div>
+<script>
+// ── Stub interactivity ──
+// Every param maps 1:1 to GET /api/v1/invoices/?...
+
+// Status pills
+const STATUS_CLASSES = {
+  '':        'pill-all',
+  'draft':   'pill-draft',
+  'sent':    'pill-sent',
+  'partial': 'pill-partial',
+  'paid':    'pill-paid',
+  'overdue': 'pill-overdue',
+};
+
+function setStatus(status) {
+  // In React: setSearchParams({ status }) → React Query refetches with ?status=
+  document.querySelectorAll('.status-pill').forEach(p => p.classList.remove('active-pill'));
+  const targetClass = STATUS_CLASSES[status];
+  document.querySelector('.' + targetClass)?.classList.add('active-pill');
+  applyFilters();
+}
+
+// Date mode toggle (issue date vs due date)
+// Controls which param pair is sent: ?issue_date__gte= vs ?due_date__gte=
+let dateMode = 'issue';
+function setDateMode(mode) {
+  dateMode = mode;
+  document.getElementById('mode-issue').classList.toggle('active', mode === 'issue');
+  document.getElementById('mode-due').classList.toggle('active', mode === 'due');
+  // In React: regenerate query params
+  // mode === 'issue' → { issue_date__gte: from, issue_date__lte: to }
+  // mode === 'due'   → { due_date__gte: from, due_date__lte: to }
+  console.log('date mode:', mode,
+    '| from param:', mode + '_date__gte',
+    '| to param:',  mode + '_date__lte');
+}
+
+// Search — backend: ?search= on invoice_number + client__name
+document.getElementById('search').addEventListener('input', applyFilters);
+document.getElementById('filter-client').addEventListener('change', () => {
+  // In React: also reset project dropdown to '' since project list
+  // should be filtered by the selected client
+  // GET /api/v1/projects/?client_id=<uuid> to populate project options
+  console.log('client filter:', document.getElementById('filter-client').value);
+  applyFilters();
+});
+document.getElementById('filter-project').addEventListener('change', applyFilters);
+document.getElementById('filter-ordering').addEventListener('change', function() {
+  console.log('ordering:', this.value);
+  // In React: ?ordering=due_date | ?ordering=-total_ghs
+});
+
+function applyFilters() {
+  const q      = document.getElementById('search').value.toLowerCase();
+  const active = document.querySelector('.status-pill.active-pill');
+  const status = active ? [...active.classList]
+    .find(c => c.startsWith('pill-') && c !== 'pill-all' && c !== 'status-pill' && c !== 'active-pill')
+    ?.replace('pill-', '') || '' : '';
+
+  const rows  = document.querySelectorAll('#invoice-tbody tr');
+  let visible = 0;
+
+  rows.forEach(r => {
+    const num    = r.querySelector('.inv-num')?.textContent.toLowerCase() || '';
+    const client = r.querySelector('.client-name')?.textContent.toLowerCase() || '';
+    const badge  = r.querySelector('.status-badge')?.textContent.trim().toLowerCase() || '';
+
+    const matchSearch = !q || num.includes(q) || client.includes(q);
+    const matchStatus = !status || badge.includes(status);
+    const show = matchSearch && matchStatus;
+
+    r.style.display = show ? '' : 'none';
+    if (show) visible++;
+  });
+
+  const countEl = document.getElementById('result-count');
+  const emptyEl = document.getElementById('empty-state');
+  const tbody   = document.getElementById('invoice-tbody');
+
+  countEl.textContent = visible > 0
+    ? `Showing ${visible} invoice${visible !== 1 ? 's' : ''}`
+    : 'No results';
+  emptyEl.style.display = visible === 0 ? 'block' : 'none';
+  tbody.style.display   = visible === 0 ? 'none' : '';
+}
+
+function clearFilters() {
+  document.getElementById('search').value = '';
+  document.getElementById('filter-client').value = '';
+  document.getElementById('filter-project').value = '';
+  document.getElementById('date-from').value = '';
+  document.getElementById('date-to').value = '';
+  setStatus('');
+  applyFilters();
+}
+
+function toggleSort(col) {
+  const sel = document.getElementById('filter-ordering');
+  const cur = sel.value;
+  const next = cur === col ? '-' + col : col;
+  sel.value = next;
+  console.log('sort:', next);
+}
+</script>
+</body>
+</html>

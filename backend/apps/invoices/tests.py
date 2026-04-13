@@ -1,4 +1,3 @@
-
 from datetime import timedelta
 from decimal import Decimal
 
@@ -44,10 +43,13 @@ def test_create_invoice_service_writes_audit_logs_for_invoice_and_line_items(org
         entity_id=invoice.id,
         action=AuditLog.Action.CREATED,
     ).exists()
-    assert AuditLog.objects.filter(
-        entity_type="InvoiceLineItem",
-        action=AuditLog.Action.CREATED,
-    ).count() == 2
+    assert (
+        AuditLog.objects.filter(
+            entity_type="InvoiceLineItem",
+            action=AuditLog.Action.CREATED,
+        ).count()
+        == 2
+    )
     assert InvoiceLineItem.objects.filter(invoice=invoice).count() == 2
 
 
@@ -182,10 +184,13 @@ def test_update_invoice_service_replaces_line_items_and_audits_create_delete(org
         entity_id=original_line_item.id,
         action=AuditLog.Action.DELETED,
     ).exists()
-    assert AuditLog.objects.filter(
-        entity_type="InvoiceLineItem",
-        action=AuditLog.Action.CREATED,
-    ).count() >= 2
+    assert (
+        AuditLog.objects.filter(
+            entity_type="InvoiceLineItem",
+            action=AuditLog.Action.CREATED,
+        ).count()
+        >= 2
+    )
 
 
 @pytest.mark.django_db

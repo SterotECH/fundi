@@ -9,7 +9,9 @@ class LoginSerializer(serializers.Serializer):
 
 
 class UserSerializer(serializers.ModelSerializer):
-    organisation_name = serializers.CharField(source="organisation.name", read_only=True)
+    organisation_name = serializers.CharField(
+        source="organisation.name", read_only=True
+    )
 
     class Meta:
         model = User

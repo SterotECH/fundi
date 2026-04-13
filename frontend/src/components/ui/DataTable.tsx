@@ -29,6 +29,7 @@ type DataTableProps<T> = {
   columns: DataTableColumn<T>[];
   emptyState?: ReactNode;
   getRowHref?: (row: T) => string;
+  getRowClassName?: (row: T, index: number) => string | undefined;
   loading?: boolean;
   mobileCard?: (row: T, index: number) => ReactNode;
   onRowClick?: (row: T) => void;
@@ -42,6 +43,7 @@ type DataTableProps<T> = {
   enableColumnToggle?: boolean;
   className?: string;
   shellClassName?: string;
+  variant?: "default" | "list";
 };
 
 const alignments: Record<NonNullable<DataTableColumn<unknown>["align"]>, string> = {
@@ -96,6 +98,7 @@ export function DataTable<T>({
   columns,
   emptyState,
   getRowHref,
+  getRowClassName,
   loading = false,
   mobileCard,
   onRowClick,
@@ -109,6 +112,7 @@ export function DataTable<T>({
   enableColumnToggle = true,
   className,
   shellClassName,
+  variant = "default",
 }: DataTableProps<T>) {
   const navigate = useNavigate();
   const [hiddenColumns, setHiddenColumns] = useState<Set<string>>(
@@ -143,6 +147,11 @@ export function DataTable<T>({
   const isRowInteractive = Boolean(getRowHref || onRowClick);
   const visibleColumns = columns.filter((column) => !hiddenColumns.has(column.key));
   const showToolbarControls = Boolean(searchSlot || filterContent || toolbarActions || enableColumnToggle);
+  const shellVariantClassName = variant === "list" ? "data-table-shell-list" : undefined;
+  const headVariantClassName = variant === "list" ? "data-table-head-list" : undefined;
+  const rowVariantClassName = variant === "list" ? "data-table-row-list" : undefined;
+  const mobileCardVariantClassName =
+    variant === "list" ? "data-table-mobile-card-list" : undefined;
 
   useEffect(() => {
     function handlePointerDown(event: MouseEvent) {
@@ -363,11 +372,11 @@ export function DataTable<T>({
         <div className="data-table-toolbar">{toolbar}</div>
       ) : null}
 
-      <div className={cn("data-table-shell", shellClassName)}>
+      <div className={cn("data-table-shell", shellVariantClassName, shellClassName)}>
         <div className="hidden md:block">
           <table className="min-w-full border-separate border-spacing-0">
             <thead>
-              <tr className="data-table-head">
+              <tr className={cn("data-table-head", headVariantClassName)}>
                 {visibleColumns.map((column) => {
                   const style: CSSProperties | undefined = column.width
                     ? { width: column.width }
@@ -394,6 +403,8 @@ export function DataTable<T>({
                   aria-label={isRowInteractive ? "Open row" : undefined}
                   className={cn(
                     "data-table-row",
+                    rowVariantClassName,
+                    getRowClassName?.(row, index),
                     isRowInteractive && "data-table-row-clickable",
                   )}
                   key={rowKey(row)}
@@ -434,6 +445,8 @@ export function DataTable<T>({
                 <div
                   className={cn(
                     "data-table-mobile-card",
+                    mobileCardVariantClassName,
+                    getRowClassName?.(row, index),
                     isRowInteractive && "data-table-mobile-card-clickable",
                   )}
                   key={rowKey(row)}
@@ -452,6 +465,8 @@ export function DataTable<T>({
               <div
                 className={cn(
                   "data-table-mobile-card",
+                  mobileCardVariantClassName,
+                  getRowClassName?.(row, index),
                   isRowInteractive && "data-table-mobile-card-clickable",
                 )}
                 key={rowKey(row)}

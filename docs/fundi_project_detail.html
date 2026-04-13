@@ -1,0 +1,491 @@
+
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --p50:#EEEDFE;--p100:#CECBF6;--p200:#AFA9EC;--p600:#534AB7;--p800:#3C3489;
+  --t50:#E1F5EE;--t100:#9FE1CB;--t400:#1D9E75;--t600:#0F6E56;--t800:#085041;
+  --a50:#FAEEDA;--a400:#BA7517;--a600:#854F0B;
+  --r50:#FCEBEB;--r400:#E24B4A;--r800:#791F1F;
+  --b50:#E6F1FB;--b400:#378ADD;--b800:#0C447C;
+  --g50:#F1EFE8;--g100:#D3D1C7;--g400:#888780;--g600:#5F5E5A;
+  --page:#F4F3FC;
+  --glass:rgba(255,255,255,0.78);
+  --glass-b:rgba(255,255,255,0.55);
+  --ink:var(--color-text-primary);
+  --ink2:var(--color-text-secondary);
+  --ink3:var(--color-text-tertiary);
+  --bdr:var(--color-border-tertiary);
+}
+body{background:var(--page);font-family:var(--font-sans);color:var(--ink);font-size:14px;line-height:1.5}
+
+.wrap{padding:20px 20px 40px;max-width:960px;margin:0 auto}
+
+.back{display:inline-flex;align-items:center;gap:5px;font-size:12px;color:var(--ink3);margin-bottom:16px;cursor:pointer;text-decoration:none}
+.back svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5}
+
+.project-header{background:var(--glass);border:0.5px solid var(--glass-b);border-radius:16px;padding:20px 24px;margin-bottom:14px;backdrop-filter:blur(12px);display:flex;align-items:flex-start;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.ph-left{flex:1;min-width:240px}
+.ph-breadcrumb{font-size:11px;color:var(--ink3);margin-bottom:6px;display:flex;align-items:center;gap:5px}
+.ph-title{font-size:20px;font-weight:500;color:var(--ink);margin-bottom:6px;line-height:1.2}
+.ph-client{font-size:13px;color:var(--ink2);display:flex;align-items:center;gap:6px}
+.ph-client-dot{width:7px;height:7px;border-radius:50%;background:var(--p600)}
+.ph-right{display:flex;flex-direction:column;align-items:flex-end;gap:8px}
+.status-chip{font-size:11px;font-weight:500;padding:3px 10px;border-radius:20px}
+.chip-active{background:var(--t50);color:var(--t800)}
+.chip-hold{background:var(--a50);color:var(--a600)}
+.chip-planning{background:var(--b50);color:var(--b800)}
+.chip-done{background:var(--g50);color:var(--g600)}
+.chip-draft{background:var(--g50);color:var(--g600)}
+.chip-partial{background:var(--a50);color:var(--a600)}
+.chip-paid{background:var(--t50);color:var(--t800)}
+.chip-overdue{background:var(--r50);color:var(--r800)}
+.chip-sent{background:var(--b50);color:var(--b800)}
+.ph-actions{display:flex;gap:7px}
+.btn{font-size:12px;font-weight:500;padding:6px 14px;border-radius:8px;border:0.5px solid var(--bdr);background:var(--color-background-primary);color:var(--ink);cursor:pointer;transition:all .15s}
+.btn:hover{background:var(--color-background-secondary)}
+.btn-primary{background:var(--p600);color:#fff;border-color:var(--p800)}
+.btn-primary:hover{background:var(--p800)}
+
+.meta-strip{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:14px}
+.meta-tile{background:var(--glass);border:0.5px solid var(--glass-b);border-radius:12px;padding:12px 14px;backdrop-filter:blur(8px)}
+.mt-label{font-size:10px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);margin-bottom:3px}
+.mt-val{font-size:18px;font-weight:500;color:var(--ink);line-height:1}
+.mt-sub{font-size:11px;color:var(--ink3);margin-top:2px}
+
+.progress-row{display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.progress-track{flex:1;height:6px;background:var(--g100);border-radius:3px;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;background:var(--t400)}
+.progress-label{font-size:12px;font-weight:500;color:var(--t600);flex-shrink:0}
+.progress-date{font-size:12px;color:var(--ink3);flex-shrink:0}
+
+.two-col{display:grid;grid-template-columns:1fr 340px;gap:14px;align-items:start}
+.left-col{display:flex;flex-direction:column;gap:14px}
+.right-col{display:flex;flex-direction:column;gap:14px}
+
+.panel{background:var(--glass);border:0.5px solid var(--glass-b);border-radius:14px;backdrop-filter:blur(10px);overflow:hidden}
+.panel-header{display:flex;align-items:center;justify-content:space-between;padding:13px 16px;border-bottom:0.5px solid var(--bdr)}
+.panel-title{font-size:13px;font-weight:500;color:var(--ink);display:flex;align-items:center;gap:7px}
+.panel-icon{width:16px;height:16px;stroke:currentColor;fill:none;stroke-width:1.5;flex-shrink:0}
+.panel-action{font-size:11px;color:var(--p600);cursor:pointer;font-weight:500}
+.panel-body{padding:12px 16px}
+
+.milestone-list{display:flex;flex-direction:column;gap:0}
+.milestone-item{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:0.5px solid var(--bdr)}
+.milestone-item:last-child{border-bottom:none}
+.ms-check{width:17px;height:17px;border-radius:5px;border:1.5px solid var(--g100);flex-shrink:0;margin-top:1px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:all .15s}
+.ms-check.done{background:var(--t400);border-color:var(--t600)}
+.ms-check.done svg{display:block}
+.ms-check svg{display:none;width:10px;height:10px;stroke:#fff;fill:none;stroke-width:2.5}
+.ms-body{flex:1;min-width:0}
+.ms-title{font-size:13px;color:var(--ink);line-height:1.4;margin-bottom:2px}
+.ms-title.done{text-decoration:line-through;color:var(--ink3)}
+.ms-meta{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--ink3)}
+.ms-due-red{color:var(--r400)}
+.ms-order{font-size:10px;font-weight:500;background:var(--p50);color:var(--p800);padding:1px 6px;border-radius:10px}
+
+.timelog-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.tl-stat{background:var(--color-background-secondary);border-radius:8px;padding:9px 11px}
+.tl-stat-label{font-size:10px;color:var(--ink3);font-weight:500;letter-spacing:.04em;text-transform:uppercase;margin-bottom:2px}
+.tl-stat-val{font-size:16px;font-weight:500;color:var(--ink)}
+.tl-stat-sub{font-size:10px;color:var(--ink3);margin-top:1px}
+
+.timelog-row{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:0.5px solid var(--bdr)}
+.timelog-row:last-child{border-bottom:none}
+.tl-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.tl-date{font-size:11px;color:var(--ink3);width:52px;flex-shrink:0;font-family:var(--font-mono)}
+.tl-desc{font-size:13px;color:var(--ink);flex:1;line-height:1.4}
+.tl-hrs{font-size:13px;font-weight:500;color:var(--p600);flex-shrink:0}
+.tl-billable-badge{font-size:9px;font-weight:500;padding:1px 6px;border-radius:10px;flex-shrink:0}
+.tl-bill{background:var(--t50);color:var(--t800)}
+.tl-nobill{background:var(--g50);color:var(--g600)}
+
+.burn-bar-wrap{margin-top:10px}
+.burn-label{display:flex;justify-content:space-between;font-size:11px;color:var(--ink3);margin-bottom:5px}
+.burn-track{height:7px;background:var(--g100);border-radius:4px;overflow:hidden}
+.burn-fill{height:100%;border-radius:4px;background:var(--a400)}
+.burn-fill.ok{background:var(--t400)}
+.burn-fill.warn{background:var(--a400)}
+.burn-fill.over{background:var(--r400)}
+
+.invoice-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--bdr)}
+.invoice-row:last-child{border-bottom:none}
+.inv-num{font-size:11px;font-family:var(--font-mono);color:var(--ink3);width:100px;flex-shrink:0}
+.inv-client{font-size:13px;color:var(--ink);flex:1}
+.inv-amt{font-size:13px;font-weight:500;color:var(--ink);flex-shrink:0}
+.inv-total{font-size:11px;color:var(--ink3);flex-shrink:0;text-align:right;min-width:70px}
+
+.project-info-block{background:var(--color-background-secondary);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.pib-label{font-size:10px;font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--ink3);margin-bottom:4px}
+.pib-val{font-size:13px;color:var(--ink)}
+
+.proposal-ref{display:flex;align-items:center;gap:8px;background:var(--p50);border-radius:10px;padding:10px 12px;margin-bottom:10px}
+.pr-icon{width:28px;height:28px;border-radius:7px;background:var(--p600);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.pr-icon svg{width:14px;height:14px;stroke:#fff;fill:none;stroke-width:1.5}
+.pr-body{flex:1}
+.pr-title{font-size:12px;font-weight:500;color:var(--p800)}
+.pr-sub{font-size:11px;color:var(--p600);margin-top:1px}
+
+.quick-actions{display:flex;flex-direction:column;gap:6px;padding:12px 16px}
+.qa-btn{width:100%;text-align:left;font-size:12px;font-weight:500;padding:8px 12px;border-radius:8px;border:0.5px solid var(--bdr);background:var(--color-background-primary);color:var(--ink);cursor:pointer;display:flex;align-items:center;gap:7px;transition:all .15s}
+.qa-btn:hover{background:var(--color-background-secondary)}
+.qa-btn svg{width:14px;height:14px;stroke:currentColor;fill:none;stroke-width:1.5;flex-shrink:0;color:var(--ink3)}
+.qa-arrow{margin-left:auto;color:var(--ink3);font-size:11px}
+</style>
+
+<div class="wrap">
+<h2 class="sr-only">Fundi project detail screen for School Management System v2, showing milestones, time logs, and invoices</h2>
+
+<a class="back" href="#">
+  <svg viewBox="0 0 24 24"><polyline points="15 18 9 12 15 6"/></svg>
+  Projects
+</a>
+
+<div class="project-header">
+  <div class="ph-left">
+    <div class="ph-breadcrumb">
+      <span>Accra Academy SHS</span>
+      <span>·</span>
+      <span>School Management System v2</span>
+    </div>
+    <div class="ph-title">School Management System v2</div>
+    <div class="ph-client">
+      <div class="ph-client-dot"></div>
+      <span>Accra Academy Senior High School</span>
+      <span style="color:var(--g100)">·</span>
+      <span>Mrs. Abena Mensah</span>
+    </div>
+  </div>
+  <div class="ph-right">
+    <div class="ph-actions">
+      <button class="btn" onclick="sendPrompt('How many billable hours have been logged on the School Management System v2 project so far?')">Ask Fundi ↗</button>
+      <button class="btn">Edit</button>
+      <button class="btn btn-primary">+ Log time</button>
+    </div>
+    <span class="status-chip chip-active">Active</span>
+  </div>
+</div>
+
+<div class="meta-strip">
+  <div class="meta-tile">
+    <div class="mt-label">Budget</div>
+    <div class="mt-val">GHS 11,800</div>
+    <div class="mt-sub">Project budget</div>
+  </div>
+  <div class="meta-tile">
+    <div class="mt-label">Total hours</div>
+    <div class="mt-val">42.5h</div>
+    <div class="mt-sub">89% billable</div>
+  </div>
+  <div class="meta-tile">
+    <div class="mt-label">Effective rate</div>
+    <div class="mt-val">GHS 197</div>
+    <div class="mt-sub">per billable hour</div>
+  </div>
+  <div class="meta-tile">
+    <div class="mt-label">Due date</div>
+    <div class="mt-val" style="font-size:14px;margin-top:2px">30 Apr 2025</div>
+    <div class="mt-sub" style="color:var(--r400)">Today</div>
+  </div>
+  <div class="meta-tile">
+    <div class="mt-label">Invoiced</div>
+    <div class="mt-val">GHS 15k</div>
+    <div class="mt-sub" style="color:var(--a600)">GHS 5k collected</div>
+  </div>
+</div>
+
+<div class="progress-row">
+  <div class="progress-track"><div class="progress-fill" style="width:65%"></div></div>
+  <span class="progress-label">65% complete</span>
+  <span class="progress-date">Start: 1 Feb 2025</span>
+</div>
+
+<div class="two-col">
+  <div class="left-col">
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <svg class="panel-icon" viewBox="0 0 24 24"><polyline points="9 11 12 14 22 4"/><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"/></svg>
+          Milestones
+        </div>
+        <span class="panel-action">+ Add milestone</span>
+      </div>
+      <div class="panel-body">
+        <div class="milestone-list">
+          <div class="milestone-item">
+            <div class="ms-check done"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="ms-body">
+              <div class="ms-title done">Requirements & system design</div>
+              <div class="ms-meta"><span>Completed 14 Feb</span><span class="ms-order">#1</span></div>
+            </div>
+          </div>
+          <div class="milestone-item">
+            <div class="ms-check done"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="ms-body">
+              <div class="ms-title done">Database schema & Django models</div>
+              <div class="ms-meta"><span>Completed 28 Feb</span><span class="ms-order">#2</span></div>
+            </div>
+          </div>
+          <div class="milestone-item">
+            <div class="ms-check done"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+            <div class="ms-body">
+              <div class="ms-title done">Core module — student records & enrollment</div>
+              <div class="ms-meta"><span>Completed 15 Mar</span><span class="ms-order">#3</span></div>
+            </div>
+          </div>
+          <div class="milestone-item">
+            <div class="ms-check" style="border-color:var(--p200)"></div>
+            <div class="ms-body">
+              <div class="ms-title">Staff payroll integration module</div>
+              <div class="ms-meta"><span class="ms-due-red">Due 20 Apr — overdue</span><span class="ms-order">#4</span></div>
+            </div>
+          </div>
+          <div class="milestone-item">
+            <div class="ms-check"></div>
+            <div class="ms-body">
+              <div class="ms-title">MoMo fee payment webhook</div>
+              <div class="ms-meta"><span>Due 28 Apr</span><span class="ms-order">#5</span></div>
+            </div>
+          </div>
+          <div class="milestone-item">
+            <div class="ms-check"></div>
+            <div class="ms-body">
+              <div class="ms-title">On-site installation & staff training (2 days)</div>
+              <div class="ms-meta"><span>Due 30 Apr</span><span class="ms-order">#6</span></div>
+            </div>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;margin-top:10px;padding-top:10px;border-top:0.5px solid var(--bdr)">
+          <span style="font-size:11px;color:var(--ink3)">3 of 6 completed</span>
+          <div style="flex:1;height:4px;background:var(--g100);border-radius:2px;overflow:hidden"><div style="width:50%;height:100%;background:var(--t400);border-radius:2px"></div></div>
+          <span style="font-size:11px;color:var(--t600);font-weight:500">50%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <svg class="panel-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Time logs
+          <span style="font-size:11px;color:var(--ink3);font-weight:400">· 42.5h total</span>
+        </div>
+        <span class="panel-action" onclick="sendPrompt('Log time to the School Management System v2 project')">+ Log time ↗</span>
+      </div>
+      <div class="panel-body">
+        <div class="timelog-stats">
+          <div class="tl-stat">
+            <div class="tl-stat-label">Total</div>
+            <div class="tl-stat-val">42.5h</div>
+          </div>
+          <div class="tl-stat">
+            <div class="tl-stat-label">Billable</div>
+            <div class="tl-stat-val" style="color:var(--t600)">38h</div>
+            <div class="tl-stat-sub">89%</div>
+          </div>
+          <div class="tl-stat">
+            <div class="tl-stat-label">Rate</div>
+            <div class="tl-stat-val">GHS 197</div>
+            <div class="tl-stat-sub">/hr</div>
+          </div>
+          <div class="tl-stat">
+            <div class="tl-stat-label">Burn</div>
+            <div class="tl-stat-val" style="color:var(--a400)">71%</div>
+            <div class="tl-stat-sub">8,400 / 11,800</div>
+          </div>
+        </div>
+        <div class="burn-bar-wrap">
+          <div class="burn-label"><span>Budget burn</span><span>GHS 8,400 of 11,800</span></div>
+          <div class="burn-track"><div class="burn-fill warn" style="width:71%"></div></div>
+        </div>
+        <div style="height:12px"></div>
+        <div class="timelog-row">
+          <div class="tl-dot" style="background:var(--t400)"></div>
+          <span class="tl-date">29 Apr</span>
+          <span class="tl-desc">Fee payment module — MoMo webhook integration</span>
+          <span class="tl-hrs">3.5h</span>
+          <span class="tl-billable-badge tl-bill">billable</span>
+        </div>
+        <div class="timelog-row">
+          <div class="tl-dot" style="background:var(--t400)"></div>
+          <span class="tl-date">28 Apr</span>
+          <span class="tl-desc">Student dashboard — responsive layout and data tables</span>
+          <span class="tl-hrs">5h</span>
+          <span class="tl-billable-badge tl-bill">billable</span>
+        </div>
+        <div class="timelog-row">
+          <div class="tl-dot" style="background:var(--g100)"></div>
+          <span class="tl-date">27 Apr</span>
+          <span class="tl-desc">Requirements clarification call with Mrs. Mensah</span>
+          <span class="tl-hrs">1h</span>
+          <span class="tl-billable-badge tl-nobill">non-billable</span>
+        </div>
+        <div class="timelog-row">
+          <div class="tl-dot" style="background:var(--t400)"></div>
+          <span class="tl-date">26 Apr</span>
+          <span class="tl-desc">Django model migrations and schema updates</span>
+          <span class="tl-hrs">4h</span>
+          <span class="tl-billable-badge tl-bill">billable</span>
+        </div>
+        <div class="timelog-row">
+          <div class="tl-dot" style="background:var(--t400)"></div>
+          <span class="tl-date">25 Apr</span>
+          <span class="tl-desc">Auth system and staff role management</span>
+          <span class="tl-hrs">6h</span>
+          <span class="tl-billable-badge tl-bill">billable</span>
+        </div>
+        <div style="padding-top:10px;text-align:center">
+          <button class="btn" style="font-size:11px">View all 28 entries</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <svg class="panel-icon" viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          Invoices
+        </div>
+        <span class="panel-action" onclick="sendPrompt('Create a new invoice for the School Management System v2 project for Accra Academy SHS')">+ New invoice ↗</span>
+      </div>
+      <div class="panel-body">
+        <div class="invoice-row">
+          <span class="inv-num">STERO-2025-0007</span>
+          <span class="inv-client">School management system — full scope</span>
+          <span class="inv-amt">GHS 15,000</span>
+          <div style="display:flex;flex-direction:column;align-items:flex-end;gap:3px">
+            <span class="status-chip chip-partial" style="font-size:10px">Partial</span>
+            <span class="inv-total">GHS 5,000 paid</span>
+          </div>
+        </div>
+        <div style="padding:10px 0;border-bottom:0.5px solid var(--bdr)">
+          <div style="display:flex;align-items:center;gap:8px">
+            <div style="flex:1;height:5px;background:var(--g100);border-radius:3px;overflow:hidden">
+              <div style="width:33%;height:100%;background:var(--t400);border-radius:3px"></div>
+            </div>
+            <span style="font-size:11px;color:var(--ink3)">GHS 10,000 outstanding</span>
+          </div>
+        </div>
+        <div style="padding-top:10px;font-size:12px;color:var(--ink3);display:flex;gap:16px">
+          <span>2 payments recorded</span>
+          <span>·</span>
+          <span>Last: GHS 2,000 via GCB bank · 22 Apr</span>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <div class="right-col">
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Project info</div>
+        <span class="panel-action">Edit</span>
+      </div>
+      <div class="panel-body">
+        <div class="proposal-ref">
+          <div class="pr-icon">
+            <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>
+          </div>
+          <div class="pr-body">
+            <div class="pr-title">Converted from proposal</div>
+            <div class="pr-sub">GHS 15,000 · Won 28 Jan 2025</div>
+          </div>
+        </div>
+        <div class="project-info-block">
+          <div class="pib-label">Client</div>
+          <div class="pib-val" style="font-weight:500">Accra Academy Senior High School</div>
+          <div class="pib-val" style="font-size:12px;color:var(--ink3);margin-top:1px">Mrs. Abena Mensah · Finance Office</div>
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
+          <div class="project-info-block" style="margin-bottom:0">
+            <div class="pib-label">Start date</div>
+            <div class="pib-val">1 Feb 2025</div>
+          </div>
+          <div class="project-info-block" style="margin-bottom:0">
+            <div class="pib-label">Due date</div>
+            <div class="pib-val" style="color:var(--r400)">30 Apr 2025</div>
+          </div>
+        </div>
+        <div class="project-info-block">
+          <div class="pib-label">Budget</div>
+          <div class="pib-val" style="font-weight:500">GHS 11,800</div>
+          <div class="pib-val" style="font-size:11px;color:var(--ink3);margin-top:2px">GHS 8,400 burned (71%)</div>
+        </div>
+        <div class="project-info-block" style="margin-bottom:0">
+          <div class="pib-label">Description</div>
+          <div class="pib-val" style="font-size:12px;color:var(--ink2);line-height:1.5">Complete school management platform: student records, payroll integration, fee collection via MoMo, staff dashboard.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">Quick actions</div>
+      </div>
+      <div class="quick-actions">
+        <button class="qa-btn" onclick="sendPrompt('Log time to the School Management System v2 project')">
+          <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Log time ↗
+          <span class="qa-arrow">→</span>
+        </button>
+        <button class="qa-btn" onclick="sendPrompt('Create a new invoice for the School Management System v2 project for Accra Academy SHS')">
+          <svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/></svg>
+          New invoice ↗
+          <span class="qa-arrow">→</span>
+        </button>
+        <button class="qa-btn" onclick="sendPrompt('Record a payment for invoice STERO-2025-0007 for the Accra Academy SHS School Management System project')">
+          <svg viewBox="0 0 24 24"><rect x="2" y="5" width="20" height="14" rx="2"/><line x1="2" y1="10" x2="22" y2="10"/></svg>
+          Record payment ↗
+          <span class="qa-arrow">→</span>
+        </button>
+        <button class="qa-btn" onclick="sendPrompt('Summarise the current status of the School Management System v2 project — budget burn, time logged, outstanding invoices, and overdue milestones')">
+          <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          Ask Fundi about this project ↗
+          <span class="qa-arrow">→</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <svg class="panel-icon" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          Hours summary
+        </div>
+      </div>
+      <div class="panel-body" style="padding:10px 16px">
+        <div style="display:flex;flex-direction:column;gap:7px">
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <span style="color:var(--ink2)">Billable hours</span>
+            <span style="font-weight:500">38h</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <span style="color:var(--ink2)">Non-billable</span>
+            <span>4.5h</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <span style="color:var(--ink2)">Total logged</span>
+            <span style="font-weight:500">42.5h</span>
+          </div>
+          <div style="height:0.5px;background:var(--bdr);margin:3px 0"></div>
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <span style="color:var(--ink2)">Effective rate</span>
+            <span style="color:var(--t600);font-weight:500">GHS 197 / hr</span>
+          </div>
+          <div style="display:flex;justify-content:space-between;font-size:12px">
+            <span style="color:var(--ink2)">Budget remaining</span>
+            <span style="color:var(--a600);font-weight:500">GHS 3,400 (29%)</span>
+          </div>
+        </div>
+        <div style="margin-top:10px;background:var(--a50);border-radius:8px;padding:8px 10px">
+          <div style="font-size:11px;color:var(--a600);font-weight:500;margin-bottom:2px">Budget warning</div>
+          <div style="font-size:11px;color:var(--a600)">71% burned with 2 milestones remaining. At current pace you'll exceed budget.</div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</div>
+</div>

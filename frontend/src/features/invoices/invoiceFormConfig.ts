@@ -97,11 +97,13 @@ export const emptyInvoiceFormState: InvoiceFormValues = {
 export function createInvoiceFormState(
   invoice?: InvoiceDetail | null,
   clientId?: string,
+  projectId?: string,
 ): InvoiceFormValues {
   if (!invoice) {
     return {
       ...emptyInvoiceFormState,
       client_id: clientId ?? "",
+      project_id: projectId ?? "",
       line_items: [{ ...emptyInvoiceLineItem }],
     };
   }

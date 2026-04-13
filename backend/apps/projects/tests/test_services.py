@@ -213,10 +213,13 @@ def test_get_project_detail_is_organisation_scoped(org):
     project = ProjectFactory(organisation=org)
     other_project = ProjectFactory(organisation=OrganisationFactory())
 
-    assert services.get_project_detail(
-        organisation=org,
-        project_id=str(project.id),
-    ) == project
+    assert (
+        services.get_project_detail(
+            organisation=org,
+            project_id=str(project.id),
+        )
+        == project
+    )
 
     with pytest.raises(Project.DoesNotExist):
         services.get_project_detail(
@@ -341,11 +344,14 @@ def test_get_project_milestone_is_scoped_by_project_and_organisation(org):
     milestone = MilestoneFactory(project=project)
     other_milestone = MilestoneFactory(project=ProjectFactory(organisation=org))
 
-    assert services.get_project_milestone(
-        organisation=org,
-        project_id=str(project.id),
-        milestone_id=str(milestone.id),
-    ) == milestone
+    assert (
+        services.get_project_milestone(
+            organisation=org,
+            project_id=str(project.id),
+            milestone_id=str(milestone.id),
+        )
+        == milestone
+    )
 
     with pytest.raises(Milestone.DoesNotExist):
         services.get_project_milestone(
@@ -470,10 +476,13 @@ def test_get_time_log_detail_is_organisation_scoped(org):
         project=ProjectFactory(organisation=OrganisationFactory())
     )
 
-    assert services.get_time_log_detail(
-        organisation=org,
-        time_log_id=str(time_log.id),
-    ) == time_log
+    assert (
+        services.get_time_log_detail(
+            organisation=org,
+            time_log_id=str(time_log.id),
+        )
+        == time_log
+    )
 
     with pytest.raises(TimeLog.DoesNotExist):
         services.get_time_log_detail(

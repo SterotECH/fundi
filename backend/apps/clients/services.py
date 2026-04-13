@@ -210,6 +210,7 @@ def list_leads(
     - organisation scoping happens first so no later filter can leak data
     - supports text search across name, email, phone, and contact person
     - supports filtering by lead source and status
+    - returns all lead statuses by default, including converted and dead leads
     - ordering is explicit so API responses stay predictable
     """
     queryset = Lead.objects.filter(organisation=organisation).order_by(
@@ -220,14 +221,6 @@ def list_leads(
     status_filter = filters.get("status")
     if status_filter:
         queryset = queryset.filter(status=status_filter)
-    else:
-        queryset = queryset.filter(
-            status__in=[
-                Lead.LeadStatus.NEW,
-                Lead.LeadStatus.CONTACTED,
-                Lead.LeadStatus.QUALIFIED,
-            ]
-        )
 
     search_term = str(filters.get("search", "")).strip()
     if search_term:
